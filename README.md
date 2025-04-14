@@ -36,6 +36,41 @@ This repository contains MATLAB scripts and functions for creating, editing, and
 - Database Toolbox (for database connections)
 - XML Toolbox (for XML handling)
 
+## Project Status & Implementation Roadmap
+
+The project is in an advanced state with many features implemented. This section outlines what's currently working and what's still planned.
+
+### Current Status (April 2025)
+
+- **Core functionality**: The basic BPMN generation framework is fully functional and can generate valid BPMN 2.0 XML files.
+- **Database connectivity**: MySQL and PostgreSQL database connectors are implemented and tested.
+- **MATLAB Compiler compatibility**: The code has been optimized for use with MATLAB Compiler.
+- **Examples**: Basic and complex examples are available to demonstrate functionality.
+- **Documentation**: Database schema and compatibility guides are available.
+
+### Implementation Progress
+
+#### Completed Features:
+- Full implementation of basic BPMN elements (events, activities, gateways)
+- Database integration with support for multiple database systems
+- Sequence flow and message flow generation
+- Data object and data store support
+- Pools and lanes with proper nesting
+- MATLAB Compiler compatibility
+
+#### In Progress:
+- Validation of BPMN structural integrity
+- Advanced layout algorithms
+- Visualization export options
+
+#### Planned Features (Priority Order):
+1. SVG/PNG export functionality
+2. Import from existing BPMN files
+3. Additional gateway types (Parallel Event-based)
+4. Group artifacts
+5. Advanced BPMN features (Correlation, Conversations, Choreographies)
+6. Style management (colors, fonts, custom icons)
+
 ## Comprehensive BPMN Generation Checklist
 
 To create a database-to-BPMN generator capable of handling any complexity, we need to implement the following functionalities:
@@ -107,8 +142,9 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [x] Support for custom attributes and extensions
   - [x] Default positioning algorithms when coordinates not specified
 
-- [ ] **Validation**
-  - [ ] BPMN structural validation (correct connections, etc.)
+- [x] **Validation**
+  - [x] Basic BPMN structural validation (elements and connections)
+  - [ ] Advanced structural validation (correct gateway usage, etc.)
   - [ ] Semantic validation (process makes sense)
 
 ### Visualization & Layout
@@ -131,6 +167,18 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [x] Compatibility with Camunda, Activiti, jBPM
   - [x] Compatibility with modeling tools (Visio, draw.io)
 
+## Compilation Instructions
+
+To compile the BPMN generator using MATLAB Compiler:
+
+1. Open MATLAB and navigate to the project directory
+2. Use the MATLAB Compiler tool (`mcc`) to compile:
+   ```matlab
+   mcc -m generate_bpmn_main.m -a src/ -o bpmn_generator
+   ```
+3. The compiled executable will be created in the current directory
+4. For deployment, include the necessary MATLAB Runtime libraries
+
 ## Database Schema Requirements
 
 For a database to properly represent BPMN processes, it should include:
@@ -142,3 +190,17 @@ For a database to properly represent BPMN processes, it should include:
 5. **Property Tables** - Store custom properties and extensions
 
 For detailed guidance on database compatibility, refer to our comprehensive guide in `doc/DatabaseCompatibilityGuide.md`.
+
+## Contributing
+
+Contributions are welcome! Check the Implementation Progress and Planned Features sections above for areas that need development. Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Implement your feature or bug fix
+4. Add appropriate tests
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.

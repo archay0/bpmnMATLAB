@@ -21,10 +21,27 @@ classdef BPMNValidator < handle
             obj.ValidationLogs = struct('errors', {}, 'warnings', {}, 'info', {});
             obj.BPMNVersion = '2.0';
             
-            % Set default schema path if not provided
+            % Set default schema path if not provided - with compile-safe path handling
             if nargin < 2 || isempty(schemaPath)
-                currentDir = fileparts(mfilename('fullpath'));
-                obj.SchemaPath = fullfile(currentDir, '..', 'schemas', 'BPMN20.xsd');
+                % Use mfilename to get the actual script's path
+                currentScript = mfilename('fullpath');
+                currentDir = fileparts(currentScript);
+                
+                % For compiled applications, the path might be different
+                if isdeployed
+                    % In compiled applications, use a relative path from the executable
+                    obj.SchemaPath = fullfile(ctfroot, 'schemas', 'BPMN20.xsd');
+                    
+                    % Check if the schema exists at the deployed location
+                    if ~exist(obj.SchemaPath, 'file')
+                        warning('BPMN schema not found at %s when compiled. Schema validation will be skipped.', obj.SchemaPath);
+                        % Fallback to the source path structure
+                        obj.SchemaPath = fullfile(currentDir, '..', 'schemas', 'BPMN20.xsd');
+                    end
+                else
+                    % Regular MATLAB environment
+                    obj.SchemaPath = fullfile(currentDir, '..', 'schemas', 'BPMN20.xsd');
+                end
             else
                 obj.SchemaPath = schemaPath;
             end
@@ -90,7 +107,7 @@ classdef BPMNValidator < handle
         function validateBPMNSchema(obj)
             % Validate against the BPMN XML schema
             
-            if ~exist(obj.SchemaPath, 'file')
+            if (!exist(obj.SchemaPath, 'file'))
                 obj.addWarning(['BPMN schema file not found: ' obj.SchemaPath]);
                 obj.addWarning('Schema validation skipped.');
                 return;
@@ -193,7 +210,7 @@ classdef BPMNValidator < handle
                 % Verify target reference
                 if isempty(targetRef)
                     obj.addError(['Sequence flow ' flowId ' has no targetRef attribute.']);
-                elseif !nodeIds.isKey(targetRef)
+                elseif ~nodeIds.isKey(targetRef)
                     obj.addError(['Sequence flow ' flowId ' references non-existent target: ' targetRef]);
                 end
             end
@@ -247,7 +264,7 @@ classdef BPMNValidator < handle
                 
                 % Start events should have no incoming flows
                 if strcmp(nodeType, 'startEvent')
-                    if !isempty(incoming(nodeId))
+                    if ~isempty(incoming(nodeId))
                         obj.addError(['Start event ' nodeId ' has incoming sequence flows, which is not allowed.']);
                     end
                     if isempty(outgoing(nodeId))
@@ -258,12 +275,12 @@ classdef BPMNValidator < handle
                     if isempty(incoming(nodeId))
                         obj.addWarning(['End event ' nodeId ' has no incoming sequence flows.']);
                     end
-                    if !isempty(outgoing(nodeId))
+                    if ~isempty(outgoing(nodeId))
                         obj.addError(['End event ' nodeId ' has outgoing sequence flows, which is not allowed.']);
                     end
                 % All other nodes should have both incoming and outgoing flows
                 else
-                    if isempty(incoming(nodeId)) && !strcmp(nodeType, 'boundaryEvent')
+                    if isempty(incoming(nodeId)) && ~strcmp(nodeType, 'boundaryEvent')
                         obj.addWarning(['Node ' nodeId ' (' char(nodeType) ') has no incoming sequence flows.']);
                     end
                     if isempty(outgoing(nodeId))
@@ -334,7 +351,7 @@ classdef BPMNValidator < handle
             gatewayId = char(gateway.getAttribute('id'));
             defaultFlow = char(gateway.getAttribute('default'));
             
-            hasDefault = !isempty(defaultFlow);
+            hasDefault = ~isempty(defaultFlow);
             conditionCount = 0;
             
             for i = 1:length(outFlows)
@@ -347,7 +364,7 @@ classdef BPMNValidator < handle
                 
                 if hasCondition
                     conditionCount = conditionCount + 1;
-                elseif !hasDefault || !strcmp(flowId, defaultFlow)
+                elseif ~hasDefault || ~strcmp(flowId, defaultFlow)
                     obj.addError(['Flow ' flowId ' from exclusive gateway ' gatewayId ' has no condition and is not the default flow.']);
                 end
             end
