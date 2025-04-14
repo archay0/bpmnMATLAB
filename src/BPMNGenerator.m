@@ -488,6 +488,110 @@ classdef BPMNGenerator < handle
             obj.addShapeToVisualization(id, x, y, width, height, isExpanded);
         end
         
+        function addCompleteTransaction(obj, id, name, x, y, width, height, isExpanded, childElements)
+            % Add a complete transaction with compensation handling to the BPMN diagram
+            % id: Unique identifier for the transaction
+            % name: Name/label of the transaction
+            % x, y: Coordinates for the transaction in the diagram
+            % width, height: Dimensions of the transaction
+            % isExpanded: Whether the transaction is expanded in the diagram
+            % childElements: Optional structure with child elements to add inside transaction
+            
+            % Get process node
+            processNode = obj.getProcessNode();
+            
+            % Create transaction element
+            transactionNode = obj.XMLDoc.createElement('transaction');
+            transactionNode.setAttribute('id', id);
+            
+            if ~isempty(name)
+                transactionNode.setAttribute('name', name);
+            end
+            
+            % Add transaction method (compensate, store, image)
+            transactionNode.setAttribute('method', 'compensate');
+            
+            % Add to process
+            processNode.appendChild(transactionNode);
+            
+            % Add child elements if specified
+            if nargin >= 9 && ~isempty(childElements)
+                % Add child elements inside the transaction
+                if isfield(childElements, 'tasks') && ~isempty(childElements.tasks)
+                    for i = 1:length(childElements.tasks)
+                        task = childElements.tasks{i};
+                        taskNode = obj.XMLDoc.createElement(task.type);
+                        taskNode.setAttribute('id', task.id);
+                        taskNode.setAttribute('name', task.name);
+                        
+                        if isfield(task, 'properties')
+                            propFields = fieldnames(task.properties);
+                            for j = 1:length(propFields)
+                                taskNode.setAttribute(propFields{j}, task.properties.(propFields{j}));
+                            end
+                        end
+                        
+                        transactionNode.appendChild(taskNode);
+                        
+                        % Add task to visualization
+                        if isfield(task, 'x') && isfield(task, 'y')
+                            tx = x + task.x;  % Relative positioning within transaction
+                            ty = y + task.y;
+                            tw = task.width || 100;
+                            th = task.height || 80;
+                            obj.addShapeToVisualization(task.id, tx, ty, tw, th);
+                        end
+                    end
+                end
+                
+                % Add flows between child elements
+                if isfield(childElements, 'flows') && ~isempty(childElements.flows)
+                    for i = 1:length(childElements.flows)
+                        flow = childElements.flows{i};
+                        flowNode = obj.XMLDoc.createElement('sequenceFlow');
+                        flowNode.setAttribute('id', flow.id);
+                        flowNode.setAttribute('sourceRef', flow.sourceRef);
+                        flowNode.setAttribute('targetRef', flow.targetRef);
+                        
+                        transactionNode.appendChild(flowNode);
+                        
+                        % Add flow to visualization if waypoints provided
+                        if isfield(flow, 'waypoints') && ~isempty(flow.waypoints)
+                            % Adjust waypoints to transaction's position
+                            adjustedWaypoints = flow.waypoints;
+                            for w = 1:size(adjustedWaypoints, 1)
+                                adjustedWaypoints(w, 1) = adjustedWaypoints(w, 1) + x;
+                                adjustedWaypoints(w, 2) = adjustedWaypoints(w, 2) + y;
+                            end
+                            obj.addEdgeToVisualization(flow.id, flow.sourceRef, flow.targetRef, adjustedWaypoints);
+                        end
+                    end
+                end
+            end
+            
+            % Create a compensation boundary event for the transaction
+            compBoundaryEventId = [id, '_CompensationBoundary'];
+            boundaryEventNode = obj.XMLDoc.createElement('boundaryEvent');
+            boundaryEventNode.setAttribute('id', compBoundaryEventId);
+            boundaryEventNode.setAttribute('attachedToRef', id);
+            boundaryEventNode.setAttribute('cancelActivity', 'false'); % Non-interrupting
+            
+            % Add compensation event definition
+            compDefNode = obj.XMLDoc.createElement('compensateEventDefinition');
+            compDefNode.setAttribute('id', ['CompensateEventDefinition_', compBoundaryEventId]);
+            boundaryEventNode.appendChild(compDefNode);
+            
+            processNode.appendChild(boundaryEventNode);
+            
+            % Add boundary event to visualization - position at bottom of transaction
+            boundaryEventX = x + width/2;
+            boundaryEventY = y + height - 15;  % Place at bottom edge
+            obj.addShapeToVisualization(compBoundaryEventId, boundaryEventX, boundaryEventY, 36, 36);
+            
+            % Add transaction to diagram with visualization
+            obj.addShapeToVisualization(id, x, y, width, height, isExpanded);
+        end
+        
         function addPool(obj, id, name, processRef, x, y, width, height)
             % Add a pool (participant) to the BPMN diagram
             % id: Unique identifier for the pool

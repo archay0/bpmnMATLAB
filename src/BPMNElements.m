@@ -150,5 +150,143 @@ classdef BPMNElements
             
             return collabNode;
         end
+        
+        function transactionNode = createTransaction(xmlDoc, id, name, method)
+            % Create a transaction subprocess element with specified attributes
+            % xmlDoc: XML document object
+            % id: Unique identifier for the transaction
+            % name: Name/label of the transaction
+            % method: Transaction method ('Compensate', 'Image', 'Store')
+            
+            transactionNode = xmlDoc.createElement('transaction');
+            transactionNode.setAttribute('id', id);
+            
+            if ~isempty(name)
+                transactionNode.setAttribute('name', name);
+            end
+            
+            % Set transaction method with default to 'Compensate'
+            if nargin < 4 || isempty(method)
+                method = 'Compensate';
+            end
+            
+            transactionNode.setAttribute('method', method);
+            
+            % Add standard transaction attributes
+            transactionNode.setAttribute('startQuantity', '1');
+            transactionNode.setAttribute('completionQuantity', '1');
+            transactionNode.setAttribute('isForCompensation', 'false');
+        end
+        
+        function boundaryEventNode = createBoundaryEvent(xmlDoc, id, name, attachedToRef, eventDefinition, cancelActivity)
+            % Create a boundary event with specified attributes
+            % xmlDoc: XML document object
+            % id: Unique identifier for the event
+            % name: Name/label of the event
+            % attachedToRef: ID of the activity this event is attached to
+            % eventDefinition: Type of event definition
+            % cancelActivity: Whether the event interrupts/cancels the activity (true/false)
+            
+            boundaryEventNode = xmlDoc.createElement('boundaryEvent');
+            boundaryEventNode.setAttribute('id', id);
+            boundaryEventNode.setAttribute('attachedToRef', attachedToRef);
+            
+            if nargin < 6
+                cancelActivity = true; % Default to interrupting
+            end
+            
+            boundaryEventNode.setAttribute('cancelActivity', BPMNElements.toString(cancelActivity));
+            
+            if ~isempty(name)
+                boundaryEventNode.setAttribute('name', name);
+            end
+            
+            % Add event definition if specified
+            if nargin > 4 && ~isempty(eventDefinition)
+                defNode = xmlDoc.createElement(eventDefinition);
+                defNode.setAttribute('id', [eventDefinition, '_', id]);
+                boundaryEventNode.appendChild(defNode);
+            end
+        end
+        
+        function compensateEventDefinitionNode = createCompensateEventDefinition(xmlDoc, id, activityRef, waitForCompletion)
+            % Create a compensate event definition
+            % xmlDoc: XML document object
+            % id: Unique identifier for the event definition
+            % activityRef: Optional reference to the activity to compensate
+            % waitForCompletion: Whether to wait for completion before continuing
+            
+            compensateEventDefinitionNode = xmlDoc.createElement('compensateEventDefinition');
+            compensateEventDefinitionNode.setAttribute('id', id);
+            
+            if nargin >= 3 && ~isempty(activityRef)
+                compensateEventDefinitionNode.setAttribute('activityRef', activityRef);
+            end
+            
+            if nargin >= 4 && ~isempty(waitForCompletion)
+                compensateEventDefinitionNode.setAttribute('waitForCompletion', BPMNElements.toString(waitForCompletion));
+            end
+        end
+        
+        function groupNode = createGroup(xmlDoc, id, categoryValue)
+            % Create a group artifact
+            % xmlDoc: XML document object
+            % id: Unique identifier for the group
+            % categoryValue: Optional category value reference
+            
+            groupNode = xmlDoc.createElement('group');
+            groupNode.setAttribute('id', id);
+            
+            if nargin >= 3 && ~isempty(categoryValue)
+                groupNode.setAttribute('categoryValueRef', categoryValue);
+            end
+        end
+        
+        function categoryNode = createCategory(xmlDoc, id, name)
+            % Create a category element
+            % xmlDoc: XML document object
+            % id: Unique identifier for the category
+            % name: Name of the category
+            
+            categoryNode = xmlDoc.createElement('category');
+            categoryNode.setAttribute('id', id);
+            
+            if ~isempty(name)
+                categoryNode.setAttribute('name', name);
+            end
+        end
+        
+        function gatewayNode = createParallelEventBasedGateway(xmlDoc, id, name)
+            % Create a parallel event-based gateway with specified attributes
+            % xmlDoc: XML document object
+            % id: Unique identifier for the gateway
+            % name: Name/label of the gateway
+            
+            gatewayNode = xmlDoc.createElement('eventBasedGateway');
+            gatewayNode.setAttribute('id', id);
+            
+            if ~isempty(name)
+                gatewayNode.setAttribute('name', name);
+            end
+            
+            % Set special attributes for parallel event-based gateway
+            gatewayNode.setAttribute('instantiate', 'false');
+            gatewayNode.setAttribute('eventGatewayType', 'Parallel');
+        end
+        
+        function str = toString(value)
+            % Convert any value to string representation
+            if islogical(value)
+                if value
+                    str = 'true';
+                else
+                    str = 'false';
+                end
+            elseif isnumeric(value)
+                str = num2str(value);
+            else
+                str = char(value);
+            end
+        end
     end
 end

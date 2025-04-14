@@ -12,7 +12,9 @@ function generate_bpmn_main(dbType, dbName, dbUser, dbPass, dbServer, dbPort, ou
     %   dbPort - Database port (as string or number)
     %   outputFile - Full path to save the generated BPMN file
     %   processId - (Optional) ID of the process to import
-
+    
+    %#function BPMNGenerator BPMNDatabaseConnector BPMNElements BPMNDiagramExporter BPMNValidator BPMNToSimulink
+    
     disp('Starting BPMN generation...');
     startTime = tic;
 

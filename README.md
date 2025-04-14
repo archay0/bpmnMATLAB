@@ -1,10 +1,10 @@
 # bpmnMATLAB
 
-A MATLAB utility for BPMN (Business Process Model and Notation) file generation from database data.
+A MATLAB utility for BPMN (Business Process Model and Notation) file generation, manipulation, and visualization.
 
 ## Overview
 
-This repository contains MATLAB scripts and functions for creating, editing, and managing BPMN 2.0 files. The utility connects to databases to extract process information and generates standard-compliant BPMN XML files that can be imported into any BPMN-compatible tool.
+This repository contains MATLAB scripts and functions for creating, editing, importing and managing BPMN 2.0 files. The utility connects to databases to extract process information and generates standard-compliant BPMN XML files that can be imported into any BPMN-compatible tool.
 
 ## Directory Structure
 
@@ -23,8 +23,9 @@ This repository contains MATLAB scripts and functions for creating, editing, and
 3. Run the examples to understand the functionality:
    ```matlab
    cd /path/to/bpmnMATLAB/examples
-   SimpleProcessExample % Generate a simple BPMN diagram
-   ComplexBPMNExample  % Generate a complex BPMN diagram
+   SimpleProcessExample    % Generate a simple BPMN diagram
+   ComplexBPMNExample     % Generate a complex BPMN diagram
+   AdvancedBPMNFeatures  % Try advanced features like transactions and parallel event-based gateways
    ```
 4. Check the documentation in the `doc/` folder for detailed guides:
    - `DatabaseSchema.md` - Detailed database schema description
@@ -35,41 +36,48 @@ This repository contains MATLAB scripts and functions for creating, editing, and
 - MATLAB R2019b or newer
 - Database Toolbox (for database connections)
 - XML Toolbox (for XML handling)
+- Image Processing Toolbox (for SVG/PNG export)
 
 ## Project Status & Implementation Roadmap
 
-The project is in an advanced state with many features implemented. This section outlines what's currently working and what's still planned.
+The project is in an advanced state with most features implemented. This section outlines what's currently working and what's still planned.
 
 ### Current Status (April 2025)
 
-- **Core functionality**: The basic BPMN generation framework is fully functional and can generate valid BPMN 2.0 XML files.
+- **Core functionality**: The BPMN generation framework is fully functional and can generate valid BPMN 2.0 XML files with advanced features.
 - **Database connectivity**: MySQL and PostgreSQL database connectors are implemented and tested.
 - **MATLAB Compiler compatibility**: The code has been optimized for use with MATLAB Compiler.
-- **Examples**: Basic and complex examples are available to demonstrate functionality.
+- **Import/Export**: The utility can now import existing BPMN files, edit them, and export to SVG/PNG formats.
+- **Advanced BPMN Features**: Support added for transactions, parallel event-based gateways, and groups.
+- **Examples**: Basic, complex, and advanced examples are available to demonstrate functionality.
 - **Documentation**: Database schema and compatibility guides are available.
 
 ### Implementation Progress
 
 #### Completed Features:
 - Full implementation of basic BPMN elements (events, activities, gateways)
+- Advanced elements including parallel event-based gateways and transactions
 - Database integration with support for multiple database systems
 - Sequence flow and message flow generation
 - Data object and data store support
 - Pools and lanes with proper nesting
+- SVG/PNG export functionality
+- Import from existing BPMN files
+- Group artifacts
+- Transaction boundaries support
 - MATLAB Compiler compatibility
 
 #### In Progress:
 - Validation of BPMN structural integrity
 - Advanced layout algorithms
-- Visualization export options
+- Choreography and Conversation diagrams
 
 #### Planned Features (Priority Order):
-1. SVG/PNG export functionality
-2. Import from existing BPMN files
-3. Additional gateway types (Parallel Event-based)
-4. Group artifacts
-5. Advanced BPMN features (Correlation, Conversations, Choreographies)
-6. Style management (colors, fonts, custom icons)
+1. Advanced structural validation
+2. Style management (colors, fonts, custom icons)
+3. Correlation keys and properties
+4. Complete conversation support
+5. Complete choreography support
 
 ## Comprehensive BPMN Generation Checklist
 
@@ -94,7 +102,7 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [x] Parallel (AND)
   - [x] Event-based
   - [x] Complex
-  - [ ] Parallel Event-based
+  - [x] Parallel Event-based
 
 - [x] **Connecting Objects**
   - [x] Sequence Flows (with conditions)
@@ -106,7 +114,7 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [x] Data Objects
   - [x] Data Stores
   - [x] Text Annotations
-  - [ ] Groups
+  - [x] Groups
 
 - [x] **Swimlanes**
   - [x] Pools (participants)
@@ -126,7 +134,7 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [ ] Sub-choreographies
 
 - [x] **Process Execution**
-  - [ ] Transaction boundaries
+  - [x] Transaction boundaries
   - [x] Compensation handling
   - [x] Error handling
 
@@ -160,8 +168,8 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
 ### Import/Export Capabilities
 - [x] **File Formats**
   - [x] BPMN 2.0 XML
-  - [ ] SVG/PNG visualization export
-  - [ ] Import from existing BPMN files
+  - [x] SVG/PNG visualization export
+  - [x] Import from existing BPMN files
 
 - [x] **Tool Integration**
   - [x] Compatibility with Camunda, Activiti, jBPM
