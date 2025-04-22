@@ -21,10 +21,11 @@ classdef APICaller
             );
 
             % Build request body
-            body = struct('prompt', prompt);
+            model_name = 'openai/o1'; % Define the model name
+            body = struct('prompt', prompt, 'model', model_name); % Add model name to body
 
             % Send POST to GitHub Models API endpoint
-            endpoint = 'https://api.github.com/models/your-model-id/generate';
+            endpoint = 'https://models.github.ai/inference'; % Updated endpoint
             try
                 raw = webwrite(endpoint, jsonencode(body), options);
             catch ME
