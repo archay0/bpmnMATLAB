@@ -12,8 +12,14 @@ addpath(genpath(repoPath));
 fprintf('\nTest Case 1: Create Empty BPMN\n');
 fprintf('---------------------------\n');
 
-% Create temporary file for test
-tempFile = fullfile(tempdir, 'test_bpmn_empty.bpmn');
+% Define target directory
+tempOutputDir = fullfile(repoPath, 'doc', 'temporary');
+if ~exist(tempOutputDir, 'dir')
+    mkdir(tempOutputDir);
+end
+
+% Create temporary file path for test
+tempFile = fullfile(tempOutputDir, 'test_bpmn_empty.bpmn');
 bpmn = BPMNGenerator(tempFile);
 
 % Save file and check existence
@@ -31,8 +37,14 @@ delete(tempFile);
 fprintf('\nTest Case 2: Add Elements to BPMN\n');
 fprintf('----------------------------\n');
 
-% Create temporary file for test
-tempFile = fullfile(tempdir, 'test_bpmn_elements.bpmn');
+% Define target directory (redundant but safe)
+tempOutputDir = fullfile(repoPath, 'doc', 'temporary');
+if ~exist(tempOutputDir, 'dir')
+    mkdir(tempOutputDir);
+end
+
+% Create temporary file path for test
+tempFile = fullfile(tempOutputDir, 'test_bpmn_elements.bpmn');
 bpmn = BPMNGenerator(tempFile);
 
 % Add task

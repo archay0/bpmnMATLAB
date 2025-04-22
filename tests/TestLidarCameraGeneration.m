@@ -33,18 +33,19 @@ try
     % Adjust based on actual schema dependencies and desired generation flow
     opts.order = {'process_definitions', 'bpmn_elements', 'tasks', 'events', 'gateways', 'pools_and_lanes', 'data_objects', 'data_stores'}; % Example order, adjust as needed
     opts.batchSize = 5; % Generate a small number of items per step for testing
-    opts.outputFile = 'lidar_camera_process.bpmn'; % Output file name
+    opts.outputFile = 'lidar_camera_process.bpmn'; % Keep only the base filename here
 
     fprintf('Configuration:\n');
     disp(opts);
 
     % --- Run Generation ---
     fprintf('Calling GeneratorController.generateIterative...\n');
+    % The controller will now handle placing the file in doc/temporary
     GeneratorController.generateIterative(opts);
 
     fprintf('Data generation process completed.\n');
-    fprintf('Check temporary file: temp_generated_data.json\n');
-    fprintf('Check final output file: %s\n', opts.outputFile);
+    fprintf('Check temporary file: doc/temporary/temp_generated_data.json\n'); % Updated path
+    fprintf('Check final output file: doc/temporary/%s\n', opts.outputFile); % Updated path
 
 catch ME
     fprintf('\n--- ERROR during data generation test ---\n');

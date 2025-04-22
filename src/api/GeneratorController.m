@@ -83,18 +83,18 @@ classdef GeneratorController
             for i = 1:numel(fields)
                 fn = fields{i};
                 % Collect all rows that look like element tables
-                if endsWith(fn, 'Rows') && !strcmp(fn, 'flowRows') && !strcmp(fn, 'resourceRows') % Exclude known non-element tables
+                if endsWith(fn, 'Rows') && ~strcmp(fn, 'flowRows') && ~strcmp(fn, 'resourceRows') % Use ~ instead of !
                     rows = context.(fn);
                     if isstruct(rows) && isfield(rows, 'element_id') % Check if it has element_id
                         % Ensure consistent fields before concatenating (add missing fields with default values)
-                        if !isempty(rows)
-                             if !isfield(rows, 'attached_to_ref')
+                        if ~isempty(rows) % Use ~ instead of !
+                             if ~isfield(rows, 'attached_to_ref') % Use ~ instead of !
                                  [rows.attached_to_ref] = deal('');
                              end
-                             if !isfield(rows, 'process_id')
+                             if ~isfield(rows, 'process_id') % Use ~ instead of !
                                  [rows.process_id] = deal(''); % Or infer based on level if possible
                              end
-                             if !isfield(rows, 'element_subtype')
+                             if ~isfield(rows, 'element_subtype') % Use ~ instead of !
                                  [rows.element_subtype] = deal('');
                              end
                              % Select common fields for aggregation
@@ -112,7 +112,18 @@ classdef GeneratorController
 
             % --- Store Generated Data Temporarily ---
             try
-                fprintf('Storing generated data temporarily to temp_generated_data.json...\n');
+                tempDir = 'doc/temporary'; % Define the target directory
+                tempFileName = 'temp_generated_data.json';
+                tempFilePath = fullfile(tempDir, tempFileName);
+
+                fprintf('Storing generated data temporarily to %s...\n', tempFilePath);
+
+                % Ensure the directory exists
+                if ~exist(tempDir, 'dir')
+                    mkdir(tempDir);
+                    fprintf('Created directory: %s\n', tempDir);
+                end
+
                 tempDataToStore = struct();
                 if isfield(context, 'allElementRows')
                     tempDataToStore.allElements = context.allElementRows;
@@ -129,11 +140,11 @@ classdef GeneratorController
                      tempDataToStore.processDefinitions = context.process_definitionsRows;
                  end
 
-                if !isempty(fieldnames(tempDataToStore))
+                if ~isempty(fieldnames(tempDataToStore))
                     jsonStr = jsonencode(tempDataToStore, 'PrettyPrint', true);
-                    fid = fopen('temp_generated_data.json', 'w');
+                    fid = fopen(tempFilePath, 'w'); % Use the full path
                     if fid == -1
-                        error('GeneratorController:TempFileError', 'Cannot open temp_generated_data.json for writing.');
+                        error('GeneratorController:TempFileError', 'Cannot open %s for writing.', tempFilePath);
                     end
                     fprintf(fid, '%s', jsonStr);
                     fclose(fid);
@@ -146,11 +157,19 @@ classdef GeneratorController
             end
             % --- End Temporary Storage ---
 
+            % Define final output path
+            finalOutputDir = 'doc/temporary';
+            if ~exist(finalOutputDir, 'dir') % Use ~ instead of !
+                mkdir(finalOutputDir);
+            end
+            finalOutputPath = fullfile(finalOutputDir, opts.outputFile);
+            fprintf('Final BPMN will be saved to: %s\n', finalOutputPath);
+
             % Fetch all and export
             % Fetch based on original context fields, not the aggregated ones
             fetchFields = setdiff(fieldnames(context), {'allElementRows', 'allFlowRows'});
             allData = BPMNDatabaseConnector.fetchAll(fetchFields);
-            BPMNDiagramExporter.export(allData, opts.outputFile);
+            BPMNDiagramExporter.export(allData, finalOutputPath); % Use the full path
         end
 
         function generateAll(opts)
