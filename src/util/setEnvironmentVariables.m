@@ -8,26 +8,24 @@ function setEnvironmentVariables()
     % Verwendung:
     %   setEnvironmentVariables();
     %
-    % Gemäß GitHub Models API Dokumentation:
-    % - Die Umgebungsvariable heißt GITHUB_TOKEN (nicht GITHUB_API_TOKEN)
-    % - Der Token benötigt "models:read" Berechtigungen
-    % - Der Endpunkt ist: https://models.github.ai/inference
-    % - Das Modell ist: openai/gpt-4.1-mini (oder openai/o1 für Codex)
+    % API-Konfiguration:
+    % - GitHub Models API: Benötigt GITHUB_TOKEN mit "models:read" Berechtigungen
+    % - OpenRouter API: Benötigt OPENROUTER_API_KEY
     %
     % Siehe auch: loadEnvironment, getenv
 
     fprintf('Setze Umgebungsvariablen für API-Zugriff...\n');
-
+    
     % HIER DEINE TATSÄCHLICHEN API-SCHLÜSSEL UND ANDERE UMGEBUNGSVARIABLEN EINFÜGEN
     % =============================================================================
     
-    % GitHub Models API Token - RICHTIGER NAME IST GITHUB_TOKEN
-    % Ersetze 'your_github_token_here' durch deinen tatsächlichen GitHub-Token
-    % HINWEIS: Der Token muss "models:read" Berechtigungen haben
-    setenv('GITHUB_TOKEN', 'your_github_token_here');
+    % OpenRouter API Token - RICHTIGER NAME IST OPENROUTER_API_KEY
+    % Ersetze 'your_openrouter_api_key_here' durch deinen tatsächlichen OpenRouter-Token
+    setenv('OPENROUTER_API_KEY', 'your_openrouter_api_key_here');
     
-    % Für Kompatibilität mit bestehender Codebasis auch unter GITHUB_API_TOKEN setzen
-    setenv('GITHUB_API_TOKEN', getenv('GITHUB_TOKEN'));
+    % GitHub Models API Token (falls benötigt)
+    % setenv('GITHUB_TOKEN', 'your_github_token_here');
+    % setenv('GITHUB_API_TOKEN', getenv('GITHUB_TOKEN'));
     
     % OpenAI API Token (falls benötigt)
     % setenv('OPENAI_API_KEY', 'your_openai_api_key_here');
@@ -35,43 +33,42 @@ function setEnvironmentVariables()
     % =============================================================================
     
     % Bestätige erfolgreiches Setzen (ohne die tatsächlichen Werte anzuzeigen)
-    if ~isempty(getenv('GITHUB_TOKEN'))
-        fprintf('✓ GITHUB_TOKEN wurde gesetzt.\n');
-        
-        % Zeige die ersten und letzten 4 Zeichen (für Debugging)
-        tokenValue = getenv('GITHUB_TOKEN');
-        tokenLength = length(tokenValue);
-        if tokenLength > 10
-            firstChars = tokenValue(1:4);
-            lastChars = tokenValue(end-3:end);
-            fprintf('  Token Format: %s...%s (Länge: %d)\n', firstChars, lastChars, tokenLength);
-        end
+    if ~isempty(getenv('OPENROUTER_API_KEY'))
+        fprintf('✓ OPENROUTER_API_KEY gesetzt\n');
     else
-        warning('GITHUB_TOKEN wurde nicht korrekt gesetzt!');
+        fprintf('✗ OPENROUTER_API_KEY nicht gesetzt\n');
+    end
+    
+    if ~isempty(getenv('GITHUB_TOKEN'))
+        fprintf('✓ GITHUB_TOKEN gesetzt\n');
+    else
+        fprintf('✗ GITHUB_TOKEN nicht gesetzt\n');
     end
     
     fprintf('Umgebungsvariablen wurden erfolgreich gesetzt.\n');
     
-    % Zeige Hilfetext mit Python OpenAI SDK Beispiel
-    fprintf('\n--- Beispiel für Verwendung mit Python OpenAI SDK ---\n');
-    fprintf('import os\n');
-    fprintf('from openai import OpenAI\n\n');
-    fprintf('token = os.environ["GITHUB_TOKEN"]  # Verwende diese Umgebungsvariable\n');
-    fprintf('endpoint = "https://models.github.ai/inference"\n');
-    fprintf('model = "openai/gpt-4.1-mini"  # oder "openai/o1" für Code\n\n');
-    fprintf('client = OpenAI(\n');
-    fprintf('    base_url=endpoint,\n');
-    fprintf('    api_key=token,\n');
-    fprintf(')\n\n');
-    fprintf('response = client.chat.completions.create(\n');
-    fprintf('    messages=[\n');
+    % Ausgabe eines Beispiels für OpenRouter API-Nutzung
+    fprintf('\n--------------------------------------------------------\n');
+    fprintf('Beispiel für OpenRouter API-Nutzung (Python):\n\n');
+    fprintf('import requests\n\n');
+    fprintf('openrouter_url = "https://openrouter.ai/api/v1/chat/completions"\n');
+    fprintf('api_key = "%s"  # Dein OpenRouter API-Schlüssel\n', 'YOUR_OPENROUTER_API_KEY');
+    fprintf('model = "microsoft/mai-ds-r1:free"\n\n');
+    fprintf('headers = {\n');
+    fprintf('    "Content-Type": "application/json",\n');
+    fprintf('    "Authorization": f"Bearer {api_key}",\n');
+    fprintf('    "HTTP-Referer": "http://localhost:3000",\n');
+    fprintf('    "X-Title": "BPMN MATLAB Generator"\n');
+    fprintf('}\n\n');
+    fprintf('data = {\n');
+    fprintf('    "messages": [\n');
     fprintf('        { "role": "system", "content": "You are a helpful assistant." },\n');
     fprintf('        { "role": "user", "content": "What is the capital of France?" }\n');
     fprintf('    ],\n');
-    fprintf('    temperature=1.0,\n');
-    fprintf('    top_p=1.0,\n');
-    fprintf('    model=model\n');
-    fprintf(')\n\n');
-    fprintf('print(response.choices[0].message.content)\n');
+    fprintf('    "temperature": 0.7,\n');
+    fprintf('    "model": model\n');
+    fprintf('}\n\n');
+    fprintf('response = requests.post(openrouter_url, headers=headers, json=data)\n');
+    fprintf('print(response.json()["choices"][0]["message"]["content"])\n');
     fprintf('--------------------------------------------------------\n\n');
 end

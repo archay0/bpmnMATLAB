@@ -1,26 +1,20 @@
 classdef APICaller
-    % APICaller wraps communications with the GitHub Models API using GitHub CLI
+    % APICaller wraps communications with the OpenRouter API
     
     methods(Static)
         function raw = sendPrompt(prompt, options)
-            % sendPrompt - Sendet eine Anfrage an die GitHub Models API via GitHub CLI
+            % sendPrompt - Sendet eine Anfrage an die OpenRouter API
             %
             % Input:
             %   prompt - Der zu sendende Text-Prompt
             %   options - (Optional) Struktur mit zusätzlichen Optionen:
             %       .debug - Boolean, aktiviert ausführliche Protokollierung (Standard: false)
-            %       .model - String, zu verwendendes Modell (Standard: 'openai/gpt-4.1-mini')
+            %       .model - String, zu verwendendes Modell (Standard: 'microsoft/mai-ds-r1:free')
             %       .temperature - Numerisch, Kreativität (0-1, Standard: 0.7)
             %       .system_message - String, Systemanweisung (Standard: 'You are a helpful assistant specialized in BPMN.')
             %
             % Output:
             %   raw - Die verarbeitete API-Antwort
-            
-            % Prüfen, ob GitHub CLI installiert ist
-            [status, ~] = system('gh --version');
-            if status ~= 0
-                error('APICaller:NoCLI', 'GitHub CLI (gh) ist nicht installiert oder nicht im PATH. Bitte installieren Sie die GitHub CLI: https://cli.github.com/');
-            end
             
             % Standardoptionen setzen
             if nargin < 2
@@ -32,7 +26,7 @@ classdef APICaller
             end
             
             if ~isfield(options, 'model')
-                options.model = 'openai/gpt-4.1-mini'; % Standardmodell (für allgemeine Anfragen)
+                options.model = 'microsoft/mai-ds-r1:free'; % Standardmodell (OpenRouter)
             end
             
             if ~isfield(options, 'temperature')
@@ -43,12 +37,36 @@ classdef APICaller
                 options.system_message = 'You are a helpful assistant specialized in BPMN.';
             end
             
+            % Laden des API-Schlüssels aus der Umgebung
+            api_key = getenv('OPENROUTER_API_KEY');
+            if isempty(api_key)
+                % Versuchen, die API-Schlüssel aus der .env-Datei zu laden
+                utilPath = fileparts(fileparts(mfilename('fullpath')));
+                utilFolder = fullfile(utilPath, 'util');
+                
+                % Stellen Sie sicher, dass der util-Ordner im Pfad ist
+                if ~any(contains(path, utilFolder))
+                    addpath(utilFolder);
+                end
+                
+                try
+                    env = loadEnvironment();
+                    if isfield(env, 'OPENROUTER_API_KEY')
+                        api_key = env.OPENROUTER_API_KEY;
+                    else
+                        error('APICaller:NoAPIKey', 'OpenRouter API-Schlüssel nicht gefunden. Bitte setzen Sie die OPENROUTER_API_KEY Umgebungsvariable.');
+                    end
+                catch ME
+                    error('APICaller:EnvError', 'Fehler beim Laden der Umgebungsvariablen: %s', ME.message);
+                end
+            end
+            
             % Temporäre Dateien für Ein- und Ausgabe
             temp_dir = tempdir;
-            input_file = fullfile(temp_dir, 'gh_models_input.json');
-            output_file = fullfile(temp_dir, 'gh_models_output.json');
+            input_file = fullfile(temp_dir, 'openrouter_input.json');
+            output_file = fullfile(temp_dir, 'openrouter_output.json');
             
-            % Erstelle JSON-Anfrage (in OpenAI-Format)
+            % Erstelle JSON-Anfrage für OpenRouter API
             request_data = struct();
             request_data.messages = [
                 struct('role', 'system', 'content', options.system_message),
@@ -66,30 +84,30 @@ classdef APICaller
             fprintf(input_fid, '%s', jsonencode(request_data));
             fclose(input_fid);
             
-            % GitHub CLI Befehl erstellen
-            gh_cmd = sprintf('gh api --method POST models.github.ai/inference --input "%s" -H "Content-Type: application/json" > "%s"', ...
-                input_file, output_file);
+            % Erstelle und führe den curl-Befehl aus
+            curl_cmd = sprintf('curl -s -X POST https://openrouter.ai/api/v1/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer %s" -H "HTTP-Referer: http://localhost:3000" -H "X-Title: BPMN MATLAB Generator" -d @"%s" > "%s"', ...
+                api_key, input_file, output_file);
             
             if options.debug
-                fprintf('Führe GitHub CLI Befehl aus:\n%s\n', gh_cmd);
+                fprintf('Führe curl-Befehl aus:\n%s\n', curl_cmd);
                 tic;
             end
             
             % Befehl ausführen
-            [status, cmdout] = system(gh_cmd);
+            [status, cmdout] = system(curl_cmd);
             
             if options.debug
                 elapsed = toc;
-                fprintf('CLI-Aufruf abgeschlossen in %.2f Sekunden mit Status: %d\n', elapsed, status);
+                fprintf('curl-Aufruf abgeschlossen in %.2f Sekunden mit Status: %d\n', elapsed, status);
                 
                 if ~isempty(cmdout)
-                    fprintf('CLI-Ausgabe: %s\n', cmdout);
+                    fprintf('curl-Ausgabe: %s\n', cmdout);
                 end
             end
             
             % Fehlerbehandlung
             if status ~= 0
-                error('APICaller:CLIError', 'GitHub CLI-Fehler: %s', cmdout);
+                error('APICaller:CurlError', 'curl-Fehler: %s', cmdout);
             end
             
             % Lese Ausgabe
