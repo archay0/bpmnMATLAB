@@ -20,7 +20,24 @@ classdef SchemaLoader
             [tokens, starts, ends] = regexp(raw, '###\s*\d+\.\s*([^\n]+)', 'tokens','start','end');
             numTables = numel(tokens);
             for i = 1:numTables
-                tblName = strtrim(tokens{i}{1});
+                tblNameRaw = strtrim(tokens{i}{1});
+
+                % Validate and sanitize table name for use as struct field
+                if ~isvarname(tblNameRaw)
+                    tblName = matlab.lang.makeValidName(tblNameRaw, 'ReplacementStyle', 'underscore');
+                    if ~strcmp(tblName, tblNameRaw)
+                        warning('SchemaLoader:InvalidName', 'Table name "%s" was converted to "%s" to be a valid MATLAB field name.', tblNameRaw, tblName);
+                    end
+                else
+                    tblName = tblNameRaw;
+                end
+
+                % Skip if the table name is empty after sanitization
+                if isempty(tblName)
+                    warning('SchemaLoader:EmptyTableName', 'Skipping table with empty or invalid name originating from: "%s" ', tblNameRaw);
+                    continue;
+                end
+
                 blockStart = ends(i) + 1;
                 if i < numTables
                     blockEnd = starts(i+1) - 1;

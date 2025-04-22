@@ -383,11 +383,11 @@ classdef BPMNValidator < handle
                 end
                 
                 % Check that source and target elements exist
-                if ~isempty(sourceRef) && !obj.elementExists(sourceRef)
+                if ~isempty(sourceRef) && ~obj.elementExists(sourceRef)
                     obj.addError(sprintf('Message flow "%s" references non-existent source element "%s"', flowId, sourceRef));
                 end
                 
-                if !isempty(targetRef) && !obj.elementExists(targetRef)
+                if ~isempty(targetRef) && ~obj.elementExists(targetRef)
                     obj.addError(sprintf('Message flow "%s" references non-existent target element "%s"', flowId, targetRef));
                 end
                 
@@ -396,7 +396,7 @@ classdef BPMNValidator < handle
                     sourceProcessId = obj.getProcessForElement(sourceRef);
                     targetProcessId = obj.getProcessForElement(targetRef);
                     
-                    if !isempty(sourceProcessId) && !isempty(targetProcessId) && strcmp(sourceProcessId, targetProcessId)
+                    if ~isempty(sourceProcessId) && ~isempty(targetProcessId) && strcmp(sourceProcessId, targetProcessId)
                         obj.addWarning(sprintf('Message flow "%s" should connect elements in different pools', flowId));
                     end
                 end
@@ -414,7 +414,7 @@ classdef BPMNValidator < handle
                     nodeRef = nodeRefs.item(n);
                     refId = char(nodeRef.getTextContent());
                     
-                    if !obj.elementExists(refId)
+                    if ~obj.elementExists(refId)
                         obj.addError(sprintf('Lane "%s" references non-existent flow node "%s"', laneId, refId));
                     end
                 end
@@ -431,7 +431,7 @@ classdef BPMNValidator < handle
                 dataId = char(dataObject.getAttribute('id'));
                 
                 % Typically should have associations
-                if !obj.hasAssociation(dataId)
+                if ~obj.hasAssociation(dataId)
                     obj.addWarning(sprintf('Data object "%s" is not connected by associations', dataId));
                 end
             end
@@ -443,7 +443,7 @@ classdef BPMNValidator < handle
                 dataId = char(dataStore.getAttribute('id'));
                 
                 % Typically should have associations
-                if !obj.hasAssociation(dataId)
+                if ~obj.hasAssociation(dataId)
                     obj.addWarning(sprintf('Data store "%s" is not connected by associations', dataId));
                 end
             end
@@ -471,11 +471,11 @@ classdef BPMNValidator < handle
                 end
                 
                 % Check that source and target elements exist
-                if !isempty(sourceRef) && !obj.elementExists(sourceRef)
+                if ~isempty(sourceRef) && ~obj.elementExists(sourceRef)
                     obj.addError(sprintf('Association "%s" references non-existent source element "%s"', assocId, sourceRef));
                 end
                 
-                if !isempty(targetRef) && !obj.elementExists(targetRef)
+                if ~isempty(targetRef) && ~obj.elementExists(targetRef)
                     obj.addError(sprintf('Association "%s" references non-existent target element "%s"', assocId, targetRef));
                 end
             end
@@ -486,7 +486,7 @@ classdef BPMNValidator < handle
             % Get all elements with the specified tag name
             
             % Check if tag name contains namespace prefix
-            if !contains(tagName, ':')
+            if ~contains(tagName, ':')
                 % Try with various namespace prefixes
                 elements = obj.XMLDoc.getElementsByTagName(tagName);
                 if elements.getLength() == 0
@@ -501,7 +501,7 @@ classdef BPMNValidator < handle
             % Get child elements of parentNode with the specified tag name
             
             % Check if tag name contains namespace prefix
-            if !contains(tagName, ':')
+            if ~contains(tagName, ':')
                 % Try with various namespace prefixes
                 elements = parentNode.getElementsByTagName(tagName);
                 if elements.getLength() == 0

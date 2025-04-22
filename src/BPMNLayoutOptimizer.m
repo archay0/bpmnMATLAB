@@ -135,7 +135,7 @@ classdef BPMNLayoutOptimizer < handle
                             targetElement = obj.findElementById(targetId);
                             
                             % Prüfe ob das Zielelement bereits verarbeitet wurde
-                            if ~isempty(targetElement) && !ismember(targetId, processedElements)
+                            if ~isempty(targetElement) && ~ismember(targetId, processedElements)
                                 % Prüfe ob alle Quellen bereits verarbeitet wurden
                                 allSourcesProcessed = true;
                                 
@@ -158,7 +158,7 @@ classdef BPMNLayoutOptimizer < handle
                 end
                 
                 currentLayer = currentLayer + 1;
-                if !isempty(nextLayer)
+                if ~isempty(nextLayer)
                     layers{currentLayer} = nextLayer;
                 else
                     break;
@@ -183,7 +183,7 @@ classdef BPMNLayoutOptimizer < handle
                     end
                 end
                 
-                if !hasIncoming
+                if ~hasIncoming
                     nodesWithoutIncoming{end+1} = elements{i}; %#ok<AGROW>
                 end
             end
@@ -249,7 +249,7 @@ classdef BPMNLayoutOptimizer < handle
                             if strcmp(flows{k}.targetRef, currentElement.id)
                                 % Finde die Position der Quelle in der vorherigen Schicht
                                 sourceElement = obj.findElementById(flows{k}.sourceRef);
-                                if !isempty(sourceElement)
+                                if ~isempty(sourceElement)
                                     for l = 1:length(layers{i-1})
                                         if strcmp(layers{i-1}{l}.id, sourceElement.id)
                                             incomingPositionSum = incomingPositionSum + l;
@@ -329,7 +329,7 @@ classdef BPMNLayoutOptimizer < handle
             
             % Nachbearbeitung: Zentriere Elemente in jeder Schicht
             for i = 1:length(layers)
-                if !isempty(layers{i})
+                if ~isempty(layers{i})
                     totalWidth = layers{i}{end}.x + layers{i}{end}.width - layers{i}{1}.x;
                     centerOffset = (layerWidth - totalWidth) / 2;
                     
@@ -404,7 +404,7 @@ classdef BPMNLayoutOptimizer < handle
                     
                     for j = 1:length(incomingFlows)
                         sourceElement = obj.findElementById(incomingFlows{j}.sourceRef);
-                        if !isempty(sourceElement)
+                        if ~isempty(sourceElement)
                             sumX = sumX + sourceElement.x + sourceElement.width/2;
                             count = count + 1;
                         end
@@ -412,7 +412,7 @@ classdef BPMNLayoutOptimizer < handle
                     
                     for j = 1:length(outgoingFlows)
                         targetElement = obj.findElementById(outgoingFlows{j}.targetRef);
-                        if !isempty(targetElement)
+                        if ~isempty(targetElement)
                             sumX = sumX + targetElement.x + targetElement.width/2;
                             count = count + 1;
                         end
@@ -436,7 +436,7 @@ classdef BPMNLayoutOptimizer < handle
                 sourceElement = obj.findElementById(flows{i}.sourceRef);
                 targetElement = obj.findElementById(flows{i}.targetRef);
                 
-                if !isempty(sourceElement) && !isempty(targetElement)
+                if ~isempty(sourceElement) && ~isempty(targetElement)
                     % Berechne Wegpunkte für den Flow
                     waypoints = obj.calculateWaypoints(sourceElement, targetElement);
                     flows{i}.waypoints = waypoints;
@@ -577,7 +577,7 @@ classdef BPMNLayoutOptimizer < handle
                 sourceElement = obj.findElementById(flows{i}.sourceRef);
                 targetElement = obj.findElementById(flows{i}.targetRef);
                 
-                if !isempty(sourceElement) && !isempty(targetElement)
+                if ~isempty(sourceElement) && ~isempty(targetElement)
                     % Berechne den optimalen Pfad zwischen den Elementen mit A* oder ähnlichem Algorithmus
                     flows{i}.waypoints = obj.calculateOptimalPath(sourceElement, targetElement);
                 end
@@ -739,7 +739,7 @@ classdef BPMNLayoutOptimizer < handle
                 end
                 
                 % Linie ist vollständig außerhalb der Box - triviale Ablehnung
-                if bitand(outcode1, outcode2) != 0
+                if bitand(outcode1, outcode2) ~= 0
                     intersects = false;
                     return;
                 end
@@ -749,16 +749,16 @@ classdef BPMNLayoutOptimizer < handle
                 outcodeOut = max(outcode1, outcode2);
                 
                 % Schnittpunkt finden
-                if bitand(outcodeOut, TOP) != 0
+                if bitand(outcodeOut, TOP) ~= 0
                     x = x1 + (x2 - x1) * (top - y1) / (y2 - y1);
                     y = top;
-                elseif bitand(outcodeOut, BOTTOM) != 0
+                elseif bitand(outcodeOut, BOTTOM) ~= 0
                     x = x1 + (x2 - x1) * (bottom - y1) / (y2 - y1);
                     y = bottom;
-                elseif bitand(outcodeOut, RIGHT) != 0
+                elseif bitand(outcodeOut, RIGHT) ~= 0
                     y = y1 + (y2 - y1) * (right - x1) / (x2 - x1);
                     x = right;
-                elseif bitand(outcodeOut, LEFT) != 0
+                elseif bitand(outcodeOut, LEFT) ~= 0
                     y = y1 + (y2 - y1) * (left - x1) / (x2 - x1);
                     x = left;
                 end
@@ -786,7 +786,7 @@ classdef BPMNLayoutOptimizer < handle
                         % Überprüfen, ob diese Flüsse sich kreuzen
                         crossingPoints = obj.findFlowCrossings(flows{i}, flows{j});
                         
-                        if !isempty(crossingPoints)
+                        if ~isempty(crossingPoints)
                             % Versuchen, die Kreuzung durch Anpassen der Wegpunkte zu lösen
                             [flows{i}, flows{j}] = obj.resolveCrossing(flows{i}, flows{j}, crossingPoints);
                         end
@@ -800,7 +800,7 @@ classdef BPMNLayoutOptimizer < handle
             
             crossingPoints = [];
             
-            if !isfield(flow1, 'waypoints') || !isfield(flow2, 'waypoints') || ...
+            if ~isfield(flow1, 'waypoints') || ~isfield(flow2, 'waypoints') || ...
                size(flow1.waypoints, 1) < 2 || size(flow2.waypoints, 1) < 2
                 return;
             end
@@ -889,10 +889,10 @@ classdef BPMNLayoutOptimizer < handle
             isFlow1SequenceFlow = strcmp(flow1.type, 'sequenceFlow');
             isFlow2SequenceFlow = strcmp(flow2.type, 'sequenceFlow');
             
-            if isFlow1SequenceFlow && !isFlow2SequenceFlow
+            if isFlow1SequenceFlow && ~isFlow2SequenceFlow
                 % Fluss2 anpassen
                 flow2.waypoints = obj.insertWaypointOffset(flow2.waypoints, seg2Idx, offset);
-            elseif !isFlow1SequenceFlow && isFlow2SequenceFlow
+            elseif ~isFlow1SequenceFlow && isFlow2SequenceFlow
                 % Fluss1 anpassen
                 flow1.waypoints = obj.insertWaypointOffset(flow1.waypoints, seg1Idx, offset);
             else

@@ -276,7 +276,7 @@ classdef BPMNDatabaseConnector < handle
             % List all tables in the current database
             % Returns a cell array of table names
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -295,7 +295,7 @@ classdef BPMNDatabaseConnector < handle
             % query: SQL query string to execute
             % Returns query results
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -319,7 +319,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch elements for
             % Returns a table with element data according to DatabaseSchema.md
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -364,7 +364,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch flows for
             % Returns a table with flow data and associated waypoints
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -402,7 +402,7 @@ classdef BPMNDatabaseConnector < handle
             % Fetch message flows between pools/participants
             % Returns a table with message flow data
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -435,7 +435,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch data objects for
             % Returns a table with data object information
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -467,7 +467,7 @@ classdef BPMNDatabaseConnector < handle
             % Fetch data associations with waypoints
             % Returns a table with data association information
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -500,7 +500,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch diagram info for
             % Returns a table with diagram positioning data
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -533,7 +533,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch annotations for
             % Returns a table with text annotation data
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -565,7 +565,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch associations for
             % Returns a table with association data
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             

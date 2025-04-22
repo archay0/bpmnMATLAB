@@ -24,27 +24,27 @@ classdef ValidationLayer
                 for c = tblSchema.columns
                     colName = c.name;
                     % Column presence
-                    if !isfield(row, colName)
+                    if ~isfield(row, colName)
                         error('ValidationLayer:MissingColumn', 'Missing column %s in table %s row %d', colName, tableName, i);
                     end
                     % Basic type enforcement
                     val = row.(colName);
                     type = upper(c.type);
                     if contains(type, 'VARCHAR') || contains(type, 'TEXT')
-                        if !(ischar(val) || isstring(val))
+                        if ~(ischar(val) || isstring(val))
                             error('ValidationLayer:TypeMismatch', 'Column %s in table %s must be text', colName, tableName);
                         end
                     elseif contains(type, 'INT') || contains(type, 'FLOAT') || contains(type, 'DOUBLE')
-                        if !isnumeric(val)
+                        if ~isnumeric(val)
                             error('ValidationLayer:TypeMismatch', 'Column %s in table %s must be numeric', colName, tableName);
                         end
                     elseif contains(type, 'BOOLEAN')
-                        if !(islogical(val) || isequal(val,0) || isequal(val,1))
+                        if ~(islogical(val) || isequal(val,0) || isequal(val,1))
                             error('ValidationLayer:TypeMismatch', 'Column %s in table %s must be boolean', colName, tableName);
                         end
                     elseif contains(type, 'TIMESTAMP') || contains(type, 'DATE') || contains(type, 'TIME_')
                         % Timestamp/date fields should be datetime or string
-                        if !(ischar(val) || isstring(val) || isa(val,'datetime'))
+                        if ~(ischar(val) || isstring(val) || isa(val,'datetime'))
                             error('ValidationLayer:TypeMismatch', 'Column %s in table %s must be datetime or text', colName, tableName);
                         end
                     end
@@ -193,10 +193,10 @@ classdef ValidationLayer
             else
                 for i = 1:numel(allFlows)
                     flow = allFlows(i);
-                    if !ismember(flow.sourceRef, allElementIds)
+                    if ~ismember(flow.sourceRef, allElementIds)
                         error('ValidationLayer:SemanticError', 'Sequence flow %s sourceRef %s not found among generated elements.', flow.id, flow.sourceRef);
                     end
-                    if !ismember(flow.targetRef, allElementIds)
+                    if ~ismember(flow.targetRef, allElementIds)
                         error('ValidationLayer:SemanticError', 'Sequence flow %s targetRef %s not found among generated elements.', flow.id, flow.targetRef);
                     end
                     % Optional: Check if source/target are in the same process/subprocess scope
@@ -208,16 +208,16 @@ classdef ValidationLayer
                  elem = allElements(i);
                  isStart = strcmp(elem.subtype, 'startEvent');
                  isEnd = strcmp(elem.subtype, 'endEvent');
-                 isBoundary = strcmp(elem.type, 'event') && !isempty(elem.attachedToRef); % Basic check for boundary
+                 isBoundary = strcmp(elem.type, 'event') && ~isempty(elem.attachedToRef); % Basic check for boundary
 
-                 if !isStart && !isBoundary % Start events don't need incoming, boundary events handled differently
+                 if ~isStart && ~isBoundary % Start events don't need incoming, boundary events handled differently
                      incomingFlows = allFlows(strcmp({allFlows.targetRef}, elem.id));
                      if isempty(incomingFlows)
                          warning('ValidationLayer:SemanticWarning', 'Element %s (%s) has no incoming sequence flows.', elem.id, elem.type);
                      end
                  end
 
-                 if !isEnd && !isBoundary % End events don't need outgoing
+                 if ~isEnd && ~isBoundary % End events don't need outgoing
                      outgoingFlows = allFlows(strcmp({allFlows.sourceRef}, elem.id));
                      if isempty(outgoingFlows)
                           warning('ValidationLayer:SemanticWarning', 'Element %s (%s) has no outgoing sequence flows.', elem.id, elem.type);
@@ -245,7 +245,7 @@ classdef ValidationLayer
                             % Check for conditions or default flow (default flow check requires gateway table context)
                             hasCondition = any([outgoing.hasCondition]);
                             % hasDefault = isfield(context, 'gatewayRows') && ... % Need gateway table context
-                            if !hasCondition % && !hasDefault
+                            if ~hasCondition % && ~hasDefault
                                  warning('ValidationLayer:SemanticWarning', 'Exclusive Gateway %s has %d outgoing flows but none have conditions (default flow check requires gateway table context).', gw.id, numel(outgoing));
                             end
                         elseif numel(outgoing) == 0 && numel(incoming) > 0 % Converging
@@ -267,7 +267,7 @@ classdef ValidationLayer
                             % Check for conditions or default flow (default flow check requires gateway table context)
                              hasCondition = any([outgoing.hasCondition]);
                              % hasDefault = isfield(context, 'gatewayRows') && ... % Need gateway table context
-                             if !hasCondition % && !hasDefault
+                             if ~hasCondition % && ~hasDefault
                                  warning('ValidationLayer:SemanticWarning', 'Inclusive Gateway %s has %d outgoing flows but none have conditions (default flow check requires gateway table context).', gw.id, numel(outgoing));
                              end
                          end
@@ -280,12 +280,12 @@ classdef ValidationLayer
                                 if isempty(targetElem) continue; end % Error handled earlier
                                 isCatchEvent = strcmp(targetElem.type, 'event') && contains(targetElem.subtype, 'intermediateCatch');
                                 isReceiveTask = strcmp(targetElem.subtype, 'receiveTask');
-                                if !isCatchEvent && !isReceiveTask
+                                if ~isCatchEvent && ~isReceiveTask
                                     validTargets = false;
                                     break;
                                 end
                             end
-                            if !validTargets
+                            if ~validTargets
                                 error('ValidationLayer:SemanticError', 'Event-Based Gateway %s must be followed only by Intermediate Catching Events or Receive Tasks.', gw.id);
                             end
                         end
@@ -294,15 +294,15 @@ classdef ValidationLayer
             end
 
             % --- Boundary Event Validation ---
-             boundaryEvents = allElements(!cellfun('isempty', {allElements.attachedToRef}));
+             boundaryEvents = allElements(~cellfun('isempty', {allElements.attachedToRef}));
              for i = 1:numel(boundaryEvents)
                  bev = boundaryEvents(i);
-                 if !ismember(bev.attachedToRef, allElementIds)
+                 if ~ismember(bev.attachedToRef, allElementIds)
                       error('ValidationLayer:SemanticError', 'Boundary Event %s attachedToRef %s not found among generated elements.', bev.id, bev.attachedToRef);
                  else
                      % Check if attached element is an Activity (Task, SubProcess, CallActivity)
                      attachedElem = allElements(strcmp({allElements.id}, bev.attachedToRef));
-                     if !ismember(attachedElem.type, {'task', 'subProcess', 'callActivity'}) % Add other valid types if needed
+                     if ~ismember(attachedElem.type, {'task', 'subProcess', 'callActivity'}) % Add other valid types if needed
                           error('ValidationLayer:SemanticError', 'Boundary Event %s is attached to %s (%s), which is not an Activity.', bev.id, attachedElem.id, attachedElem.type);
                      end
                  end
@@ -321,9 +321,9 @@ classdef ValidationLayer
         % --- Helper Functions ---
         function processGroups = groupElementsByProcess(elements)
              processGroups = struct();
-             if isempty(elements) || !isfield(elements, 'parentProcessId')
+             if isempty(elements) || ~isfield(elements, 'parentProcessId')
                  % Handle cases where parentProcessId might not exist or elements is empty
-                 if !isempty(elements)
+                 if ~isempty(elements)
                      processGroups.('unknownProcess') = elements; % Group under a default key
                  end
                  return;
@@ -334,7 +334,7 @@ classdef ValidationLayer
                  procId = uniqueProcessIds{i};
                  if isempty(procId)
                      procId = 'noProcessId'; % Handle empty process IDs
-                 elseif !isvarname(procId)
+                 elseif ~isvarname(procId)
                       procId = matlab.lang.makeValidName(procId); % Ensure valid struct field name
                  end
                  processGroups.(procId) = elements(strcmp({elements.parentProcessId}, uniqueProcessIds{i}));
@@ -345,7 +345,7 @@ classdef ValidationLayer
              % Basic check if an element ID corresponds to a subprocess type
              isSub = false;
              elem = allElements(strcmp({allElements.id}, elementId));
-             if !isempty(elem) && ismember(elem(1).type, {'subProcess', 'transaction', 'adHocSubProcess'})
+             if ~isempty(elem) && ismember(elem(1).type, {'subProcess', 'transaction', 'adHocSubProcess'})
                  isSub = true;
              end
         end
