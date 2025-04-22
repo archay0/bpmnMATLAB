@@ -20,21 +20,28 @@ This repository contains MATLAB scripts and functions for creating, editing, and
    ```matlab
    addpath(genpath('/path/to/bpmnMATLAB'));
    ```
-3. Run the examples to understand the functionality:
+3. Configure your API access by creating a `.env` file in the project root with your API keys:
+   ```
+   # API Configuration
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
+   ```
+4. Run the examples to understand the functionality:
    ```matlab
    cd /path/to/bpmnMATLAB/examples
    SimpleProcessExample % Generate a simple BPMN diagram
    ComplexBPMNExample  % Generate a complex BPMN diagram
    ```
-4. Check the documentation in the `doc/` folder for detailed guides:
+5. Check the documentation in the `doc/` folder for detailed guides:
    - `DatabaseSchema.md` - Detailed database schema description
    - `DatabaseCompatibilityGuide.md` - Comprehensive guide for database compatibility
+   - `APIIntegration.md` - Guide for API integration with OpenRouter
 
 ## Requirements
 
 - MATLAB R2019b or newer
 - Database Toolbox (for database connections)
 - XML Toolbox (for XML handling)
+- Internet connection (for API access)
 
 ## Comprehensive BPMN Generation Checklist
 
@@ -165,6 +172,19 @@ For a database to properly represent BPMN processes and detailed product composi
 7. **Example Configuration Tables**
    - Templates or sample configurations to drive example-driven BPMN generation (e.g., product assembly workflow, part-specific subprocess flows)
 
+## API Integration
+
+This project now uses the OpenRouter API with the `microsoft/mai-ds-r1:free` model for AI-assisted BPMN generation. To use this feature:
+
+1. Sign up for an account at [OpenRouter](https://openrouter.ai)
+2. Create an API key and add it to your `.env` file
+3. Run the initialization script to set up your environment:
+   ```matlab
+   initAPIEnvironment();
+   ```
+
+For more details on API integration, see `doc/APIIntegration.md`.
+
 ## Future Plans
 
 - Generate comprehensive BPMN for a single product with subparts: automated creation of hierarchical subprocesses to represent product assembly, quality checks, packaging, and validation flows.
@@ -179,19 +199,22 @@ For detailed database schema guidance, refer to `doc/DatabaseSchema.md`.
 ```
 BPMN2_0_Poster_EN.pdf
 compile_bpmn_tools.m
+generate_bpmn_data.m
 generate_bpmn_export.m
 generate_bpmn_main.m
 README.md
 doc/
+    APIIntegration.md
     DatabaseCompatibilityGuide.md
     DatabaseSchema.md
+    temporary/
 examples/
     AdvancedBPMNFeatures.m
     ComplexBPMNExample.m
     DatabaseBPMNExample.m
     OptimizedLayoutExample.m
     SimpleProcessExample.m
-output/
+    output/
 src/
     BPMNDatabaseConnector.m
     BPMNDiagramExporter.m
@@ -201,10 +224,25 @@ src/
     BPMNStyleManager.m
     BPMNToSimulink.m
     BPMNValidator.m
+    api/
+        APICaller.m
+        APIConfig.m
+        DataGenerator.m
+        GeneratorController.m
+        initAPIEnvironment.m
+        PromptBuilder.m
+        SchemaLoader.m
+        ValidationLayer.m
     util/
         loadEnvironment.m
+        setEnvironmentVariables.m
 tests/
     runAllTests.m
+    SimpleOpenRouterTest.m
+    TestAPIConnection.m
+    TestBPMNGeneration.m
     TestBPMNGenerator.m
     TestBPMNSuite.m
+    TestOpenRouterAPI.m
+    TestSchemaValidation.m
 ```

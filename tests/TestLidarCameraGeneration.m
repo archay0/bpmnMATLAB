@@ -17,13 +17,19 @@ try
         error('Could not find src directory. Run script from workspace root or tests directory.');
     end
 
-    % Load environment variables (like GITHUB_API_TOKEN)
-    if exist('../.env', 'file')
-        loadEnvironment('../.env');
-    elseif exist('.env', 'file')
-        loadEnvironment('.env');
+    % Initialisiere die API-Umgebung (enthält loadEnvironment)
+    if exist('initAPIEnvironment', 'file') == 2
+        fprintf('Initializing API environment...\n');
+        initAPIEnvironment();
     else
-        warning('TestLidarCameraGeneration:NoEnv', '.env file not found. API calls might fail if GITHUB_API_TOKEN is not set.');
+        % Fallback zur alten Methode
+        if exist('../.env', 'file')
+            loadEnvironment('../.env');
+        elseif exist('.env', 'file')
+            loadEnvironment('.env');
+        else
+            warning('TestLidarCameraGeneration:NoEnv', '.env file not found. API calls might fail if API key is not set.');
+        end
     end
 
     % --- Enhanced Configuration ---
@@ -63,6 +69,25 @@ try
     opts.additionalParams.companyDepartments = {'Manufacturing', 'Quality Control', 'Engineering', 'Packaging'};
     opts.additionalParams.requireParallelProcessing = true;  % Ensure the use of parallel gateways
     opts.additionalParams.includeProbabilisticPaths = true;  % Include exclusive gateways with conditions
+    
+    % API-spezifische Konfiguration für OpenRouter
+    if exist('APIConfig', 'class') == 8
+        % Load default API options from APIConfig
+        apiDefaults = APIConfig.getDefaultOptions();
+        opts.model = apiDefaults.model;        % microsoft/mai-ds-r1:free
+        opts.temperature = apiDefaults.temperature;
+        opts.debug = true;                     % Enable debugging for this test
+    else
+        % Manual defaults if APIConfig is not available
+        opts.model = 'microsoft/mai-ds-r1:free';
+        opts.temperature = 0.7;
+        opts.debug = true;
+    end
+    
+    % Override system message for better BPMN generation
+    opts.system_message = ['You are a BPMN (Business Process Model and Notation) expert. ', ...
+                          'Generate detailed, consistent BPMN processes with proper semantics. ', ...
+                          'Focus on creating structured JSON output that follows database schema requirements.'];
 
     fprintf('Enhanced Configuration:\n');
     disp(opts);
@@ -70,9 +95,9 @@ try
     % --- Pre-Generation Checks ---
     fprintf('Performing pre-generation validation checks...\n');
     
-    % Verify token exists
-    if isempty(getenv('GITHUB_API_TOKEN'))
-        error('GITHUB_API_TOKEN is not set in the environment. Required for API calls.');
+    % Verify API key exists (OpenRouter instead of GitHub)
+    if isempty(getenv('OPENROUTER_API_KEY'))
+        error('OPENROUTER_API_KEY is not set in the environment. Required for API calls.');
     end
     
     % Ensure output directory exists
@@ -83,7 +108,7 @@ try
     end
 
     % --- Run Generation ---
-    fprintf('Calling GeneratorController.generateIterative...\n');
+    fprintf('Calling GeneratorController.generateIterative with model %s...\n', opts.model);
     tic; % Start timing the generation
     GeneratorController.generateIterative(opts);
     generationTime = toc; % End timing

@@ -7,6 +7,27 @@ classdef GeneratorController
             % opts.order = {'process_definitions','modules','parts','subparts'};
             % opts.batchSize = 10;
 
+            % API-Umgebung initialisieren
+            if exist('initAPIEnvironment', 'file') == 2
+                initAPIEnvironment();
+            end
+
+            % Standard-API-Optionen laden
+            apiOpts = APIConfig.getDefaultOptions();
+            
+            % Optionale API-Einstellungen überschreiben, wenn angegeben
+            if isfield(opts, 'model') 
+                apiOpts.model = opts.model;
+            end
+            
+            if isfield(opts, 'temperature')
+                apiOpts.temperature = opts.temperature;
+            end
+            
+            if isfield(opts, 'debug')
+                apiOpts.debug = opts.debug;
+            end
+
             % Load full schema metadata
             schema = SchemaLoader.load();
 
@@ -15,7 +36,8 @@ classdef GeneratorController
             % Optionally: productDescription -> phases
             if isfield(opts,'productDescription')
                 procMapPrompt = PromptBuilder.buildProcessMapPrompt(opts.productDescription);
-                context.phases = DataGenerator.callLLM(procMapPrompt);
+                procMapPrompt = APIConfig.formatPrompt(procMapPrompt); % Format-Anweisung hinzufügen
+                context.phases = DataGenerator.callLLM(procMapPrompt, apiOpts);
             end
 
             % Hierarchical generation: process, modules, parts, subparts
@@ -25,7 +47,8 @@ classdef GeneratorController
                     case 'process_definitions'
                         % Create top-level process entries
                         prompt = PromptBuilder.buildEntityPrompt(level, schema.(level), context, opts.batchSize);
-                        rows = DataGenerator.callLLM(prompt);
+                        prompt = APIConfig.formatPrompt(prompt); % Format-Anweisung hinzufügen
+                        rows = DataGenerator.callLLM(prompt, apiOpts);
                         % Store generated rows for validation
                         context.([level 'Rows']) = rows;
                         ValidationLayer.validate(level, rows, schema, context);
@@ -33,7 +56,8 @@ classdef GeneratorController
                     otherwise
                         % 1) Create subprocess/element entries in bpmn_elements for this level
                         ePrompt = PromptBuilder.buildEntityPrompt(level, schema.bpmn_elements, context, opts.batchSize);
-                        eRows = DataGenerator.callLLM(ePrompt);
+                        ePrompt = APIConfig.formatPrompt(ePrompt); % Format-Anweisung hinzufügen
+                        eRows = DataGenerator.callLLM(ePrompt, apiOpts);
                         % Store element rows
                         context.([level 'Rows']) = eRows;
                         ValidationLayer.validate('bpmn_elements', eRows, schema, context);
@@ -41,7 +65,8 @@ classdef GeneratorController
                         context.(level) = eIDs;
                         % 2) Generate phase-specific BPMN entities under this level
                         phasePrompt = PromptBuilder.buildPhaseEntitiesPrompt(level, '', context.(level), opts.batchSize);
-                        pRows = DataGenerator.callLLM(phasePrompt);
+                        phasePrompt = APIConfig.formatPrompt(phasePrompt); % Format-Anweisung hinzufügen
+                        pRows = DataGenerator.callLLM(phasePrompt, apiOpts);
                         % Store phase entity rows
                         context.([level '_phaseRows']) = pRows;
                         ValidationLayer.validate('bpmn_elements', pRows, schema, context);
@@ -52,14 +77,16 @@ classdef GeneratorController
 
             % After core hierarchy, generate flows and resources
             flowPrompt = PromptBuilder.buildFlowPrompt(context);
-            flows = DataGenerator.callLLM(flowPrompt);
+            flowPrompt = APIConfig.formatPrompt(flowPrompt); % Format-Anweisung hinzufügen
+            flows = DataGenerator.callLLM(flowPrompt, apiOpts);
             % Store flow rows for semantic validation
             context.flowRows = flows;
             ValidationLayer.validate('sequenceFlows', flows, schema, context);
             context.sequenceFlows = BPMNDatabaseConnector.insertRows('sequenceFlows', flows);
 
             resourcePrompt = PromptBuilder.buildResourcePrompt(context, schema.resources);
-            resources = DataGenerator.callLLM(resourcePrompt);
+            resourcePrompt = APIConfig.formatPrompt(resourcePrompt); % Format-Anweisung hinzufügen
+            resources = DataGenerator.callLLM(resourcePrompt, apiOpts);
             % Store resource rows
             context.resourceRows = resources;
             ValidationLayer.validate('resources', resources, schema, context);
@@ -67,7 +94,8 @@ classdef GeneratorController
 
             % Integrity check
             integrityPrompt = PromptBuilder.buildIntegrityPrompt(context);
-            report = DataGenerator.callLLM(integrityPrompt);
+            integrityPrompt = APIConfig.formatPrompt(integrityPrompt); % Format-Anweisung hinzufügen
+            report = DataGenerator.callLLM(integrityPrompt, apiOpts);
             if ~isempty(report)
                 error('Integrity issues: %s', jsonencode(report));
             end
