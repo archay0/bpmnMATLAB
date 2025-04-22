@@ -1,10 +1,10 @@
 # bpmnMATLAB
 
-A MATLAB utility for BPMN (Business Process Model and Notation) file generation, manipulation, and visualization.
+A MATLAB utility for BPMN (Business Process Model and Notation) file generation from database data.
 
 ## Overview
 
-This repository contains MATLAB scripts and functions for creating, editing, importing and managing BPMN 2.0 files. The utility connects to databases to extract process information and generates standard-compliant BPMN XML files that can be imported into any BPMN-compatible tool.
+This repository contains MATLAB scripts and functions for creating, editing, and managing BPMN 2.0 files. The utility connects to databases to extract process information and generates standard-compliant BPMN XML files that can be imported into any BPMN-compatible tool.
 
 ## Directory Structure
 
@@ -23,9 +23,8 @@ This repository contains MATLAB scripts and functions for creating, editing, imp
 3. Run the examples to understand the functionality:
    ```matlab
    cd /path/to/bpmnMATLAB/examples
-   SimpleProcessExample    % Generate a simple BPMN diagram
-   ComplexBPMNExample     % Generate a complex BPMN diagram
-   AdvancedBPMNFeatures  % Try advanced features like transactions and parallel event-based gateways
+   SimpleProcessExample % Generate a simple BPMN diagram
+   ComplexBPMNExample  % Generate a complex BPMN diagram
    ```
 4. Check the documentation in the `doc/` folder for detailed guides:
    - `DatabaseSchema.md` - Detailed database schema description
@@ -36,48 +35,6 @@ This repository contains MATLAB scripts and functions for creating, editing, imp
 - MATLAB R2019b or newer
 - Database Toolbox (for database connections)
 - XML Toolbox (for XML handling)
-- Image Processing Toolbox (for SVG/PNG export)
-
-## Project Status & Implementation Roadmap
-
-The project is in an advanced state with most features implemented. This section outlines what's currently working and what's still planned.
-
-### Current Status (April 2025)
-
-- **Core functionality**: The BPMN generation framework is fully functional and can generate valid BPMN 2.0 XML files with advanced features.
-- **Database connectivity**: MySQL and PostgreSQL database connectors are implemented and tested.
-- **MATLAB Compiler compatibility**: The code has been optimized for use with MATLAB Compiler.
-- **Import/Export**: The utility can now import existing BPMN files, edit them, and export to SVG/PNG formats.
-- **Advanced BPMN Features**: Support added for transactions, parallel event-based gateways, and groups.
-- **Examples**: Basic, complex, and advanced examples are available to demonstrate functionality.
-- **Documentation**: Database schema and compatibility guides are available.
-
-### Implementation Progress
-
-#### Completed Features:
-- Full implementation of basic BPMN elements (events, activities, gateways)
-- Advanced elements including parallel event-based gateways and transactions
-- Database integration with support for multiple database systems
-- Sequence flow and message flow generation
-- Data object and data store support
-- Pools and lanes with proper nesting
-- SVG/PNG export functionality
-- Import from existing BPMN files
-- Group artifacts
-- Transaction boundaries support
-- MATLAB Compiler compatibility
-
-#### In Progress:
-- Validation of BPMN structural integrity
-- Advanced layout algorithms
-- Choreography and Conversation diagrams
-
-#### Planned Features (Priority Order):
-1. Advanced structural validation
-2. Style management (colors, fonts, custom icons)
-3. Correlation keys and properties
-4. Complete conversation support
-5. Complete choreography support
 
 ## Comprehensive BPMN Generation Checklist
 
@@ -102,7 +59,7 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [x] Parallel (AND)
   - [x] Event-based
   - [x] Complex
-  - [x] Parallel Event-based
+  - [ ] Parallel Event-based
 
 - [x] **Connecting Objects**
   - [x] Sequence Flows (with conditions)
@@ -114,7 +71,7 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [x] Data Objects
   - [x] Data Stores
   - [x] Text Annotations
-  - [x] Groups
+  - [ ] Groups
 
 - [x] **Swimlanes**
   - [x] Pools (participants)
@@ -134,7 +91,7 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [ ] Sub-choreographies
 
 - [x] **Process Execution**
-  - [x] Transaction boundaries
+  - [ ] Transaction boundaries
   - [x] Compensation handling
   - [x] Error handling
 
@@ -150,9 +107,8 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
   - [x] Support for custom attributes and extensions
   - [x] Default positioning algorithms when coordinates not specified
 
-- [x] **Validation**
-  - [x] Basic BPMN structural validation (elements and connections)
-  - [ ] Advanced structural validation (correct gateway usage, etc.)
+- [ ] **Validation**
+  - [ ] BPMN structural validation (correct connections, etc.)
   - [ ] Semantic validation (process makes sense)
 
 ### Visualization & Layout
@@ -168,47 +124,87 @@ To create a database-to-BPMN generator capable of handling any complexity, we ne
 ### Import/Export Capabilities
 - [x] **File Formats**
   - [x] BPMN 2.0 XML
-  - [x] SVG/PNG visualization export
-  - [x] Import from existing BPMN files
+  - [ ] SVG/PNG visualization export
+  - [ ] Import from existing BPMN files
 
 - [x] **Tool Integration**
   - [x] Compatibility with Camunda, Activiti, jBPM
   - [x] Compatibility with modeling tools (Visio, draw.io)
 
-## Compilation Instructions
-
-To compile the BPMN generator using MATLAB Compiler:
-
-1. Open MATLAB and navigate to the project directory
-2. Use the MATLAB Compiler tool (`mcc`) to compile:
-   ```matlab
-   mcc -m generate_bpmn_main.m -a src/ -o bpmn_generator
-   ```
-3. The compiled executable will be created in the current directory
-4. For deployment, include the necessary MATLAB Runtime libraries
-
 ## Database Schema Requirements
 
-For a database to properly represent BPMN processes, it should include:
+For a database to properly represent BPMN processes and detailed product compositions, it should include the following tables and fields:
 
-1. **Process Tables** - Store process definitions and metadata
-2. **Element Tables** - Store all BPMN elements with type-specific attributes
-3. **Flow Tables** - Store sequence flows and other connections
-4. **Position Tables** - Store visual layout information
-5. **Property Tables** - Store custom properties and extensions
+1. **Process Tables**
+   - Store process definitions and metadata (process ID, name, version, description, related product ID)
 
-For detailed guidance on database compatibility, refer to our comprehensive guide in `doc/DatabaseCompatibilityGuide.md`.
+2. **Element Tables**
+   - **Events**: event ID, type (start, intermediate, end), kind (message, timer, error, etc.), catching/throwing flag, interrupting flag
+   - **Activities**: activity ID, type (task, sub-process, transaction, event sub-process, call activity), marker flags (loop, parallel MI, sequential MI, ad-hoc, compensation), callable reference
+   - **Gateways**: gateway ID, type (exclusive, inclusive, parallel, complex, event-based, parallel event-based), merging/branching semantics
+   - **Flows**: flow ID, type (sequence, conditional, default, message), source element ID, target element ID, condition expression
+   - **Data**: data object ID, type (data object, data store, input, output, collection), persistence, associations (input/output references)
+   - **Pools & Lanes**: pool ID, name, type (black/white box), lane ID, hierarchical parent reference
+   - **Conversations & Collaboration**: conversation ID, sub-conversation reference, conversation links (source, target)
+   - **Choreographies**: choreography ID, type (task, sub-choreography, call choreography), participants, multiple markers
 
-## Contributing
+3. **Relationship/Flow Tables**
+   - Map connections between elements: sequenceFlow, messageFlow, association, dataAssociation
 
-Contributions are welcome! Check the Implementation Progress and Planned Features sections above for areas that need development. Please follow these steps:
+4. **Position/Layout Tables**
+   - Coordinates, dimensions (width/height), docking information for diagram rendering
 
-1. Fork the repository
-2. Create a feature branch
-3. Implement your feature or bug fix
-4. Add appropriate tests
-5. Submit a pull request
+5. **Property Tables**
+   - Custom attributes and extension elements associated with any BPMN element
 
-## License
+6. **Product Composition Tables**
+   - **Products**: product ID, name, description, version
+   - **Parts**: part ID, name, description, parent product ID
+   - **Assembly Processes**: process ID, part ID, sequence order, dependency references (sub-process IDs)
 
-This project is licensed under the MIT License.
+7. **Example Configuration Tables**
+   - Templates or sample configurations to drive example-driven BPMN generation (e.g., product assembly workflow, part-specific subprocess flows)
+
+## Future Plans
+
+- Generate comprehensive BPMN for a single product with subparts: automated creation of hierarchical subprocesses to represent product assembly, quality checks, packaging, and validation flows.
+- Visualization export (SVG/PNG) for example product BPMN models, with style customization for parts and processes.
+- Enhanced validation: structural and semantic checks tailored to product-specific workflows and subpart interactions.
+- Style management: custom icons, color schemes, and layout optimizations for clear representation of complex product assemblies.
+- **One‑shot data generation mode**: full-schema, one‑call generation via LLM will be implemented in a future release.
+
+For detailed database schema guidance, refer to `doc/DatabaseSchema.md`.
+
+## Project Structure
+```
+BPMN2_0_Poster_EN.pdf
+compile_bpmn_tools.m
+generate_bpmn_export.m
+generate_bpmn_main.m
+README.md
+doc/
+    DatabaseCompatibilityGuide.md
+    DatabaseSchema.md
+examples/
+    AdvancedBPMNFeatures.m
+    ComplexBPMNExample.m
+    DatabaseBPMNExample.m
+    OptimizedLayoutExample.m
+    SimpleProcessExample.m
+output/
+src/
+    BPMNDatabaseConnector.m
+    BPMNDiagramExporter.m
+    BPMNElements.m
+    BPMNGenerator.m
+    BPMNLayoutOptimizer.m
+    BPMNStyleManager.m
+    BPMNToSimulink.m
+    BPMNValidator.m
+    util/
+        loadEnvironment.m
+tests/
+    runAllTests.m
+    TestBPMNGenerator.m
+    TestBPMNSuite.m
+```

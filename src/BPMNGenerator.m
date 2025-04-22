@@ -161,16 +161,6 @@ classdef BPMNGenerator < handle
                 gatewayNode.setAttribute('name', name);
             end
             
-            % Add specific attributes for certain gateway types
-            if strcmp(gatewayType, 'eventBasedGateway')
-                % Default to exclusive event-based gateway
-                gatewayNode.setAttribute('instantiate', 'false');
-            elseif strcmp(gatewayType, 'parallelEventBasedGateway')
-                % Parallel event-based gateway specific attributes
-                gatewayNode.setAttribute('instantiate', 'false');
-                gatewayNode.setAttribute('eventGatewayType', 'parallel');
-            end
-            
             % Add to process
             processNode.appendChild(gatewayNode);
             
@@ -459,139 +449,6 @@ classdef BPMNGenerator < handle
             obj.addShapeToVisualization(id, x, y, width, height, isExpanded);
         end
         
-        function addTransaction(obj, id, name, x, y, width, height, isExpanded)
-            % Add a transaction subprocess to the BPMN diagram
-            % id: Unique identifier for the transaction
-            % name: Name/label of the transaction
-            % x, y: Coordinates for the transaction in the diagram
-            % width, height: Dimensions of the transaction
-            % isExpanded: Whether the transaction is expanded in the diagram
-            
-            % Get process node
-            processNode = obj.getProcessNode();
-            
-            % Create transaction element
-            transactionNode = obj.XMLDoc.createElement('transaction');
-            transactionNode.setAttribute('id', id);
-            
-            if ~isempty(name)
-                transactionNode.setAttribute('name', name);
-            end
-            
-            % Add method attribute (compensate, store, image) - default to 'compensate'
-            transactionNode.setAttribute('method', 'compensate');
-            
-            % Add to process
-            processNode.appendChild(transactionNode);
-            
-            % Add to diagram with special transaction visualization
-            obj.addShapeToVisualization(id, x, y, width, height, isExpanded);
-        end
-        
-        function addCompleteTransaction(obj, id, name, x, y, width, height, isExpanded, childElements)
-            % Add a complete transaction with compensation handling to the BPMN diagram
-            % id: Unique identifier for the transaction
-            % name: Name/label of the transaction
-            % x, y: Coordinates for the transaction in the diagram
-            % width, height: Dimensions of the transaction
-            % isExpanded: Whether the transaction is expanded in the diagram
-            % childElements: Optional structure with child elements to add inside transaction
-            
-            % Get process node
-            processNode = obj.getProcessNode();
-            
-            % Create transaction element
-            transactionNode = obj.XMLDoc.createElement('transaction');
-            transactionNode.setAttribute('id', id);
-            
-            if ~isempty(name)
-                transactionNode.setAttribute('name', name);
-            end
-            
-            % Add transaction method (compensate, store, image)
-            transactionNode.setAttribute('method', 'compensate');
-            
-            % Add to process
-            processNode.appendChild(transactionNode);
-            
-            % Add child elements if specified
-            if nargin >= 9 && ~isempty(childElements)
-                % Add child elements inside the transaction
-                if isfield(childElements, 'tasks') && ~isempty(childElements.tasks)
-                    for i = 1:length(childElements.tasks)
-                        task = childElements.tasks{i};
-                        taskNode = obj.XMLDoc.createElement(task.type);
-                        taskNode.setAttribute('id', task.id);
-                        taskNode.setAttribute('name', task.name);
-                        
-                        if isfield(task, 'properties')
-                            propFields = fieldnames(task.properties);
-                            for j = 1:length(propFields)
-                                taskNode.setAttribute(propFields{j}, task.properties.(propFields{j}));
-                            end
-                        end
-                        
-                        transactionNode.appendChild(taskNode);
-                        
-                        % Add task to visualization
-                        if isfield(task, 'x') && isfield(task, 'y')
-                            tx = x + task.x;  % Relative positioning within transaction
-                            ty = y + task.y;
-                            tw = task.width || 100;
-                            th = task.height || 80;
-                            obj.addShapeToVisualization(task.id, tx, ty, tw, th);
-                        end
-                    end
-                end
-                
-                % Add flows between child elements
-                if isfield(childElements, 'flows') && ~isempty(childElements.flows)
-                    for i = 1:length(childElements.flows)
-                        flow = childElements.flows{i};
-                        flowNode = obj.XMLDoc.createElement('sequenceFlow');
-                        flowNode.setAttribute('id', flow.id);
-                        flowNode.setAttribute('sourceRef', flow.sourceRef);
-                        flowNode.setAttribute('targetRef', flow.targetRef);
-                        
-                        transactionNode.appendChild(flowNode);
-                        
-                        % Add flow to visualization if waypoints provided
-                        if isfield(flow, 'waypoints') && ~isempty(flow.waypoints)
-                            % Adjust waypoints to transaction's position
-                            adjustedWaypoints = flow.waypoints;
-                            for w = 1:size(adjustedWaypoints, 1)
-                                adjustedWaypoints(w, 1) = adjustedWaypoints(w, 1) + x;
-                                adjustedWaypoints(w, 2) = adjustedWaypoints(w, 2) + y;
-                            end
-                            obj.addEdgeToVisualization(flow.id, flow.sourceRef, flow.targetRef, adjustedWaypoints);
-                        end
-                    end
-                end
-            end
-            
-            % Create a compensation boundary event for the transaction
-            compBoundaryEventId = [id, '_CompensationBoundary'];
-            boundaryEventNode = obj.XMLDoc.createElement('boundaryEvent');
-            boundaryEventNode.setAttribute('id', compBoundaryEventId);
-            boundaryEventNode.setAttribute('attachedToRef', id);
-            boundaryEventNode.setAttribute('cancelActivity', 'false'); % Non-interrupting
-            
-            % Add compensation event definition
-            compDefNode = obj.XMLDoc.createElement('compensateEventDefinition');
-            compDefNode.setAttribute('id', ['CompensateEventDefinition_', compBoundaryEventId]);
-            boundaryEventNode.appendChild(compDefNode);
-            
-            processNode.appendChild(boundaryEventNode);
-            
-            % Add boundary event to visualization - position at bottom of transaction
-            boundaryEventX = x + width/2;
-            boundaryEventY = y + height - 15;  % Place at bottom edge
-            obj.addShapeToVisualization(compBoundaryEventId, boundaryEventX, boundaryEventY, 36, 36);
-            
-            % Add transaction to diagram with visualization
-            obj.addShapeToVisualization(id, x, y, width, height, isExpanded);
-        end
-        
         function addPool(obj, id, name, processRef, x, y, width, height)
             % Add a pool (participant) to the BPMN diagram
             % id: Unique identifier for the pool
@@ -746,782 +603,93 @@ classdef BPMNGenerator < handle
             obj.addEdgeToVisualization(id, sourceRef, targetRef, waypoints);
         end
         
-        function addGroup(obj, id, name, categoryValue, x, y, width, height)
-            % Add a group artifact to the BPMN diagram
-            % id: Unique identifier for the group
-            % name: Optional name/label of the group
-            % categoryValue: Optional category value for classification
-            % x, y: Coordinates for the group in the diagram
-            % width, height: Dimensions of the group
-            
-            % Get process node
-            processNode = obj.getProcessNode();
-            
-            % Create group element
-            groupNode = obj.XMLDoc.createElement('group');
-            groupNode.setAttribute('id', id);
-            
-            if ~isempty(name)
-                groupNode.setAttribute('name', name);
-            end
-            
-            if nargin >= 4 && ~isempty(categoryValue)
-                groupNode.setAttribute('categoryValue', categoryValue);
-            end
-            
-            % Add to process
-            processNode.appendChild(groupNode);
-            
-            % Add to diagram
-            obj.addShapeToVisualization(id, x, y, width, height);
-        end
-        
-        function importFromDatabase(obj, dbConnector, processId)
-            % Import BPMN definition from a database connection.
-            % Requires a connected BPMNDatabaseConnector object.
+        function importFromDatabase(obj, dbConnector, processId, mappingConfig)
+            % Import process information from database
             % dbConnector: BPMNDatabaseConnector instance
-            % processId: Optional ID of the process to import (if not provided, first process will be used)
+            % processId: ID of the process to import
+            % mappingConfig: Structure defining how to map DB fields to BPMN elements
             
             if ~isa(dbConnector, 'BPMNDatabaseConnector')
-                error('BPMNGenerator:ImportError', 'Database connector must be a BPMNDatabaseConnector instance');
+                error('Database connector must be a BPMNDatabaseConnector instance');
             end
             
-            if !dbConnector.Connected
-                error('BPMNGenerator:ConnectionError', 'Database connection not established. Call connect first.');
+            if ~dbConnector.Connected
+                error('Database connection not established. Call connect first.');
             end
             
-            obj.DatabaseConn = dbConnector; % Store connector for later use
-            
-            % Get process definitions if processId not provided
+            % Get process definitions
             if nargin < 3 || isempty(processId)
                 processData = dbConnector.queryProcessDefinitions();
                 if isempty(processData)
-                    error('BPMNGenerator:NoProcessError', 'No process definitions found in database');
+                    error('No process definitions found in database');
                 end
                 processId = processData.process_id{1};
-                
-                % Set process attributes if available
-                if ismember('is_executable', processData.Properties.VariableNames)
-                    processNode = obj.getProcessNode();
-                    processNode.setAttribute('isExecutable', lower(processData.is_executable{1}));
-                end
-                if ismember('process_name', processData.Properties.VariableNames)
-                    processNode = obj.getProcessNode();
-                    processNode.setAttribute('name', processData.process_name{1});
-                end
             end
             
-            fprintf('Importing process %s from database...\n', processId);
-            
-            try
-                % --- 1. Import BPMN Elements ---
-                fprintf('Importing elements...\n');
-                elementsData = dbConnector.fetchElements(processId);
-                
-                if !isempty(elementsData)
-                    fprintf('Found %d elements in database\n', height(elementsData));
-                    
-                    % Process each element based on type
-                    for i = 1:height(elementsData)
-                        element = elementsData(i, :);
-                        
-                        % Extract common fields
-                        elementId = element.element_id{1};
-                        elementType = element.element_type{1};
-                        elementName = '';
-                        
-                        % Get name - handle different field names
-                        if ismember('element_name', element.Properties.VariableNames)
-                            elementName = element.element_name{1};
-                        elseif ismember('name', element.Properties.VariableNames)
-                            elementName = element.name{1};
-                        end
-                        
-                        % Get position and size if available
-                        x = 100 + i * 150; % Default positioning if not available
-                        y = 200;
-                        width = 100;
-                        height = 80;
-                        
-                        if ismember('x', element.Properties.VariableNames) && !isnan(element.x)
-                            x = element.x;
-                        end
-                        if ismember('y', element.Properties.VariableNames) && !isnan(element.y)
-                            y = element.y;
-                        end
-                        if ismember('width', element.Properties.VariableNames) && !isnan(element.width)
-                            width = element.width;
-                        end
-                        if ismember('height', element.Properties.VariableNames) && !isnan(element.height)
-                            height = element.height;
-                        end
-                        
-                        % Handle element based on its type
-                        fprintf('Processing %s: %s\n', elementType, elementId);
-                        
-                        switch lower(elementType)
-                            % Tasks
-                            case 'task'
-                                obj.addTask(elementId, elementName, x, y, width, height);
-                            case 'usertask'
-                                obj.addSpecificTask(elementId, elementName, 'userTask', struct(), x, y, width, height);
-                            case 'servicetask'
-                                properties = struct();
-                                if ismember('implementation', element.Properties.VariableNames) && !isempty(element.implementation{1})
-                                    properties.implementation = element.implementation{1};
-                                end
-                                obj.addSpecificTask(elementId, elementName, 'serviceTask', properties, x, y, width, height);
-                            case 'scripttask'
-                                properties = struct();
-                                if ismember('script', element.Properties.VariableNames) && !isempty(element.script{1})
-                                    properties.script = element.script{1};
-                                end
-                                if ismember('script_format', element.Properties.VariableNames) && !isempty(element.script_format{1})
-                                    properties.scriptFormat = element.script_format{1};
-                                end
-                                obj.addSpecificTask(elementId, elementName, 'scriptTask', properties, x, y, width, height);
-                                
-                            % Gateways
-                            case {'exclusivegateway', 'gateway'}
-                                obj.addGateway(elementId, elementName, 'exclusiveGateway', x, y, 50, 50);
-                            case 'parallelgateway'
-                                obj.addGateway(elementId, elementName, 'parallelGateway', x, y, 50, 50);
-                                
-                            % Events
-                            case 'startevent'
-                                eventDefType = '';
-                                if ismember('event_definition_type', element.Properties.VariableNames) && !isempty(element.event_definition_type{1})
-                                    eventDefType = element.event_definition_type{1};
-                                end
-                                obj.addEvent(elementId, elementName, 'startEvent', eventDefType, x, y, 36, 36);
-                            case 'endevent'
-                                eventDefType = '';
-                                if ismember('event_definition_type', element.Properties.VariableNames) && !isempty(element.event_definition_type{1})
-                                    eventDefType = element.event_definition_type{1};
-                                end
-                                obj.addEvent(elementId, elementName, 'endEvent', eventDefType, x, y, 36, 36);
-                            case 'boundaryevent'
-                                eventDefType = '';
-                                isInterrupting = true;
-                                attachedToRef = '';
-                                
-                                if ismember('event_definition_type', element.Properties.VariableNames) && !isempty(element.event_definition_type{1})
-                                    eventDefType = element.event_definition_type{1};
-                                end
-                                if ismember('is_interrupting', element.Properties.VariableNames)
-                                    isInterrupting = element.is_interrupting;
-                                end
-                                if ismember('attached_to_ref', element.Properties.VariableNames) && !isempty(element.attached_to_ref{1})
-                                    attachedToRef = element.attached_to_ref{1};
-                                end
-                                
-                                obj.addBoundaryEvent(elementId, elementName, attachedToRef, eventDefType, isInterrupting, x, y, 36, 36);
-                                
-                            % Container elements    
-                            case 'subprocess'
-                                isExpanded = true;
-                                if ismember('is_expanded', element.Properties.VariableNames)
-                                    isExpanded = element.is_expanded;
-                                end
-                                obj.addSubProcess(elementId, elementName, x, y, 200, 150, isExpanded);
-                            case 'pool'
-                                processRef = '';
-                                if ismember('process_ref', element.Properties.VariableNames) && !isempty(element.process_ref{1})
-                                    processRef = element.process_ref{1};
-                                end
-                                obj.addPool(elementId, elementName, processRef, x, y, 600, 200);
-                            case 'lane'
-                                parentId = '';
-                                if ismember('parent_id', element.Properties.VariableNames) && !isempty(element.parent_id{1})
-                                    parentId = element.parent_id{1};
-                                end
-                                obj.addLane(elementId, elementName, parentId, x, y, 570, 200);
-                                
-                            % Data elements    
-                            case 'dataobject'
-                                isCollection = false;
-                                if ismember('is_collection', element.Properties.VariableNames)
-                                    isCollection = element.is_collection;
-                                end
-                                obj.addDataObject(elementId, elementName, isCollection, x, y, 36, 50);
-                                
-                            % Annotations
-                            case 'textannotation'
-                                text = elementName; % Use name as the text content
-                                obj.addTextAnnotation(elementId, text, x, y, 100, 50);
-                                
-                            % Handle other types
-                            otherwise
-                                warning('BPMNGenerator:UnknownElement', 'Unknown element type: %s (ID: %s)', elementType, elementId);
-                        end
-                    end
-                else
-                    warning('BPMNGenerator:NoElements', 'No elements found for process %s', processId);
-                end
-                
-                % --- 2. Import Sequence Flows ---
-                fprintf('Importing sequence flows...\n');
-                flowsData = dbConnector.fetchSequenceFlows(processId);
-                
-                if !isempty(flowsData)
-                    fprintf('Found %d sequence flows in database\n', height(flowsData));
-                    
-                    for i = 1:height(flowsData)
-                        flow = flowsData(i, :);
-                        
-                        % Extract flow fields
-                        flowId = flow.flow_id{1};
-                        sourceRef = flow.source_ref{1};
-                        targetRef = flow.target_ref{1};
-                        
-                        % Extract condition if available
-                        condExpr = '';
-                        if ismember('condition_expr', flow.Properties.VariableNames) && !isempty(flow.condition_expr{1})
-                            condExpr = flow.condition_expr{1};
-                        end
-                        
-                        % Check for waypoints
-                        waypoints = [];
-                        if ismember('waypoints_data', flow.Properties.VariableNames) && !isempty(flow.waypoints_data{1})
-                            % Parse the waypoints data string
-                            wpData = flow.waypoints_data{1};
-                            waypoints = parseWaypointsData(wpData);
-                        end
-                        
-                        % If no waypoints, create default straight line
-                        if isempty(waypoints)
-                            % Create default waypoints between elements
-                            % This is simplified - would need element positions for better defaults
-                            waypoints = [100, 100; 200, 200];
-                        end
-                        
-                        fprintf('Processing sequence flow: %s (%s -> %s)\n', flowId, sourceRef, targetRef);
-                        obj.addSequenceFlow(flowId, sourceRef, targetRef, waypoints, condExpr);
-                    end
-                else
-                    warning('BPMNGenerator:NoFlows', 'No sequence flows found for process %s', processId);
-                end
-                
-                % --- 3. Import Message Flows ---
-                fprintf('Importing message flows...\n');
-                messageFlowsData = dbConnector.fetchMessageFlows();
-                
-                if !isempty(messageFlowsData)
-                    fprintf('Found %d message flows in database\n', height(messageFlowsData));
-                    
-                    for i = 1:height(messageFlowsData)
-                        flow = messageFlowsData(i, :);
-                        
-                        % Extract flow fields
-                        flowId = flow.flow_id{1};
-                        sourceRef = flow.source_ref{1};
-                        targetRef = flow.target_ref{1};
-                        
-                        % Extract message name if available
-                        messageName = '';
-                        if ismember('message_id', flow.Properties.VariableNames) && !isempty(flow.message_id{1})
-                            messageName = flow.message_id{1};
-                        end
-                        
-                        % Check for waypoints
-                        waypoints = [];
-                        if ismember('waypoints_data', flow.Properties.VariableNames) && !isempty(flow.waypoints_data{1})
-                            % Parse the waypoints data string
-                            wpData = flow.waypoints_data{1};
-                            waypoints = parseWaypointsData(wpData);
-                        end
-                        
-                        % If no waypoints, create default straight line
-                        if isempty(waypoints)
-                            waypoints = [100, 100; 200, 200];
-                        end
-                        
-                        fprintf('Processing message flow: %s (%s -> %s)\n', flowId, sourceRef, targetRef);
-                        obj.addMessageFlow(flowId, sourceRef, targetRef, waypoints, messageName);
-                    end
-                else
-                    fprintf('No message flows found\n');
-                end
-                
-                % --- 4. Import Data Objects and Associations ---
-                fprintf('Importing data objects...\n');
-                dataObjectsData = dbConnector.fetchDataObjects(processId);
-                
-                if !isempty(dataObjectsData)
-                    fprintf('Found %d data objects in database\n', height(dataObjectsData));
-                    
-                    for i = 1:height(dataObjectsData)
-                        dataObj = dataObjectsData(i, :);
-                        
-                        % Extract data object fields
-                        dataObjId = dataObj.data_object_id{1};
-                        
-                        % Get name
-                        dataObjName = '';
-                        if ismember('name', dataObj.Properties.VariableNames) && !isempty(dataObj.name{1})
-                            dataObjName = dataObj.name{1};
-                        end
-                        
-                        % Check if collection
-                        isCollection = false;
-                        if ismember('is_collection', dataObj.Properties.VariableNames)
-                            isCollection = dataObj.is_collection;
-                        end
-                        
-                        % Get position
-                        x = 300 + i * 100;
-                        y = 100;
-                        width = 36;
-                        height = 50;
-                        
-                        if ismember('x', dataObj.Properties.VariableNames) && !isnan(dataObj.x)
-                            x = dataObj.x;
-                        end
-                        if ismember('y', dataObj.Properties.VariableNames) && !isnan(dataObj.y)
-                            y = dataObj.y;
-                        end
-                        if ismember('width', dataObj.Properties.VariableNames) && !isnan(dataObj.width)
-                            width = dataObj.width;
-                        end
-                        if ismember('height', dataObj.Properties.VariableNames) && !isnan(dataObj.height)
-                            height = dataObj.height;
-                        end
-                        
-                        fprintf('Processing data object: %s\n', dataObjId);
-                        obj.addDataObject(dataObjId, dataObjName, isCollection, x, y, width, height);
-                    end
-                else
-                    fprintf('No data objects found\n');
-                end
-                
-                % Get data associations
-                fprintf('Importing data associations...\n');
-                dataAssocData = dbConnector.fetchDataAssociations();
-                
-                if !isempty(dataAssocData)
-                    fprintf('Found %d data associations in database\n', height(dataAssocData));
-                    
-                    for i = 1:height(dataAssocData)
-                        assoc = dataAssocData(i, :);
-                        
-                        % Extract data association fields
-                        assocId = assoc.association_id{1};
-                        sourceRef = assoc.source_ref{1};
-                        targetRef = assoc.target_ref{1};
-                        
-                        % Check for waypoints
-                        waypoints = [];
-                        if ismember('waypoints_data', assoc.Properties.VariableNames) && !isempty(assoc.waypoints_data{1})
-                            % Parse the waypoints data string
-                            wpData = assoc.waypoints_data{1};
-                            waypoints = parseWaypointsData(wpData);
-                        end
-                        
-                        % If no waypoints, create default straight line
-                        if isempty(waypoints)
-                            waypoints = [100, 100; 200, 200];
-                        end
-                        
-                        fprintf('Processing data association: %s (%s -> %s)\n', assocId, sourceRef, targetRef);
-                        obj.addDataAssociation(assocId, sourceRef, targetRef, waypoints);
-                    end
-                else
-                    fprintf('No data associations found\n');
-                end
-                
-                % --- 5. Import Text Annotations and Associations ---
-                fprintf('Importing text annotations and associations...\n');
-                
-                % Text annotations are handled in the main elements loop
-                
-                % Get regular associations (not data associations)
-                associationData = dbConnector.fetchAssociations(processId);
-                
-                if !isempty(associationData)
-                    fprintf('Found %d associations in database\n', height(associationData));
-                    
-                    for i = 1:height(associationData)
-                        assoc = associationData(i, :);
-                        
-                        % Extract association fields
-                        assocId = assoc.flow_id{1};
-                        sourceRef = assoc.source_ref{1};
-                        targetRef = assoc.target_ref{1};
-                        
-                        % Get direction if available
-                        direction = 'None';
-                        if ismember('association_direction', assoc.Properties.VariableNames) && !isempty(assoc.association_direction{1})
-                            direction = assoc.association_direction{1};
-                        end
-                        
-                        % Check for waypoints
-                        waypoints = [];
-                        if ismember('waypoints_data', assoc.Properties.VariableNames) && !isempty(assoc.waypoints_data{1})
-                            % Parse the waypoints data string
-                            wpData = assoc.waypoints_data{1};
-                            waypoints = parseWaypointsData(wpData);
-                        end
-                        
-                        % If no waypoints, create default straight line
-                        if isempty(waypoints)
-                            waypoints = [100, 100; 200, 200];
-                        end
-                        
-                        fprintf('Processing association: %s (%s -> %s)\n', assocId, sourceRef, targetRef);
-                        obj.addAssociation(assocId, sourceRef, targetRef, waypoints, direction);
-                    end
-                else
-                    fprintf('No associations found\n');
-                end
-                
-                fprintf('Database import completed successfully!\n');
-                
-            catch ME
-                % Add context to the error and rethrow
-                newME = MException('BPMNGenerator:DatabaseImportError', ...
-                    'Error importing BPMN from database: %s', ME.message);
-                newME.addCause(ME);
-                throw(newME);
-            end
-        end
-        
-        function importFromFile(obj, filePath)
-            % Import BPMN definition from an existing BPMN XML file
-            % filePath: Path to the BPMN XML file
-            
-            if ~exist(filePath, 'file')
-                error('BPMNGenerator:ImportError', 'BPMN file does not exist: %s', filePath);
-            end
-            
-            try
-                % Load the BPMN XML file
-                fprintf('Loading BPMN file: %s\n', filePath);
-                
-                % Preserve the original file path if needed
-                originalFilePath = obj.FilePath;
-                obj.FilePath = filePath;
-                
-                % Load the XML document
-                bpmnDoc = xmlread(filePath);
-                obj.XMLDoc = bpmnDoc;
-                
-                % Update the internal collections of processes and collaborations
-                obj.updateInternalCollections();
-                
-                fprintf('BPMN file imported successfully!\n');
-                
-            catch ME
-                % Add context to the error and rethrow
-                newME = MException('BPMNGenerator:FileImportError', ...
-                    'Error importing BPMN from file: %s', ME.message);
-                newME.addCause(ME);
-                throw(newME);
-            end
-        end
-        
-        function updateInternalCollections(obj)
-            % Update internal collections of processes, collaborations, etc.
-            % after loading a BPMN file
-            
-            % Clear existing collections
-            obj.Processes = {};
-            obj.Collaborations = {};
-            obj.Participants = {};
-            
-            rootNode = obj.XMLDoc.getDocumentElement();
-            
-            % Get all processes
-            processNodes = rootNode.getElementsByTagName('process');
-            for i = 0:processNodes.getLength()-1
-                processNode = processNodes.item(i);
-                obj.Processes{end+1} = processNode;
-            end
-            
-            % Get all collaborations
-            collabNodes = rootNode.getElementsByTagName('collaboration');
-            for i = 0:collabNodes.getLength()-1
-                collabNode = collabNodes.item(i);
-                obj.Collaborations{end+1} = collabNode;
-                
-                % Process participants in each collaboration
-                participantNodes = collabNode.getElementsByTagName('participant');
-                for j = 0:participantNodes.getLength()-1
-                    participantNode = participantNodes.item(j);
-                    id = char(participantNode.getAttribute('id'));
-                    processRef = '';
-                    if participantNode.hasAttribute('processRef')
-                        processRef = char(participantNode.getAttribute('processRef'));
-                    end
-                    obj.Participants{end+1} = struct('id', id, 'processRef', processRef);
-                end
-            end
-            
-            % Update ProcessElements structure (optional)
-            obj.extractProcessElements();
-        end
-        
-        function extractProcessElements(obj)
-            % Extract process elements from the BPMN document into internal structure
-            % This makes them easier to access and manipulate
-            
-            obj.ProcessElements = struct('tasks', {}, 'gateways', {}, 'events', {}, 'flows', {});
-            
-            % Get the process node
-            try
-                processNode = obj.getProcessNode();
-            catch
-                warning('No process node found in BPMN document.');
+            % Get process elements
+            elements = dbConnector.queryProcessElements(processId);
+            if isempty(elements)
+                warning('No elements found for process %s', processId);
                 return;
             end
             
-            % Extract tasks
-            taskNodes = processNode.getElementsByTagName('task');
-            for i = 0:taskNodes.getLength()-1
-                taskNode = taskNodes.item(i);
-                id = char(taskNode.getAttribute('id'));
-                name = '';
-                if taskNode.hasAttribute('name')
-                    name = char(taskNode.getAttribute('name'));
+            % Get sequence flows
+            flows = dbConnector.querySequenceFlows(processId);
+            
+            % Process the elements
+            for i = 1:height(elements)
+                element = elements(i, :);
+                elementId = element.element_id{1};
+                elementType = element.element_type{1};
+                elementName = element.element_name{1};
+                
+                % Get position information - would need to query from position table
+                x = 100 + i * 150; % Default positioning if not available
+                y = 200;
+                width = 100;
+                height = 80;
+                
+                % Create the element based on type
+                switch lower(elementType)
+                    case 'task'
+                        obj.addTask(elementId, elementName, x, y, width, height);
+                    case 'gateway'
+                        gatewayType = 'exclusiveGateway'; % Default
+                        % Would need logic to determine gateway type from properties
+                        obj.addGateway(elementId, elementName, gatewayType, x, y, 50, 50);
+                    case 'startevent'
+                        obj.addEvent(elementId, elementName, 'startEvent', '', x, y, 36, 36);
+                    case 'endevent'
+                        obj.addEvent(elementId, elementName, 'endEvent', '', x, y, 36, 36);
+                    case 'subprocess'
+                        obj.addSubProcess(elementId, elementName, x, y, 200, 150, true);
+                    % Additional element types would be handled here
+                end
+            end
+            
+            % Process the flows
+            for i = 1:height(flows)
+                flow = flows(i, :);
+                flowId = flow.flow_id{1};
+                sourceRef = flow.source_ref{1};
+                targetRef = flow.target_ref{1};
+                
+                % Default waypoints - would need to query from waypoints table
+                sourceX = 0; sourceY = 0; targetX = 0; targetY = 0;
+                % Logic to determine waypoints would go here
+                waypoints = [sourceX, sourceY; targetX, targetY];
+                
+                % Add condition expression if available
+                condExpr = '';
+                if isfield(flow, 'condition_expr') && ~isempty(flow.condition_expr{1})
+                    condExpr = flow.condition_expr{1};
                 end
                 
-                % Add to tasks collection
-                taskElement = struct('id', id, 'name', name, 'type', 'task', 'node', taskNode);
-                obj.ProcessElements.tasks{end+1} = taskElement;
+                obj.addSequenceFlow(flowId, sourceRef, targetRef, waypoints, condExpr);
             end
             
-            % Extract user tasks
-            userTaskNodes = processNode.getElementsByTagName('userTask');
-            for i = 0:userTaskNodes.getLength()-1
-                taskNode = userTaskNodes.item(i);
-                id = char(taskNode.getAttribute('id'));
-                name = '';
-                if taskNode.hasAttribute('name')
-                    name = char(taskNode.getAttribute('name'));
-                end
-                
-                % Add to tasks collection
-                taskElement = struct('id', id, 'name', name, 'type', 'userTask', 'node', taskNode);
-                obj.ProcessElements.tasks{end+1} = taskElement;
-            end
-            
-            % Extract service tasks
-            serviceTaskNodes = processNode.getElementsByTagName('serviceTask');
-            for i = 0:serviceTaskNodes.getLength()-1
-                taskNode = serviceTaskNodes.item(i);
-                id = char(taskNode.getAttribute('id'));
-                name = '';
-                if taskNode.hasAttribute('name')
-                    name = char(taskNode.getAttribute('name'));
-                end
-                
-                % Add to tasks collection
-                taskElement = struct('id', id, 'name', name, 'type', 'serviceTask', 'node', taskNode);
-                obj.ProcessElements.tasks{end+1} = taskElement;
-            end
-            
-            % Extract gateways
-            gatewayTypes = {'exclusiveGateway', 'parallelGateway', 'inclusiveGateway', 'complexGateway', 'eventBasedGateway'};
-            
-            for t = 1:length(gatewayTypes)
-                gatewayType = gatewayTypes{t};
-                gatewayNodes = processNode.getElementsByTagName(gatewayType);
-                
-                for i = 0:gatewayNodes.getLength()-1
-                    gatewayNode = gatewayNodes.item(i);
-                    id = char(gatewayNode.getAttribute('id'));
-                    name = '';
-                    if gatewayNode.hasAttribute('name')
-                        name = char(gatewayNode.getAttribute('name'));
-                    end
-                    
-                    % Add to gateways collection
-                    gatewayElement = struct('id', id, 'name', name, 'type', gatewayType, 'node', gatewayNode);
-                    obj.ProcessElements.gateways{end+1} = gatewayElement;
-                end
-            end
-            
-            % Extract events
-            eventTypes = {'startEvent', 'endEvent', 'intermediateThrowEvent', 'intermediateCatchEvent', 'boundaryEvent'};
-            
-            for t = 1:length(eventTypes)
-                eventType = eventTypes{t};
-                eventNodes = processNode.getElementsByTagName(eventType);
-                
-                for i = 0:eventNodes.getLength()-1
-                    eventNode = eventNodes.item(i);
-                    id = char(eventNode.getAttribute('id'));
-                    name = '';
-                    if eventNode.hasAttribute('name')
-                        name = char(eventNode.getAttribute('name'));
-                    end
-                    
-                    % Determine event definition type
-                    eventDefinition = 'none';
-                    childNodes = eventNode.getChildNodes();
-                    for j = 0:childNodes.getLength()-1
-                        childNode = childNodes.item(j);
-                        if childNode.getNodeType() == 1  % Element node
-                            nodeName = char(childNode.getNodeName());
-                            if contains(nodeName, 'EventDefinition')
-                                eventDefinition = nodeName;
-                                break;
-                            end
-                        end
-                    end
-                    
-                    % Add to events collection
-                    eventElement = struct('id', id, 'name', name, 'type', eventType, ...
-                        'definitionType', eventDefinition, 'node', eventNode);
-                    obj.ProcessElements.events{end+1} = eventElement;
-                end
-            end
-            
-            % Extract sequence flows
-            flowNodes = processNode.getElementsByTagName('sequenceFlow');
-            
-            for i = 0:flowNodes.getLength()-1
-                flowNode = flowNodes.item(i);
-                id = char(flowNode.getAttribute('id'));
-                sourceRef = char(flowNode.getAttribute('sourceRef'));
-                targetRef = char(flowNode.getAttribute('targetRef'));
-                name = '';
-                if flowNode.hasAttribute('name')
-                    name = char(flowNode.getAttribute('name'));
-                end
-                
-                % Check for condition expression
-                conditionExpr = '';
-                conditionNodes = flowNode.getElementsByTagName('conditionExpression');
-                if conditionNodes.getLength() > 0
-                    conditionNode = conditionNodes.item(0);
-                    if conditionNode.hasChildNodes()
-                        conditionExpr = char(conditionNode.getFirstChild().getNodeValue());
-                    end
-                end
-                
-                % Add to flows collection
-                flowElement = struct('id', id, 'name', name, 'type', 'sequenceFlow', ...
-                    'sourceRef', sourceRef, 'targetRef', targetRef, ...
-                    'conditionExpression', conditionExpr, 'node', flowNode);
-                obj.ProcessElements.flows{end+1} = flowElement;
-            end
-        end
-        
-        function modifyElement(obj, elementId, properties)
-            % Modify an existing BPMN element's properties
-            % elementId: ID of the element to modify
-            % properties: Structure with properties to update
-            
-            if isempty(elementId)
-                error('BPMNGenerator:ModifyError', 'Element ID cannot be empty');
-            end
-            
-            if ~isstruct(properties)
-                error('BPMNGenerator:ModifyError', 'Properties must be provided as a structure');
-            end
-            
-            % Find the element in the document
-            rootNode = obj.XMLDoc.getDocumentElement();
-            allNodes = rootNode.getElementsByTagName('*');
-            
-            elementNode = [];
-            for i = 0:allNodes.getLength()-1
-                node = allNodes.item(i);
-                if node.getNodeType() == 1 && node.hasAttribute('id') % Element node with id attribute
-                    if strcmp(char(node.getAttribute('id')), elementId)
-                        elementNode = node;
-                        break;
-                    end
-                end
-            end
-            
-            if isempty(elementNode)
-                error('BPMNGenerator:ModifyError', 'Element with ID %s not found', elementId);
-            end
-            
-            % Update the element's properties
-            propFields = fieldnames(properties);
-            for i = 1:length(propFields)
-                fieldName = propFields{i};
-                fieldValue = properties.(fieldName);
-                
-                if strcmpi(fieldName, 'name')
-                    elementNode.setAttribute('name', char(fieldValue));
-                elseif strcmpi(fieldName, 'x') || strcmpi(fieldName, 'y') || ...
-                       strcmpi(fieldName, 'width') || strcmpi(fieldName, 'height')
-                    % Update element position/size in the visualization
-                    obj.updateElementVisualization(elementId, properties);
-                    break; % Only need to do this once for all position/size properties
-                else
-                    % For other properties, just set the attribute directly
-                    elementNode.setAttribute(fieldName, obj.toString(fieldValue));
-                end
-            end
-            
-            fprintf('Element %s updated successfully\n', elementId);
-        end
-        
-        function updateElementVisualization(obj, elementId, properties)
-            % Update the visualization properties of a BPMN element
-            % elementId: ID of the element to update
-            % properties: Structure with x, y, width, height properties
-            
-            rootNode = obj.XMLDoc.getDocumentElement();
-            bpmnDiNodes = rootNode.getElementsByTagName('bpmndi:BPMNDiagram');
-            
-            if bpmnDiNodes.getLength() == 0
-                warning('No BPMNDiagram element found in BPMN document');
-                return;
-            end
-            
-            bpmnDiNode = bpmnDiNodes.item(0);
-            planeNodes = bpmnDiNode.getElementsByTagName('bpmndi:BPMNPlane');
-            
-            if planeNodes.getLength() == 0
-                warning('No BPMNPlane element found in BPMN document');
-                return;
-            end
-            
-            planeNode = planeNodes.item(0);
-            
-            % Find the shape element for the element being modified
-            shapeNodes = planeNode.getElementsByTagName('bpmndi:BPMNShape');
-            shapeNode = [];
-            
-            for i = 0:shapeNodes.getLength()-1
-                shape = shapeNodes.item(i);
-                if strcmp(char(shape.getAttribute('bpmnElement')), elementId)
-                    shapeNode = shape;
-                    break;
-                end
-            end
-            
-            if isempty(shapeNode)
-                warning('No shape element found for element %s', elementId);
-                return;
-            end
-            
-            % Update the bounds
-            boundsNodes = shapeNode.getElementsByTagName('dc:Bounds');
-            if boundsNodes.getLength() > 0
-                boundsNode = boundsNodes.item(0);
-                
-                if isfield(properties, 'x')
-                    boundsNode.setAttribute('x', num2str(properties.x));
-                end
-                
-                if isfield(properties, 'y')
-                    boundsNode.setAttribute('y', num2str(properties.y));
-                end
-                
-                if isfield(properties, 'width')
-                    boundsNode.setAttribute('width', num2str(properties.width));
-                end
-                
-                if isfield(properties, 'height')
-                    boundsNode.setAttribute('height', num2str(properties.height));
-                end
-            end
+            fprintf('Imported %d elements and %d flows from process %s\n', ...
+                   height(elements), height(flows), processId);
         end
         
         function connectToDatabase(obj, dbType, connectionParams)
@@ -1550,7 +718,7 @@ classdef BPMNGenerator < handle
                         error('Unsupported database type: %s', dbType);
                 end
                 
-                if !isempty(obj.DatabaseConn.Message)
+                if ~isempty(obj.DatabaseConn.Message)
                     error('Database connection failed: %s', obj.DatabaseConn.Message);
                 end
                 
@@ -1574,23 +742,13 @@ classdef BPMNGenerator < handle
             
             % Ensure output directory exists
             [fileDir, ~, ~] = fileparts(obj.FilePath);
-            if !isempty(fileDir) && !exist(fileDir, 'dir')
-                % Use try-catch because mkdir can fail in compiled applications with
-                % certain permissions
-                try
-                    mkdir(fileDir);
-                catch ME
-                    warning('Cannot create directory: %s. Will attempt to save file anyway.', fileDir);
-                end
+            if ~isempty(fileDir) && ~exist(fileDir, 'dir')
+                mkdir(fileDir);
             end
             
-            % Write XML to file with error handling for compiled context
-            try
-                xmlwrite(obj.FilePath, obj.XMLDoc);
-                fprintf('BPMN file saved to: %s\n', obj.FilePath);
-            catch ME
-                error('Failed to save BPMN file: %s', ME.message);
-            end
+            % Write XML to file
+            xmlwrite(obj.FilePath, obj.XMLDoc);
+            fprintf('BPMN file saved to: %s\n', obj.FilePath);
         end
         
         function processNode = getProcessNode(obj, processId)
@@ -1601,7 +759,7 @@ classdef BPMNGenerator < handle
             processNodes = rootNode.getElementsByTagName('process');
             
             % Return specific process if ID provided, otherwise first process
-            if nargin >= 2 && !isempty(processId)
+            if nargin >= 2 && ~isempty(processId)
                 for i = 0:processNodes.getLength()-1
                     node = processNodes.item(i);
                     if strcmp(node.getAttribute('id'), processId)
@@ -1650,7 +808,7 @@ classdef BPMNGenerator < handle
                     shapeNode.appendChild(boundsNode);
                     
                     % Add isExpanded attribute for subprocesses
-                    if nargin >= 7 && !isempty(isExpanded)
+                    if nargin >= 7 && ~isempty(isExpanded)
                         shapeNode.setAttribute('isExpanded', lower(toString(isExpanded)));
                     end
                     

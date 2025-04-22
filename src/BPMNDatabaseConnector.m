@@ -8,6 +8,7 @@ classdef BPMNDatabaseConnector < handle
         DbType          % Type of database (mysql, postgresql, etc.)
         Connected       % Boolean flag indicating if connected
         QueryCache      % Cache for commonly used queries
+        EnvVars         % Environment variables loaded from .env file
     end
     
     methods
@@ -18,10 +19,119 @@ classdef BPMNDatabaseConnector < handle
             if nargin > 0
                 obj.DbType = dbType;
             else
-                obj.DbType = '';
+                % Try to load from environment file
+                try
+                    obj.loadEnvironmentVars();
+                    if isfield(obj.EnvVars, 'DB_TYPE')
+                        obj.DbType = obj.EnvVars.DB_TYPE;
+                    else
+                        obj.DbType = '';
+                    end
+                catch ex
+                    fprintf('Could not load environment variables: %s\n', ex.message);
+                    obj.DbType = '';
+                end
             end
+            
             obj.Connected = false;
             obj.QueryCache = containers.Map();
+        end
+        
+        function loadEnvironmentVars(obj, envFilePath)
+            % Load environment variables from the .env file
+            % envFilePath: Optional path to the .env file
+            
+            try
+                if nargin < 2
+                    % Use the default loadEnvironment function to get the variables
+                    utilPath = fileparts(mfilename('fullpath'));
+                    utilFolder = fullfile(utilPath, 'util');
+                    
+                    % Ensure the util folder is on the path
+                    if ~any(contains(path, utilFolder))
+                        addpath(utilFolder);
+                    end
+                    
+                    obj.EnvVars = loadEnvironment();
+                else
+                    obj.EnvVars = loadEnvironment(envFilePath);
+                end
+                fprintf('Environment variables loaded successfully\n');
+            catch ex
+                warning('Error loading environment variables: %s', ex.message);
+                obj.EnvVars = struct();
+            end
+        end
+        
+        function success = connectWithEnvFile(obj, envFilePath)
+            % Connect to database using credentials from the .env file
+            % envFilePath: Optional path to the .env file
+            
+            try
+                % Load environment variables if not already loaded
+                if isempty(obj.EnvVars) || ~isfield(obj.EnvVars, 'DB_HOST')
+                    if nargin < 2
+                        obj.loadEnvironmentVars();
+                    else
+                        obj.loadEnvironmentVars(envFilePath);
+                    end
+                end
+                
+                % Set database type if specified in the environment
+                if isfield(obj.EnvVars, 'DB_TYPE') && isempty(obj.DbType)
+                    obj.DbType = obj.EnvVars.DB_TYPE;
+                end
+                
+                % Build connection parameters from environment variables
+                connectionParams = struct();
+                
+                if isfield(obj.EnvVars, 'DB_NAME')
+                    connectionParams.dbName = obj.EnvVars.DB_NAME;
+                else
+                    error('DB_NAME not found in environment variables');
+                end
+                
+                if isfield(obj.EnvVars, 'DB_USER')
+                    connectionParams.username = obj.EnvVars.DB_USER;
+                else
+                    connectionParams.username = '';
+                end
+                
+                if isfield(obj.EnvVars, 'DB_PASSWORD')
+                    connectionParams.password = obj.EnvVars.DB_PASSWORD;
+                else
+                    connectionParams.password = '';
+                end
+                
+                if isfield(obj.EnvVars, 'DB_HOST')
+                    connectionParams.server = obj.EnvVars.DB_HOST;
+                else
+                    connectionParams.server = 'localhost';
+                end
+                
+                if isfield(obj.EnvVars, 'DB_PORT')
+                    connectionParams.port = obj.EnvVars.DB_PORT;
+                else
+                    connectionParams.port = 3306;
+                end
+                
+                % Additional configuration for SQLite
+                if strcmpi(obj.DbType, 'sqlite') && isfield(obj.EnvVars, 'DB_FILE_PATH')
+                    connectionParams.filePath = obj.EnvVars.DB_FILE_PATH;
+                end
+                
+                % Additional configuration for ODBC
+                if strcmpi(obj.DbType, 'odbc') && isfield(obj.EnvVars, 'DB_DSN')
+                    connectionParams.dsn = obj.EnvVars.DB_DSN;
+                end
+                
+                % Connect using the standard connect method
+                success = obj.connect(connectionParams);
+                
+            catch ex
+                success = false;
+                error('Error connecting with environment file: %s', ex.message);
+            end
         end
         
         function success = connect(obj, connectionParams)
@@ -166,7 +276,7 @@ classdef BPMNDatabaseConnector < handle
             % List all tables in the current database
             % Returns a cell array of table names
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -185,7 +295,7 @@ classdef BPMNDatabaseConnector < handle
             % query: SQL query string to execute
             % Returns query results
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -209,7 +319,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch elements for
             % Returns a table with element data according to DatabaseSchema.md
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -254,7 +364,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch flows for
             % Returns a table with flow data and associated waypoints
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -292,7 +402,7 @@ classdef BPMNDatabaseConnector < handle
             % Fetch message flows between pools/participants
             % Returns a table with message flow data
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -325,7 +435,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch data objects for
             % Returns a table with data object information
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -357,7 +467,7 @@ classdef BPMNDatabaseConnector < handle
             % Fetch data associations with waypoints
             % Returns a table with data association information
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -390,7 +500,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch diagram info for
             % Returns a table with diagram positioning data
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -423,7 +533,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch annotations for
             % Returns a table with text annotation data
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -455,7 +565,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch associations for
             % Returns a table with association data
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             

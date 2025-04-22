@@ -1,147 +1,129 @@
 classdef BPMNValidator < handle
-    % BPMNValidator Class for validating BPMN 2.0 files
-    %   This class provides functionality for validating BPMN 2.0 XML files
-    %   against the specification, checking structural integrity and semantic rules
+    % BPMNValidator Validates BPMN diagrams according to BPMN 2.0 specification
+    %   This class provides comprehensive validation of BPMN diagrams to ensure
+    %   they follow the BPMN 2.0 specification and are structurally sound
     
     properties
-        XMLDoc          % XML document object
-        ValidationLogs  % Structure with validation results
-        BPMNVersion     % BPMN version to validate against
-        SchemaPath      % Path to BPMN XML schema
-        StrictMode      % Whether to enforce all rules or just critical ones
+        FilePath            % Path to the BPMN file
+        XMLDoc              % XML document object
+        ValidationResults   % Results of validation
     end
     
     methods
-        function obj = BPMNValidator(bpmnFilePath, schemaPath, strictMode)
+        function obj = BPMNValidator(filePath)
             % Constructor for BPMNValidator
-            % bpmnFilePath: Path to BPMN file to validate
-            % schemaPath: Optional path to BPMN XML schema
-            % strictMode: Optional flag for strict validation
+            %   filePath: Path to the BPMN file to validate
             
-            obj.ValidationLogs = struct('errors', {}, 'warnings', {}, 'info', {});
-            obj.BPMNVersion = '2.0';
+            obj.FilePath = filePath;
+            obj.ValidationResults = struct('errors', {}, 'warnings', {});
             
-            % Set default schema path if not provided - with compile-safe path handling
-            if nargin < 2 || isempty(schemaPath)
-                % Use mfilename to get the actual script's path
-                currentScript = mfilename('fullpath');
-                currentDir = fileparts(currentScript);
-                
-                % For compiled applications, the path might be different
-                if isdeployed
-                    % In compiled applications, use a relative path from the executable
-                    obj.SchemaPath = fullfile(ctfroot, 'schemas', 'BPMN20.xsd');
-                    
-                    % Check if the schema exists at the deployed location
-                    if ~exist(obj.SchemaPath, 'file')
-                        warning('BPMN schema not found at %s when compiled. Schema validation will be skipped.', obj.SchemaPath);
-                        % Fallback to the source path structure
-                        obj.SchemaPath = fullfile(currentDir, '..', 'schemas', 'BPMN20.xsd');
-                    end
-                else
-                    % Regular MATLAB environment
-                    obj.SchemaPath = fullfile(currentDir, '..', 'schemas', 'BPMN20.xsd');
+            % Load XML document if file exists
+            if exist(filePath, 'file')
+                obj.XMLDoc = xmlread(filePath);
+            else
+                error('BPMN file not found: %s', filePath);
+            end
+        end
+        
+        function validate(obj)
+            % Validate the BPMN file against BPMN 2.0 specification
+            %   Performs multiple validation checks and stores results
+            
+            % Reset validation results
+            obj.ValidationResults = struct('errors', {{}}, 'warnings', {{}});
+            
+            % Check BPMN namespace and structure
+            obj.validateBPMNNamespace();
+            
+            % Validate process elements
+            obj.validateProcessElements();
+            
+            % Validate sequence flows
+            obj.validateSequenceFlows();
+            
+            % Validate gateway flows
+            obj.validateGateways();
+            
+            % Validate event definitions
+            obj.validateEventDefinitions();
+            
+            % Validate collaboration elements
+            obj.validateCollaborationElements();
+            
+            % Validate data elements and associations
+            obj.validateDataElements();
+        end
+        
+        function results = getValidationResults(obj)
+            % Get the validation results
+            %   Returns a structure with errors and warnings
+            
+            results = obj.ValidationResults;
+        end
+        
+        function printValidationResults(obj)
+            % Print validation results to console
+            
+            fprintf('\nBPMN Validation Results for: %s\n', obj.FilePath);
+            fprintf('----------------------------------------\n');
+            
+            % Print errors
+            if ~isempty(obj.ValidationResults.errors)
+                fprintf('\nErrors (%d):\n', length(obj.ValidationResults.errors));
+                for i = 1:length(obj.ValidationResults.errors)
+                    fprintf('  - %s\n', obj.ValidationResults.errors{i});
                 end
             else
-                obj.SchemaPath = schemaPath;
+                fprintf('\nNo errors found.\n');
             end
             
-            % Set strict mode
-            if nargin < 3
-                obj.StrictMode = false;
+            % Print warnings
+            if ~isempty(obj.ValidationResults.warnings)
+                fprintf('\nWarnings (%d):\n', length(obj.ValidationResults.warnings));
+                for i = 1:length(obj.ValidationResults.warnings)
+                    fprintf('  - %s\n', obj.ValidationResults.warnings{i});
+                end
             else
-                obj.StrictMode = strictMode;
+                fprintf('\nNo warnings found.\n');
             end
             
-            % Load BPMN file if provided
-            if nargin > 0 && ~isempty(bpmnFilePath)
-                obj.loadBPMNFile(bpmnFilePath);
+            fprintf('\nValidation complete.\n');
+        end
+    end
+    
+    methods (Access = private)
+        function validateBPMNNamespace(obj)
+            % Validate BPMN namespace and root element
+            
+            % Get root element
+            rootNode = obj.XMLDoc.getDocumentElement();
+            
+            % Check if root element is 'definitions'
+            if ~strcmp(char(rootNode.getNodeName()), 'definitions') && ...
+               ~strcmp(char(rootNode.getNodeName()), 'bpmn:definitions')
+                obj.addError('Root element is not "definitions"');
+            end
+            
+            % Check for BPMN namespace
+            namespaceURI = char(rootNode.getAttribute('xmlns:bpmn'));
+            if isempty(namespaceURI)
+                namespaceURI = char(rootNode.getAttribute('xmlns'));
+            end
+            
+            if isempty(namespaceURI) || ~contains(namespaceURI, 'bpmn')
+                obj.addError('Missing BPMN namespace declaration');
             end
         end
         
-        function loadBPMNFile(obj, filePath)
-            % Load a BPMN file for validation
-            % filePath: Path to the BPMN file
+        function validateProcessElements(obj)
+            % Validate process elements (events, tasks, etc.)
             
-            try
-                obj.XMLDoc = xmlread(filePath);
-                obj.addInfo(['Successfully loaded BPMN file: ' filePath]);
-            catch ex
-                obj.addError(['Failed to load BPMN file: ' ex.message]);
-            end
-        end
-        
-        function valid = validate(obj)
-            % Validate the BPMN file
-            % Returns: Boolean indicating whether validation passed
+            % Get all processes
+            processes = obj.getAllElements('process');
             
-            obj.ValidationLogs = struct('errors', {}, 'warnings', {}, 'info', {});
-            obj.addInfo('Starting BPMN validation...');
-            
-            if isempty(obj.XMLDoc)
-                obj.addError('No BPMN file loaded for validation');
-                valid = false;
-                return;
-            end
-            
-            % Run all validation checks
-            obj.validateBPMNSchema();
-            obj.validateStructuralIntegrity();
-            obj.validateSemanticRules();
-            obj.validateExecutability();
-            
-            % Check if there are any errors
-            valid = isempty(obj.ValidationLogs.errors);
-            
-            if valid
-                obj.addInfo('BPMN validation completed successfully with no errors.');
-            else
-                obj.addInfo(['BPMN validation completed with ' num2str(length(obj.ValidationLogs.errors)) ' errors.']);
-            end
-            
-            if ~isempty(obj.ValidationLogs.warnings)
-                obj.addInfo(['Found ' num2str(length(obj.ValidationLogs.warnings)) ' warnings.']);
-            end
-        end
-        
-        function validateBPMNSchema(obj)
-            % Validate against the BPMN XML schema
-            
-            if (!exist(obj.SchemaPath, 'file'))
-                obj.addWarning(['BPMN schema file not found: ' obj.SchemaPath]);
-                obj.addWarning('Schema validation skipped.');
-                return;
-            end
-            
-            % MATLAB doesn't have built-in XSD validation
-            % This is a placeholder - in production you would use Java libraries
-            % or call external tools for XSD validation
-            try
-                % Example implementation - integrate with xmlvalidate or similar tools
-                % xsdvalidator = org.apache.xerces.jaxp.validation.XMLSchemaFactory.newInstance(...);
-                % schema = xsdvalidator.newSchema(javax.xml.transform.stream.StreamSource(obj.SchemaPath));
-                % validator = schema.newValidator();
-                % validator.validate(javax.xml.transform.dom.DOMSource(obj.XMLDoc));
-                
-                obj.addInfo('Schema validation is currently a placeholder and requires external tools.');
-                obj.addWarning('Schema validation not performed - requires external XML validation tools.');
-            catch ex
-                obj.addError(['Schema validation failed: ' ex.message]);
-            end
-        end
-        
-        function validateStructuralIntegrity(obj)
-            % Validate structural integrity of the BPMN diagram
-            
-            obj.addInfo('Checking structural integrity...');
-            
-            % Check for process definitions
-            processes = obj.XMLDoc.getElementsByTagName('process');
             if processes.getLength() == 0
-                obj.addError('No process definitions found.');
+                obj.addWarning('No processes defined');
                 return;
-            else
-                obj.addInfo(['Found ' num2str(processes.getLength()) ' process definitions.']);
             end
             
             % Check each process
@@ -150,674 +132,624 @@ classdef BPMNValidator < handle
                 processId = char(process.getAttribute('id'));
                 
                 % Check for start events
-                startEvents = process.getElementsByTagName('startEvent');
+                startEvents = obj.getChildElements(process, 'startEvent');
                 if startEvents.getLength() == 0
-                    obj.addWarning(['Process ' processId ' has no start events.']);
-                else
-                    obj.addInfo(['Process ' processId ' has ' num2str(startEvents.getLength()) ' start events.']);
+                    obj.addWarning(sprintf('Process "%s" has no start event', processId));
                 end
                 
                 % Check for end events
-                endEvents = process.getElementsByTagName('endEvent');
+                endEvents = obj.getChildElements(process, 'endEvent');
                 if endEvents.getLength() == 0
-                    obj.addWarning(['Process ' processId ' has no end events.']);
-                else
-                    obj.addInfo(['Process ' processId ' has ' num2str(endEvents.getLength()) ' end events.']);
+                    obj.addWarning(sprintf('Process "%s" has no end event', processId));
                 end
                 
-                % Check for sequence flows
-                obj.validateSequenceFlows(process);
+                % Check all flow nodes for required attributes
+                obj.validateFlowNodeAttributes(process, processId);
             end
         end
         
-        function validateSequenceFlows(obj, processNode)
-            % Validate sequence flows in a process
-            % processNode: DOM node representing a BPMN process
+        function validateFlowNodeAttributes(obj, process, processId)
+            % Validate attributes of all flow nodes in a process
             
-            processId = char(processNode.getAttribute('id'));
+            % List of flow node types to check
+            nodeTypes = {'task', 'userTask', 'serviceTask', 'scriptTask', 'sendTask', ...
+                        'receiveTask', 'manualTask', 'businessRuleTask', ...
+                        'exclusiveGateway', 'inclusiveGateway', 'parallelGateway', 'complexGateway', ...
+                        'startEvent', 'endEvent', 'intermediateCatchEvent', 'intermediateThrowEvent'};
             
-            % Get all flow nodes and sequence flows
-            flowNodes = obj.getAllFlowNodes(processNode);
-            sequenceFlows = processNode.getElementsByTagName('sequenceFlow');
-            
-            if sequenceFlows.getLength() == 0
-                obj.addWarning(['Process ' processId ' has no sequence flows.']);
-                return;
+            % Check each type
+            for t = 1:length(nodeTypes)
+                nodes = obj.getChildElements(process, nodeTypes{t});
+                
+                for n = 0:nodes.getLength()-1
+                    node = nodes.item(n);
+                    nodeId = char(node.getAttribute('id'));
+                    
+                    % Check for required id attribute
+                    if isempty(nodeId)
+                        obj.addError(sprintf('%s in process "%s" is missing id attribute', nodeTypes{t}, processId));
+                    end
+                    
+                    % Check node-specific requirements
+                    if strcmp(nodeTypes{t}, 'exclusiveGateway') || strcmp(nodeTypes{t}, 'inclusiveGateway')
+                        % Check if gateway has outgoing flows
+                        if ~obj.hasOutgoingFlows(process, nodeId)
+                            obj.addWarning(sprintf('Gateway "%s" in process "%s" has no outgoing sequence flows', nodeId, processId));
+                        end
+                        
+                        % For exclusive gateway with multiple outgoing flows
+                        if obj.countOutgoingFlows(process, nodeId) > 1
+                            % Check for conditions
+                            if ~obj.hasConditionsOnFlows(process, nodeId)
+                                obj.addWarning(sprintf('Exclusive gateway "%s" has multiple outgoing flows without conditions', nodeId));
+                            end
+                        end
+                    end
+                    
+                    % Check for disconnected nodes
+                    if ~strcmp(nodeTypes{t}, 'startEvent') && ~obj.hasIncomingFlows(process, nodeId)
+                        obj.addWarning(sprintf('%s "%s" has no incoming sequence flows', nodeTypes{t}, nodeId));
+                    end
+                    
+                    if ~strcmp(nodeTypes{t}, 'endEvent') && ~obj.hasOutgoingFlows(process, nodeId)
+                        obj.addWarning(sprintf('%s "%s" has no outgoing sequence flows', nodeTypes{t}, nodeId));
+                    end
+                end
             end
+        end
+        
+        function validateSequenceFlows(obj)
+            % Validate sequence flows
             
-            % Create maps for source and target references
-            nodeIds = containers.Map();
-            for i = 1:length(flowNodes)
-                node = flowNodes{i};
-                nodeId = char(node.getAttribute('id'));
-                nodeIds(nodeId) = true;
-            end
+            % Get all sequence flows
+            flows = obj.getAllElements('sequenceFlow');
             
-            % Check each sequence flow
-            for i = 0:sequenceFlows.getLength()-1
-                flow = sequenceFlows.item(i);
+            for i = 0:flows.getLength()-1
+                flow = flows.item(i);
                 flowId = char(flow.getAttribute('id'));
                 sourceRef = char(flow.getAttribute('sourceRef'));
                 targetRef = char(flow.getAttribute('targetRef'));
                 
-                % Verify source reference
+                % Check for required attributes
+                if isempty(flowId)
+                    obj.addError('Sequence flow is missing id attribute');
+                    continue;
+                end
+                
                 if isempty(sourceRef)
-                    obj.addError(['Sequence flow ' flowId ' has no sourceRef attribute.']);
-                elseif ~nodeIds.isKey(sourceRef)
-                    obj.addError(['Sequence flow ' flowId ' references non-existent source: ' sourceRef]);
+                    obj.addError(sprintf('Sequence flow "%s" is missing sourceRef attribute', flowId));
                 end
                 
-                % Verify target reference
                 if isempty(targetRef)
-                    obj.addError(['Sequence flow ' flowId ' has no targetRef attribute.']);
-                elseif ~nodeIds.isKey(targetRef)
-                    obj.addError(['Sequence flow ' flowId ' references non-existent target: ' targetRef]);
-                end
-            end
-            
-            % Check for disconnected nodes (no incoming or outgoing flows)
-            obj.checkForDisconnectedNodes(processNode, flowNodes, sequenceFlows);
-        end
-        
-        function checkForDisconnectedNodes(obj, processNode, flowNodes, sequenceFlows)
-            % Check for disconnected nodes in the process
-            % processNode: DOM node representing a BPMN process
-            % flowNodes: Cell array of flow node DOM nodes
-            % sequenceFlows: NodeList of sequence flow DOM nodes
-            
-            processId = char(processNode.getAttribute('id'));
-            
-            % Create maps for incoming and outgoing connections
-            incoming = containers.Map();
-            outgoing = containers.Map();
-            
-            % Initialize with empty arrays for all nodes
-            for i = 1:length(flowNodes)
-                node = flowNodes{i};
-                nodeId = char(node.getAttribute('id'));
-                incoming(nodeId) = {};
-                outgoing(nodeId) = {};
-            end
-            
-            % Map flows to nodes
-            for i = 0:sequenceFlows.getLength()-1
-                flow = sequenceFlows.item(i);
-                sourceRef = char(flow.getAttribute('sourceRef'));
-                targetRef = char(flow.getAttribute('targetRef'));
-                
-                if incoming.isKey(targetRef)
-                    inflows = incoming(targetRef);
-                    incoming(targetRef) = [inflows, {flow}];
+                    obj.addError(sprintf('Sequence flow "%s" is missing targetRef attribute', flowId));
                 end
                 
-                if outgoing.isKey(sourceRef)
-                    outflows = outgoing(sourceRef);
-                    outgoing(sourceRef) = [outflows, {flow}];
+                % Check that source and target elements exist
+                if ~isempty(sourceRef) && ~obj.elementExists(sourceRef)
+                    obj.addError(sprintf('Sequence flow "%s" references non-existent source element "%s"', flowId, sourceRef));
                 end
-            end
-            
-            % Check each node for connections
-            for i = 1:length(flowNodes)
-                node = flowNodes{i};
-                nodeId = char(node.getAttribute('id'));
-                nodeType = node.getNodeName();
                 
-                % Start events should have no incoming flows
-                if strcmp(nodeType, 'startEvent')
-                    if ~isempty(incoming(nodeId))
-                        obj.addError(['Start event ' nodeId ' has incoming sequence flows, which is not allowed.']);
-                    end
-                    if isempty(outgoing(nodeId))
-                        obj.addWarning(['Start event ' nodeId ' has no outgoing sequence flows.']);
-                    end
-                % End events should have no outgoing flows
-                elseif strcmp(nodeType, 'endEvent')
-                    if isempty(incoming(nodeId))
-                        obj.addWarning(['End event ' nodeId ' has no incoming sequence flows.']);
-                    end
-                    if ~isempty(outgoing(nodeId))
-                        obj.addError(['End event ' nodeId ' has outgoing sequence flows, which is not allowed.']);
-                    end
-                % All other nodes should have both incoming and outgoing flows
-                else
-                    if isempty(incoming(nodeId)) && ~strcmp(nodeType, 'boundaryEvent')
-                        obj.addWarning(['Node ' nodeId ' (' char(nodeType) ') has no incoming sequence flows.']);
-                    end
-                    if isempty(outgoing(nodeId))
-                        obj.addWarning(['Node ' nodeId ' (' char(nodeType) ') has no outgoing sequence flows.']);
+                if ~isempty(targetRef) && ~obj.elementExists(targetRef)
+                    obj.addError(sprintf('Sequence flow "%s" references non-existent target element "%s"', flowId, targetRef));
+                end
+                
+                % Validate conditions
+                conditions = flow.getElementsByTagName('conditionExpression');
+                if conditions.getLength() > 0
+                    % Check if source is a gateway
+                    if ~obj.isGateway(sourceRef)
+                        obj.addWarning(sprintf('Sequence flow "%s" has condition but source "%s" is not a gateway', flowId, sourceRef));
                     end
                 end
             end
-        end
-        
-        function validateSemanticRules(obj)
-            % Validate semantic rules of the BPMN diagram
-            
-            obj.addInfo('Checking semantic rules...');
-            
-            % Check for correct gateway usage
-            obj.validateGateways();
-            
-            % Check for boundary events
-            obj.validateBoundaryEvents();
-            
-            % Check for message flows
-            obj.validateMessageFlows();
         end
         
         function validateGateways(obj)
-            % Validate gateway rules
+            % Validate gateway configurations
             
-            % Get all gateways
-            gateways = obj.XMLDoc.getElementsByTagName('exclusiveGateway');
-            parallelGateways = obj.XMLDoc.getElementsByTagName('parallelGateway');
-            inclusiveGateways = obj.XMLDoc.getElementsByTagName('inclusiveGateway');
-            
-            % Combine all gateway types
-            allGateways = {};
-            obj.addNodeListToArray(allGateways, gateways);
-            obj.addNodeListToArray(allGateways, parallelGateways);
-            obj.addNodeListToArray(allGateways, inclusiveGateways);
-            
-            obj.addInfo(['Found ' num2str(length(allGateways)) ' gateways in the model.']);
-            
-            % Get all sequence flows
-            flowMap = obj.buildFlowMap();
-            
-            for i = 1:length(allGateways)
-                gateway = allGateways{i};
+            % Check exclusive gateways
+            exclusiveGateways = obj.getAllElements('exclusiveGateway');
+            for i = 0:exclusiveGateways.getLength()-1
+                gateway = exclusiveGateways.item(i);
                 gatewayId = char(gateway.getAttribute('id'));
-                gatewayType = gateway.getNodeName();
                 
-                % Get incoming and outgoing flows
-                inFlows = flowMap.getIncoming(gatewayId);
-                outFlows = flowMap.getOutgoing(gatewayId);
-                
-                % Check gateway direction
-                if length(inFlows) > 1 && length(outFlows) > 1
-                    obj.addWarning(['Gateway ' gatewayId ' has multiple incoming and outgoing flows. It should be split into two gateways.']);
+                % Check for default flow
+                defaultFlow = char(gateway.getAttribute('default'));
+                if ~isempty(defaultFlow) && ~obj.flowExists(defaultFlow)
+                    obj.addError(sprintf('Exclusive gateway "%s" references non-existent default flow "%s"', gatewayId, defaultFlow));
                 end
                 
-                % Check exclusive gateway conditions
-                if strcmp(gatewayType, 'exclusiveGateway') && length(outFlows) > 1
-                    obj.validateExclusiveGatewayConditions(gateway, outFlows);
+                % Count outgoing flows
+                outgoingCount = obj.countOutgoingFlows(gateway.getParentNode(), gatewayId);
+                if outgoingCount > 1
+                    % Should have conditions on flows
+                    unconditionedFlows = obj.countUnconditionedOutgoingFlows(gateway.getParentNode(), gatewayId);
+                    if unconditionedFlows > 0 && isempty(defaultFlow)
+                        obj.addWarning(sprintf('Exclusive gateway "%s" has %d outgoing flows without conditions and no default flow', gatewayId, unconditionedFlows));
+                    end
+                end
+            end
+            
+            % Check parallel gateways
+            parallelGateways = obj.getAllElements('parallelGateway');
+            for i = 0:parallelGateways.getLength()-1
+                gateway = parallelGateways.item(i);
+                gatewayId = char(gateway.getAttribute('id'));
+                
+                % Should have at least two outgoing or incoming flows
+                outgoingCount = obj.countOutgoingFlows(gateway.getParentNode(), gatewayId);
+                incomingCount = obj.countIncomingFlows(gateway.getParentNode(), gatewayId);
+                
+                if max(outgoingCount, incomingCount) < 2
+                    obj.addWarning(sprintf('Parallel gateway "%s" should have at least 2 incoming or outgoing flows', gatewayId));
+                end
+                
+                % Should not have conditions on parallel gateway flows
+                if obj.hasConditionsOnFlows(gateway.getParentNode(), gatewayId)
+                    obj.addWarning(sprintf('Parallel gateway "%s" should not have conditions on outgoing flows', gatewayId));
                 end
             end
         end
         
-        function validateExclusiveGatewayConditions(obj, gateway, outFlows)
-            % Check if exclusive gateway has proper conditions on outgoing flows
+        function validateEventDefinitions(obj)
+            % Validate event definitions
             
-            gatewayId = char(gateway.getAttribute('id'));
-            defaultFlow = char(gateway.getAttribute('default'));
-            
-            hasDefault = ~isempty(defaultFlow);
-            conditionCount = 0;
-            
-            for i = 1:length(outFlows)
-                flow = outFlows{i};
-                flowId = char(flow.getAttribute('id'));
-                
-                % Check if flow has condition expression
-                conditions = flow.getElementsByTagName('conditionExpression');
-                hasCondition = (conditions.getLength() > 0);
-                
-                if hasCondition
-                    conditionCount = conditionCount + 1;
-                elseif ~hasDefault || ~strcmp(flowId, defaultFlow)
-                    obj.addError(['Flow ' flowId ' from exclusive gateway ' gatewayId ' has no condition and is not the default flow.']);
-                end
-            end
-            
-            if length(outFlows) > 1 && conditionCount == 0 && !hasDefault
-                obj.addError(['Exclusive gateway ' gatewayId ' has multiple outgoing flows but no conditions or default flow.']);
-            end
-        end
-        
-        function validateBoundaryEvents(obj)
-            % Validate boundary event rules
-            
-            % Get all boundary events
-            boundaryEvents = obj.XMLDoc.getElementsByTagName('boundaryEvent');
-            
-            obj.addInfo(['Found ' num2str(boundaryEvents.getLength()) ' boundary events in the model.']);
-            
+            % Check boundary events
+            boundaryEvents = obj.getAllElements('boundaryEvent');
             for i = 0:boundaryEvents.getLength()-1
                 event = boundaryEvents.item(i);
                 eventId = char(event.getAttribute('id'));
                 attachedToRef = char(event.getAttribute('attachedToRef'));
                 
-                % Check if attached to reference is valid
                 if isempty(attachedToRef)
-                    obj.addError(['Boundary event ' eventId ' has no attachedToRef attribute.']);
-                else
-                    % Verify that referenced element exists
-                    attachedNode = obj.findElementById(attachedToRef);
-                    if isempty(attachedNode)
-                        obj.addError(['Boundary event ' eventId ' references non-existent element: ' attachedToRef]);
-                    else
-                        % Check that it's attached to a valid element type
-                        nodeName = attachedNode.getNodeName();
-                        if !(strcmp(nodeName, 'task') || strcmp(nodeName, 'subProcess') || ...
-                             strcmp(nodeName, 'callActivity') || endsWith(nodeName, 'Task'))
-                            obj.addWarning(['Boundary event ' eventId ' is attached to ' nodeName ' which is not a recommended target.']);
-                        end
-                    end
+                    obj.addError(sprintf('Boundary event "%s" is missing attachedToRef attribute', eventId));
+                elseif ~obj.elementExists(attachedToRef)
+                    obj.addError(sprintf('Boundary event "%s" references non-existent element "%s"', eventId, attachedToRef));
                 end
                 
-                % Check if the event has proper event definitions
-                eventDefs = {'messageEventDefinition', 'timerEventDefinition', 'errorEventDefinition', ...
-                           'signalEventDefinition', 'compensationEventDefinition', 'escalationEventDefinition'};
-                
-                hasValidDef = false;
-                for j = 1:length(eventDefs)
-                    defType = eventDefs{j};
-                    defs = event.getElementsByTagName(defType);
-                    if defs.getLength() > 0
-                        hasValidDef = true;
-                        break;
-                    end
+                % Check for event definition
+                if event.getElementsByTagName('errorEventDefinition').getLength() == 0 && ...
+                   event.getElementsByTagName('timerEventDefinition').getLength() == 0 && ...
+                   event.getElementsByTagName('messageEventDefinition').getLength() == 0 && ...
+                   event.getElementsByTagName('signalEventDefinition').getLength() == 0 && ...
+                   event.getElementsByTagName('escalationEventDefinition').getLength() == 0 && ...
+                   event.getElementsByTagName('compensationEventDefinition').getLength() == 0 && ...
+                   event.getElementsByTagName('conditionalEventDefinition').getLength() == 0
+                    obj.addWarning(sprintf('Boundary event "%s" has no event definition', eventId));
                 end
+            end
+            
+            % Check start events
+            startEvents = obj.getAllElements('startEvent');
+            for i = 0:startEvents.getLength()-1
+                event = startEvents.item(i);
+                eventId = char(event.getAttribute('id'));
                 
-                if !hasValidDef
-                    obj.addError(['Boundary event ' eventId ' has no valid event definition.']);
+                % Start events with message/signal definitions should be in processes referenced by participants
+                if event.getElementsByTagName('messageEventDefinition').getLength() > 0 || ...
+                   event.getElementsByTagName('signalEventDefinition').getLength() > 0
+                   
+                   processId = char(event.getParentNode().getAttribute('id'));
+                   if ~obj.isProcessReferencedByParticipant(processId)
+                       obj.addWarning(sprintf('Start event "%s" with message/signal should be in a process referenced by a participant', eventId));
+                   end
                 end
             end
         end
         
-        function validateMessageFlows(obj)
-            % Validate message flow rules
+        function validateCollaborationElements(obj)
+            % Validate collaboration elements (pools, lanes, message flows)
             
-            % Check for collaboration element
-            collaborations = obj.XMLDoc.getElementsByTagName('collaboration');
+            % Check for collaborations
+            collaborations = obj.getAllElements('collaboration');
             if collaborations.getLength() == 0
-                return; % No collaborations, so no message flows to check
+                return;  % No collaborations to validate
             end
             
-            % Get all message flows
-            messageFlows = obj.XMLDoc.getElementsByTagName('messageFlow');
+            % Validate participants
+            participants = obj.getAllElements('participant');
+            for i = 0:participants.getLength()-1
+                participant = participants.item(i);
+                participantId = char(participant.getAttribute('id'));
+                processRef = char(participant.getAttribute('processRef'));
+                
+                if isempty(processRef)
+                    obj.addWarning(sprintf('Participant "%s" has no processRef attribute', participantId));
+                elseif ~obj.processExists(processRef)
+                    obj.addError(sprintf('Participant "%s" references non-existent process "%s"', participantId, processRef));
+                end
+            end
             
-            obj.addInfo(['Found ' num2str(messageFlows.getLength()) ' message flows in the model.']);
-            
+            % Validate message flows
+            messageFlows = obj.getAllElements('messageFlow');
             for i = 0:messageFlows.getLength()-1
                 flow = messageFlows.item(i);
                 flowId = char(flow.getAttribute('id'));
                 sourceRef = char(flow.getAttribute('sourceRef'));
                 targetRef = char(flow.getAttribute('targetRef'));
                 
-                % Check for source and target
+                % Check for required attributes
+                if isempty(flowId)
+                    obj.addError('Message flow is missing id attribute');
+                    continue;
+                end
+                
                 if isempty(sourceRef)
-                    obj.addError(['Message flow ' flowId ' has no sourceRef attribute.']);
+                    obj.addError(sprintf('Message flow "%s" is missing sourceRef attribute', flowId));
                 end
                 
                 if isempty(targetRef)
-                    obj.addError(['Message flow ' flowId ' has no targetRef attribute.']);
+                    obj.addError(sprintf('Message flow "%s" is missing targetRef attribute', flowId));
                 end
                 
-                % Verify that source and target exist
-                sourceNode = obj.findElementById(sourceRef);
-                targetNode = obj.findElementById(targetRef);
-                
-                if isempty(sourceNode)
-                    obj.addError(['Message flow ' flowId ' references non-existent source: ' sourceRef]);
+                % Check that source and target elements exist
+                if ~isempty(sourceRef) && !obj.elementExists(sourceRef)
+                    obj.addError(sprintf('Message flow "%s" references non-existent source element "%s"', flowId, sourceRef));
                 end
                 
-                if isempty(targetNode)
-                    obj.addError(['Message flow ' flowId ' references non-existent target: ' targetRef]);
+                if !isempty(targetRef) && !obj.elementExists(targetRef)
+                    obj.addError(sprintf('Message flow "%s" references non-existent target element "%s"', flowId, targetRef));
                 end
                 
-                % Check that message flows are between different pools
-                if !isempty(sourceNode) && !isempty(targetNode)
-                    sourcePool = obj.getParentPool(sourceNode);
-                    targetPool = obj.getParentPool(targetNode);
+                % Message flows should be between elements in different pools
+                if obj.elementExists(sourceRef) && obj.elementExists(targetRef)
+                    sourceProcessId = obj.getProcessForElement(sourceRef);
+                    targetProcessId = obj.getProcessForElement(targetRef);
                     
-                    if !isempty(sourcePool) && !isempty(targetPool) && strcmp(sourcePool, targetPool)
-                        obj.addError(['Message flow ' flowId ' is between elements in the same pool (' sourcePool '), which is not allowed.']);
+                    if !isempty(sourceProcessId) && !isempty(targetProcessId) && strcmp(sourceProcessId, targetProcessId)
+                        obj.addWarning(sprintf('Message flow "%s" should connect elements in different pools', flowId));
+                    end
+                end
+            end
+            
+            % Validate lanes
+            lanes = obj.getAllElements('lane');
+            for i = 0:lanes.getLength()-1
+                lane = lanes.item(i);
+                laneId = char(lane.getAttribute('id'));
+                
+                % Check flowNodeRefs
+                nodeRefs = lane.getElementsByTagName('flowNodeRef');
+                for n = 0:nodeRefs.getLength()-1
+                    nodeRef = nodeRefs.item(n);
+                    refId = char(nodeRef.getTextContent());
+                    
+                    if !obj.elementExists(refId)
+                        obj.addError(sprintf('Lane "%s" references non-existent flow node "%s"', laneId, refId));
                     end
                 end
             end
         end
         
-        function validateExecutability(obj)
-            % Validate that the process is executable if marked as such
+        function validateDataElements(obj)
+            % Validate data elements and associations
             
-            processes = obj.XMLDoc.getElementsByTagName('process');
+            % Validate data objects
+            dataObjects = obj.getAllElements('dataObject');
+            for i = 0:dataObjects.getLength()-1
+                dataObject = dataObjects.item(i);
+                dataId = char(dataObject.getAttribute('id'));
+                
+                % Typically should have associations
+                if !obj.hasAssociation(dataId)
+                    obj.addWarning(sprintf('Data object "%s" is not connected by associations', dataId));
+                end
+            end
             
+            % Validate data stores
+            dataStores = obj.getAllElements('dataStore');
+            for i = 0:dataStores.getLength()-1
+                dataStore = dataStores.item(i);
+                dataId = char(dataStore.getAttribute('id'));
+                
+                % Typically should have associations
+                if !obj.hasAssociation(dataId)
+                    obj.addWarning(sprintf('Data store "%s" is not connected by associations', dataId));
+                end
+            end
+            
+            % Validate associations
+            associations = obj.getAllElements('association');
+            for i = 0:associations.getLength()-1
+                association = associations.item(i);
+                assocId = char(association.getAttribute('id'));
+                sourceRef = char(association.getAttribute('sourceRef'));
+                targetRef = char(association.getAttribute('targetRef'));
+                
+                % Check for required attributes
+                if isempty(assocId)
+                    obj.addError('Association is missing id attribute');
+                    continue;
+                end
+                
+                if isempty(sourceRef)
+                    obj.addError(sprintf('Association "%s" is missing sourceRef attribute', assocId));
+                end
+                
+                if isempty(targetRef)
+                    obj.addError(sprintf('Association "%s" is missing targetRef attribute', assocId));
+                end
+                
+                % Check that source and target elements exist
+                if !isempty(sourceRef) && !obj.elementExists(sourceRef)
+                    obj.addError(sprintf('Association "%s" references non-existent source element "%s"', assocId, sourceRef));
+                end
+                
+                if !isempty(targetRef) && !obj.elementExists(targetRef)
+                    obj.addError(sprintf('Association "%s" references non-existent target element "%s"', assocId, targetRef));
+                end
+            end
+        end
+        
+        % Helper functions
+        function elements = getAllElements(obj, tagName)
+            % Get all elements with the specified tag name
+            
+            % Check if tag name contains namespace prefix
+            if !contains(tagName, ':')
+                % Try with various namespace prefixes
+                elements = obj.XMLDoc.getElementsByTagName(tagName);
+                if elements.getLength() == 0
+                    elements = obj.XMLDoc.getElementsByTagName(['bpmn:', tagName]);
+                end
+            else
+                elements = obj.XMLDoc.getElementsByTagName(tagName);
+            end
+        end
+        
+        function elements = getChildElements(obj, parentNode, tagName)
+            % Get child elements of parentNode with the specified tag name
+            
+            % Check if tag name contains namespace prefix
+            if !contains(tagName, ':')
+                % Try with various namespace prefixes
+                elements = parentNode.getElementsByTagName(tagName);
+                if elements.getLength() == 0
+                    elements = parentNode.getElementsByTagName(['bpmn:', tagName]);
+                end
+            else
+                elements = parentNode.getElementsByTagName(tagName);
+            end
+        end
+        
+        function result = elementExists(obj, elementId)
+            % Check if an element with the specified id exists
+            
+            result = false;
+            if isempty(elementId)
+                return;
+            end
+            
+            % Get all elements with id attribute
+            elements = obj.XMLDoc.getElementsByTagName('*');
+            for i = 0:elements.getLength()-1
+                element = elements.item(i);
+                if element.hasAttribute('id') && strcmp(char(element.getAttribute('id')), elementId)
+                    result = true;
+                    return;
+                end
+            end
+        end
+        
+        function result = flowExists(obj, flowId)
+            % Check if a sequence flow with the specified id exists
+            
+            result = false;
+            flows = obj.getAllElements('sequenceFlow');
+            for i = 0:flows.getLength()-1
+                flow = flows.item(i);
+                if strcmp(char(flow.getAttribute('id')), flowId)
+                    result = true;
+                    return;
+                end
+            end
+        end
+        
+        function result = processExists(obj, processId)
+            % Check if a process with the specified id exists
+            
+            result = false;
+            processes = obj.getAllElements('process');
             for i = 0:processes.getLength()-1
                 process = processes.item(i);
-                processId = char(process.getAttribute('id'));
-                isExecutable = lower(char(process.getAttribute('isExecutable')));
-                
-                if strcmp(isExecutable, 'true')
-                    obj.addInfo(['Checking executability of process ' processId '...']);
-                    
-                    % Check for service tasks having implementation
-                    serviceTasks = process.getElementsByTagName('serviceTask');
-                    for j = 0:serviceTasks.getLength()-1
-                        task = serviceTasks.item(j);
-                        taskId = char(task.getAttribute('id'));
-                        implementation = char(task.getAttribute('implementation'));
-                        
-                        if isempty(implementation)
-                            obj.addWarning(['Service task ' taskId ' in executable process has no implementation attribute.']);
-                        end
-                    end
-                    
-                    % Check for script tasks having script
-                    scriptTasks = process.getElementsByTagName('scriptTask');
-                    for j = 0:scriptTasks.getLength()-1
-                        task = scriptTasks.item(j);
-                        taskId = char(task.getAttribute('id'));
-                        
-                        scripts = task.getElementsByTagName('script');
-                        if scripts.getLength() == 0
-                            obj.addWarning(['Script task ' taskId ' in executable process has no script element.']);
-                        end
-                    end
-                    
-                    % Check that all gateways have proper conditions
-                    obj.validateExecutableGateways(process);
+                if strcmp(char(process.getAttribute('id')), processId)
+                    result = true;
+                    return;
                 end
             end
         end
         
-        function validateExecutableGateways(obj, processNode)
-            % Validate gateways for executability
+        function result = isProcessReferencedByParticipant(obj, processId)
+            % Check if a process is referenced by a participant
             
-            gateways = processNode.getElementsByTagName('exclusiveGateway');
-            
-            for i = 0:gateways.getLength()-1
-                gateway = gateways.item(i);
-                gatewayId = char(gateway.getAttribute('id'));
-                
-                % Build flow map
-                flowMap = obj.buildFlowMap();
-                outFlows = flowMap.getOutgoing(gatewayId);
-                
-                if length(outFlows) <= 1
-                    continue; % Skip gateways with 0 or 1 outgoing flows
-                end
-                
-                defaultFlow = char(gateway.getAttribute('default'));
-                hasDefault = !isempty(defaultFlow);
-                
-                % Check if all outgoing flows have conditions
-                for j = 1:length(outFlows)
-                    flow = outFlows{j};
-                    flowId = char(flow.getAttribute('id'));
-                    
-                    if strcmp(flowId, defaultFlow)
-                        continue; % Skip default flow
-                    end
-                    
-                    conditions = flow.getElementsByTagName('conditionExpression');
-                    if conditions.getLength() == 0
-                        obj.addError(['Flow ' flowId ' from exclusive gateway ' gatewayId ' in executable process has no condition.']);
-                    end
-                end
-                
-                if !hasDefault
-                    obj.addWarning(['Executable exclusive gateway ' gatewayId ' has no default flow.']);
+            result = false;
+            participants = obj.getAllElements('participant');
+            for i = 0:participants.getLength()-1
+                participant = participants.item(i);
+                if strcmp(char(participant.getAttribute('processRef')), processId)
+                    result = true;
+                    return;
                 end
             end
         end
         
-        function flowMap = buildFlowMap(obj)
-            % Build a map of sequence flows for easier lookup
-            % Returns a flow map object
+        function result = isGateway(obj, elementId)
+            % Check if an element is a gateway
             
-            flowMap = BPMNFlowMap();
+            result = false;
             
-            % Get all sequence flows
-            flows = obj.XMLDoc.getElementsByTagName('sequenceFlow');
+            % Check gateway types
+            gatewayTypes = {'exclusiveGateway', 'inclusiveGateway', 'parallelGateway', 'complexGateway', 'eventBasedGateway'};
+            
+            for t = 1:length(gatewayTypes)
+                gateways = obj.getAllElements(gatewayTypes{t});
+                for i = 0:gateways.getLength()-1
+                    gateway = gateways.item(i);
+                    if strcmp(char(gateway.getAttribute('id')), elementId)
+                        result = true;
+                        return;
+                    end
+                end
+            end
+        end
+        
+        function result = hasOutgoingFlows(obj, process, nodeId)
+            % Check if a node has outgoing sequence flows
+            
+            result = false;
+            flows = obj.getChildElements(process, 'sequenceFlow');
             
             for i = 0:flows.getLength()-1
                 flow = flows.item(i);
                 sourceRef = char(flow.getAttribute('sourceRef'));
-                targetRef = char(flow.getAttribute('targetRef'));
                 
-                flowMap.addFlow(flow, sourceRef, targetRef);
-            end
-        end
-        
-        function nodes = getAllFlowNodes(obj, processNode)
-            % Get all flow nodes in a process
-            % processNode: DOM node representing a BPMN process
-            % Returns: Cell array of flow node DOM nodes
-            
-            nodes = {};
-            
-            % Get all types of flow nodes
-            nodeTypes = {'task', 'userTask', 'serviceTask', 'sendTask', 'receiveTask', ...
-                       'manualTask', 'businessRuleTask', 'scriptTask', 'callActivity', ...
-                       'subProcess', 'startEvent', 'endEvent', 'intermediateThrowEvent', ...
-                       'intermediateCatchEvent', 'boundaryEvent', 'exclusiveGateway', ...
-                       'inclusiveGateway', 'parallelGateway', 'eventBasedGateway', 'complexGateway'};
-                   
-            for i = 1:length(nodeTypes)
-                nodeList = processNode.getElementsByTagName(nodeTypes{i});
-                obj.addNodeListToArray(nodes, nodeList);
-            end
-        end
-        
-        function addNodeListToArray(obj, array, nodeList)
-            % Add nodes from a NodeList to a cell array
-            % array: Cell array to add nodes to
-            % nodeList: DOM NodeList of nodes to add
-            
-            for i = 0:nodeList.getLength()-1
-                array{end+1} = nodeList.item(i);
-            end
-        end
-        
-        function node = findElementById(obj, id)
-            % Find a BPMN element by ID
-            % id: ID of the element to find
-            % Returns: DOM node or empty if not found
-            
-            % Look in common element types
-            elementTypes = {'process', 'task', 'userTask', 'serviceTask', 'sendTask', ...
-                          'receiveTask', 'manualTask', 'businessRuleTask', 'scriptTask', ...
-                          'callActivity', 'subProcess', 'startEvent', 'endEvent', ...
-                          'intermediateThrowEvent', 'intermediateCatchEvent', 'boundaryEvent', ...
-                          'exclusiveGateway', 'inclusiveGateway', 'parallelGateway', ...
-                          'eventBasedGateway', 'complexGateway', 'participant', 'lane'};
-                      
-            for i = 1:length(elementTypes)
-                elements = obj.XMLDoc.getElementsByTagName(elementTypes{i});
-                
-                for j = 0:elements.getLength()-1
-                    element = elements.item(j);
-                    elementId = char(element.getAttribute('id'));
-                    
-                    if strcmp(elementId, id)
-                        node = element;
-                        return;
-                    end
-                end
-            end
-            
-            % Not found
-            node = [];
-        end
-        
-        function poolId = getParentPool(obj, node)
-            % Get the ID of the pool containing this node
-            % node: DOM node to find parent pool for
-            % Returns: Pool ID or empty if not in a pool
-            
-            % Check if we can navigate upwards in the DOM
-            % Note: This is a simplified approach and may not work in all cases
-            % For robust implementation, we would need to use BPMN semantics to
-            % determine the parent pool
-            
-            % First try to find a participant for this element through references
-            participants = obj.XMLDoc.getElementsByTagName('participant');
-            for i = 0:participants.getLength()-1
-                participant = participants.item(i);
-                processRef = char(participant.getAttribute('processRef'));
-                
-                % If this is a node in a process, check if the process is referenced by a participant
-                process = obj.findAncestorByTagName(node, 'process');
-                if !isempty(process)
-                    processId = char(process.getAttribute('id'));
-                    if strcmp(processId, processRef)
-                        poolId = char(participant.getAttribute('id'));
-                        return;
-                    end
-                end
-            end
-            
-            % Not found
-            poolId = [];
-        end
-        
-        function ancestor = findAncestorByTagName(obj, node, tagName)
-            % Find an ancestor of a node with a specific tag name
-            % node: DOM node to find ancestor for
-            % tagName: Tag name to look for
-            % Returns: Ancestor node or empty if not found
-            
-            currentNode = node.getParentNode();
-            while !isempty(currentNode)
-                if strcmp(currentNode.getNodeName(), tagName)
-                    ancestor = currentNode;
+                if strcmp(sourceRef, nodeId)
+                    result = true;
                     return;
                 end
-                currentNode = currentNode.getParentNode();
             end
+        end
+        
+        function result = hasIncomingFlows(obj, process, nodeId)
+            % Check if a node has incoming sequence flows
             
-            % Not found
-            ancestor = [];
+            result = false;
+            flows = obj.getChildElements(process, 'sequenceFlow');
+            
+            for i = 0:flows.getLength()-1
+                flow = flows.item(i);
+                targetRef = char(flow.getAttribute('targetRef'));
+                
+                if strcmp(targetRef, nodeId)
+                    result = true;
+                    return;
+                end
+            end
+        end
+        
+        function result = hasConditionsOnFlows(obj, process, nodeId)
+            % Check if a node's outgoing flows have conditions
+            
+            result = false;
+            flows = obj.getChildElements(process, 'sequenceFlow');
+            
+            for i = 0:flows.getLength()-1
+                flow = flows.item(i);
+                sourceRef = char(flow.getAttribute('sourceRef'));
+                
+                if strcmp(sourceRef, nodeId)
+                    % Check for condition
+                    conditions = flow.getElementsByTagName('conditionExpression');
+                    if conditions.getLength() > 0
+                        result = true;
+                        return;
+                    end
+                end
+            end
+        end
+        
+        function count = countOutgoingFlows(obj, process, nodeId)
+            % Count outgoing flows from a node
+            
+            count = 0;
+            flows = obj.getChildElements(process, 'sequenceFlow');
+            
+            for i = 0:flows.getLength()-1
+                flow = flows.item(i);
+                sourceRef = char(flow.getAttribute('sourceRef'));
+                
+                if strcmp(sourceRef, nodeId)
+                    count = count + 1;
+                end
+            end
+        end
+        
+        function count = countIncomingFlows(obj, process, nodeId)
+            % Count incoming flows to a node
+            
+            count = 0;
+            flows = obj.getChildElements(process, 'sequenceFlow');
+            
+            for i = 0:flows.getLength()-1
+                flow = flows.item(i);
+                targetRef = char(flow.getAttribute('targetRef'));
+                
+                if strcmp(targetRef, nodeId)
+                    count = count + 1;
+                end
+            end
+        end
+        
+        function count = countUnconditionedOutgoingFlows(obj, process, nodeId)
+            % Count outgoing flows without conditions
+            
+            count = 0;
+            flows = obj.getChildElements(process, 'sequenceFlow');
+            
+            for i = 0:flows.getLength()-1
+                flow = flows.item(i);
+                sourceRef = char(flow.getAttribute('sourceRef'));
+                
+                if strcmp(sourceRef, nodeId)
+                    % Check for absence of condition
+                    conditions = flow.getElementsByTagName('conditionExpression');
+                    if conditions.getLength() == 0
+                        count = count + 1;
+                    end
+                end
+            end
+        end
+        
+        function result = hasAssociation(obj, elementId)
+            % Check if an element has associations
+            
+            result = false;
+            associations = obj.getAllElements('association');
+            
+            for i = 0:associations.getLength()-1
+                association = associations.item(i);
+                sourceRef = char(association.getAttribute('sourceRef'));
+                targetRef = char(association.getAttribute('targetRef'));
+                
+                if strcmp(sourceRef, elementId) || strcmp(targetRef, elementId)
+                    result = true;
+                    return;
+                end
+            end
+        end
+        
+        function processId = getProcessForElement(obj, elementId)
+            % Get the process ID containing an element
+            
+            processId = [];
+            
+            % Get all processes
+            processes = obj.getAllElements('process');
+            
+            for p = 0:processes.getLength()-1
+                process = processes.item(p);
+                pId = char(process.getAttribute('id'));
+                
+                % Check child elements
+                elements = process.getElementsByTagName('*');
+                for e = 0:elements.getLength()-1
+                    element = elements.item(e);
+                    if element.hasAttribute('id') && strcmp(char(element.getAttribute('id')), elementId)
+                        processId = pId;
+                        return;
+                    end
+                end
+            end
         end
         
         function addError(obj, message)
-            % Add an error message to the validation logs
-            obj.ValidationLogs.errors{end+1} = message;
+            % Add an error message to validation results
+            obj.ValidationResults.errors{end+1} = message;
         end
         
         function addWarning(obj, message)
-            % Add a warning message to the validation logs
-            obj.ValidationLogs.warnings{end+1} = message;
-        end
-        
-        function addInfo(obj, message)
-            % Add an info message to the validation logs
-            obj.ValidationLogs.info{end+1} = message;
-        end
-        
-        function displayValidationResults(obj)
-            % Display validation results to command window
-            
-            fprintf('\n===== BPMN Validation Results =====\n\n');
-            
-            % Display errors
-            if !isempty(obj.ValidationLogs.errors)
-                fprintf('ERRORS (%d):\n', length(obj.ValidationLogs.errors));
-                for i = 1:length(obj.ValidationLogs.errors)
-                    fprintf('  - %s\n', obj.ValidationLogs.errors{i});
-                end
-                fprintf('\n');
-            else
-                fprintf('No errors found.\n\n');
-            end
-            
-            % Display warnings
-            if !isempty(obj.ValidationLogs.warnings)
-                fprintf('WARNINGS (%d):\n', length(obj.ValidationLogs.warnings));
-                for i = 1:length(obj.ValidationLogs.warnings)
-                    fprintf('  - %s\n', obj.ValidationLogs.warnings{i});
-                end
-                fprintf('\n');
-            else
-                fprintf('No warnings found.\n\n');
-            end
-            
-            % Display summary
-            fprintf('SUMMARY:\n');
-            fprintf('  - Errors: %d\n', length(obj.ValidationLogs.errors));
-            fprintf('  - Warnings: %d\n', length(obj.ValidationLogs.warnings));
-            fprintf('  - Info messages: %d\n', length(obj.ValidationLogs.info));
-            
-            if isempty(obj.ValidationLogs.errors)
-                fprintf('\nValidation PASSED.\n');
-            else
-                fprintf('\nValidation FAILED.\n');
-            end
-            
-            fprintf('\n===================================\n\n');
-        end
-        
-        function results = getValidationResults(obj)
-            % Get validation results as a structure
-            % Returns: Structure with validation results
-            
-            results = obj.ValidationLogs;
-            results.valid = isempty(obj.ValidationLogs.errors);
-            results.errorCount = length(obj.ValidationLogs.errors);
-            results.warningCount = length(obj.ValidationLogs.warnings);
-            results.infoCount = length(obj.ValidationLogs.info);
-        end
-    end
-end
-
-% Helper class for tracking flow connections
-classdef BPMNFlowMap < handle
-    properties
-        IncomingFlows  % Map of incoming flows for each node
-        OutgoingFlows  % Map of outgoing flows for each node
-    end
-    
-    methods
-        function obj = BPMNFlowMap()
-            % Constructor
-            obj.IncomingFlows = containers.Map();
-            obj.OutgoingFlows = containers.Map();
-        end
-        
-        function addFlow(obj, flow, sourceRef, targetRef)
-            % Add a flow to the maps
-            % flow: DOM node representing the flow
-            % sourceRef: ID of the source element
-            % targetRef: ID of the target element
-            
-            % Add to outgoing flows map
-            if !obj.OutgoingFlows.isKey(sourceRef)
-                obj.OutgoingFlows(sourceRef) = {};
-            end
-            outFlows = obj.OutgoingFlows(sourceRef);
-            obj.OutgoingFlows(sourceRef) = [outFlows, {flow}];
-            
-            % Add to incoming flows map
-            if !obj.IncomingFlows.isKey(targetRef)
-                obj.IncomingFlows(targetRef) = {};
-            end
-            inFlows = obj.IncomingFlows(targetRef);
-            obj.IncomingFlows(targetRef) = [inFlows, {flow}];
-        end
-        
-        function flows = getOutgoing(obj, nodeId)
-            % Get outgoing flows for a node
-            % nodeId: ID of the node
-            % Returns: Cell array of flow DOM nodes
-            
-            if obj.OutgoingFlows.isKey(nodeId)
-                flows = obj.OutgoingFlows(nodeId);
-            else
-                flows = {};
-            end
-        end
-        
-        function flows = getIncoming(obj, nodeId)
-            % Get incoming flows for a node
-            % nodeId: ID of the node
-            % Returns: Cell array of flow DOM nodes
-            
-            if obj.IncomingFlows.isKey(nodeId)
-                flows = obj.IncomingFlows(nodeId);
-            else
-                flows = {};
-            end
+            % Add a warning message to validation results
+            obj.ValidationResults.warnings{end+1} = message;
         end
     end
 end

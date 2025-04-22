@@ -28,7 +28,7 @@ classdef BPMNDiagramExporter < handle
             elseif isa(bpmnFileOrObj, 'BPMNGenerator')
                 % Use XMLDoc from BPMNGenerator instance
                 obj.XMLDoc = bpmnFileOrObj.XMLDoc;
-                if (!isempty(bpmnFileOrObj.FilePath))
+                if ~isempty(bpmnFileOrObj.FilePath)
                     [filepath, name, ~] = fileparts(bpmnFileOrObj.FilePath);
                     obj.OutputFilePath = fullfile(filepath, [name, '.svg']);
                 else
@@ -89,54 +89,20 @@ classdef BPMNDiagramExporter < handle
                 obj.OutputFilePath = fullfile(filepath, [name, '.png']);
             end
             
-            % First generate SVG
+            % First generate SVG, then convert to PNG
             tempSvgPath = fullfile(filepath, [name, '_temp.svg']);
-            svgExporter = obj.OutputFilePath;
             obj.OutputFilePath = tempSvgPath;
-            obj.generateSVG(); % Generate SVG file
-            obj.OutputFilePath = svgExporter; % Restore original output path
+            svgSuccess = obj.generateSVG();
             
-            success = false;
-            
-            try
-                % Try different methods for conversion based on available tools
-                if exist('convertSVGToPNGWithMATLAB', 'file')
-                    % Use MATLAB's built-in capabilities if available
-                    success = obj.convertSVGToPNGWithMATLAB(tempSvgPath, obj.OutputFilePath);
-                elseif isdeployed
-                    % When deployed, use external converter if available
-                    success = obj.convertSVGToPNGWithExternal(tempSvgPath, obj.OutputFilePath);
-                else
-                    % Try using export_fig if available
-                    if exist('export_fig', 'file')
-                        figure('visible', 'off');
-                        [~, ~] = evalc('plot(0,0)'); % Suppress output
-                        set(gca, 'Visible', 'off');
-                        try
-                            [~, ~] = evalc('export_fig(obj.OutputFilePath, ''-png'', ''-r300'', tempSvgPath)');
-                            success = true;
-                        catch
-                            warning('export_fig failed, trying alternative method');
-                        end
-                        close;
-                    end
-                    
-                    % If previous methods failed, try with system command
-                    if ~success
-                        success = obj.convertSVGToPNGWithExternal(tempSvgPath, obj.OutputFilePath);
-                    end
-                end
-                
-                if success
-                    fprintf('PNG exported successfully to: %s\n', obj.OutputFilePath);
-                else
-                    warning('PNG export failed. Try installing a SVG-to-PNG converter.');
-                end
-            catch ME
-                warning('Error during PNG export: %s', ME.message);
+            if ~svgSuccess
+                success = false;
+                return;
             end
             
-            % Clean up temporary SVG file
+            % Convert SVG to PNG using MATLAB's built-in capabilities
+            success = obj.convertSVGToPNG(tempSvgPath, fullfile(filepath, [name, '.png']));
+            
+            % Clean up temporary file
             if exist(tempSvgPath, 'file')
                 delete(tempSvgPath);
             end
@@ -184,74 +150,17 @@ classdef BPMNDiagramExporter < handle
                 % Extract diagram information from BPMN XML
                 diagramElements = obj.extractDiagramElements();
                 
-                % Get diagram boundaries to compute the viewBox
-                [minX, minY, maxX, maxY] = obj.getViewBox(diagramElements);
-                width = max(maxX - minX + 100, obj.Width); % Add some padding
-                height = max(maxY - minY + 100, obj.Height);
-                
                 % Create SVG document
-                svgDoc = obj.createSVGDocument(diagramElements, minX, minY, width, height);
-                
-                % Create directory if it doesn't exist
-                [directory, ~, ~] = fileparts(obj.OutputFilePath);
-                if ~isempty(directory) && ~exist(directory, 'dir')
-                    try
-                        mkdir(directory);
-                    catch ME
-                        warning('Cannot create output directory: %s. Will attempt to save file anyway.', directory);
-                    end
-                end
+                svgDoc = obj.createSVGDocument(diagramElements);
                 
                 % Save SVG to file
                 xmlwrite(obj.OutputFilePath, svgDoc);
                 success = true;
-                fprintf('SVG exported successfully to: %s\n', obj.OutputFilePath);
                 
-            catch ME
-                warning('Error generating SVG: %s', ME.message);
+            catch e
+                warning('Error generating SVG: %s', e.message);
                 success = false;
             end
-        end
-        
-        function [minX, minY, maxX, maxY] = getViewBox(obj, elements)
-            % Compute the view box based on diagram elements
-            minX = Inf; minY = Inf;
-            maxX = -Inf; maxY = -Inf;
-            
-            % Check shapes
-            for i = 1:length(elements.shapes)
-                shape = elements.shapes{i};
-                minX = min(minX, shape.x);
-                minY = min(minY, shape.y);
-                maxX = max(maxX, shape.x + shape.width);
-                maxY = max(maxY, shape.y + shape.height);
-            end
-            
-            % Check edges
-            for i = 1:length(elements.edges)
-                edge = elements.edges{i};
-                for j = 1:size(edge.waypoints, 1)
-                    x = edge.waypoints(j, 1);
-                    y = edge.waypoints(j, 2);
-                    minX = min(minX, x);
-                    minY = min(minY, y);
-                    maxX = max(maxX, x);
-                    maxY = max(maxY, y);
-                end
-            end
-            
-            % Handle empty diagram case
-            if isinf(minX) || isinf(minY) || isinf(maxX) || isinf(maxY)
-                minX = 0; minY = 0;
-                maxX = 800; maxY = 600;
-            end
-            
-            % Add padding
-            padding = 50;
-            minX = max(0, minX - padding);
-            minY = max(0, minY - padding);
-            maxX = maxX + padding;
-            maxY = maxY + padding;
         end
         
         function elements = extractDiagramElements(obj)
@@ -382,115 +291,62 @@ classdef BPMNDiagramExporter < handle
             end
         end
         
-        function svgDoc = createSVGDocument(obj, elements, minX, minY, width, height)
+        function svgDoc = createSVGDocument(obj, elements)
             % Create an SVG document from diagram elements
-            import javax.xml.parsers.DocumentBuilderFactory;
             
             % Create DOM document
-            factory = DocumentBuilderFactory.newInstance();
-            builder = factory.newDocumentBuilder();
-            docImpl = builder.newDocumentBuilder().getDOMImplementation();
-            
-            % Create SVG document
-            docType = docImpl.createDocumentType('svg', '-//W3C//DTD SVG 1.1//EN', 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd');
-            svgDoc = docImpl.createDocument('http://www.w3.org/2000/svg', 'svg', docType);
-            
-            % Get root element
-            svgRoot = svgDoc.getDocumentElement();
+            docNode = com.mathworks.xml.XMLUtils.createDocument('svg');
+            svgDoc = docNode.getDocumentElement();
             
             % Set SVG attributes
-            svgRoot.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            svgRoot.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-            svgRoot.setAttribute('version', '1.1');
-            svgRoot.setAttribute('width', num2str(width));
-            svgRoot.setAttribute('height', num2str(height));
-            svgRoot.setAttribute('viewBox', [num2str(minX) ' ' num2str(minY) ' ' num2str(width) ' ' num2str(height)]);
+            svgDoc.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            svgDoc.setAttribute('width', num2str(obj.Width));
+            svgDoc.setAttribute('height', num2str(obj.Height));
+            svgDoc.setAttribute('viewBox', ['0 0 ', num2str(obj.Width), ' ', num2str(obj.Height)]);
             
             % Add background rectangle
-            bgRect = svgDoc.createElement('rect');
+            bgRect = docNode.createElement('rect');
             bgRect.setAttribute('width', '100%');
             bgRect.setAttribute('height', '100%');
             bgRect.setAttribute('fill', obj.rgbToHex(obj.BackgroundColor));
-            svgRoot.appendChild(bgRect);
+            svgDoc.appendChild(bgRect);
             
             % Add diagram title
-            title = svgDoc.createElement('title');
-            title.appendChild(svgDoc.createTextNode('BPMN Diagram'));
-            svgRoot.appendChild(title);
+            title = docNode.createElement('title');
+            title.appendChild(docNode.createTextNode('BPMN Diagram'));
+            svgDoc.appendChild(title);
             
             % Add description
-            desc = svgDoc.createElement('desc');
-            desc.appendChild(svgDoc.createTextNode('Generated by BPMNDiagramExporter for MATLAB'));
-            svgRoot.appendChild(desc);
-            
-            % Add markers for arrows
-            defs = svgDoc.createElement('defs');
-            
-            % Sequence flow marker (normal arrow)
-            seqMarker = svgDoc.createElement('marker');
-            seqMarker.setAttribute('id', 'sequenceFlowEndMarker');
-            seqMarker.setAttribute('viewBox', '0 0 10 10');
-            seqMarker.setAttribute('refX', '10');
-            seqMarker.setAttribute('refY', '5');
-            seqMarker.setAttribute('markerWidth', '6');
-            seqMarker.setAttribute('markerHeight', '6');
-            seqMarker.setAttribute('orient', 'auto');
-            
-            seqPath = svgDoc.createElement('path');
-            seqPath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-            seqPath.setAttribute('fill', '#000000');
-            seqMarker.appendChild(seqPath);
-            defs.appendChild(seqMarker);
-            
-            % Message flow marker (open arrow)
-            msgMarker = svgDoc.createElement('marker');
-            msgMarker.setAttribute('id', 'messageFlowEndMarker');
-            msgMarker.setAttribute('viewBox', '0 0 10 10');
-            msgMarker.setAttribute('refX', '10');
-            msgMarker.setAttribute('refY', '5');
-            msgMarker.setAttribute('markerWidth', '6');
-            msgMarker.setAttribute('markerHeight', '6');
-            msgMarker.setAttribute('orient', 'auto');
-            
-            msgPath = svgDoc.createElement('path');
-            msgPath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-            msgPath.setAttribute('fill', '#FFFFFF');
-            msgPath.setAttribute('stroke', '#000000');
-            msgPath.setAttribute('stroke-width', '1');
-            msgMarker.appendChild(msgPath);
-            defs.appendChild(msgMarker);
-            
-            % Append defs to document
-            svgRoot.appendChild(defs);
+            desc = docNode.createElement('desc');
+            desc.appendChild(docNode.createTextNode('Generated by BPMNDiagramExporter for MATLAB'));
+            svgDoc.appendChild(desc);
             
             % Create a group for all elements
-            mainGroup = svgDoc.createElement('g');
-            mainGroup.setAttribute('class', 'bpmn-diagram');
-            svgRoot.appendChild(mainGroup);
+            mainGroup = docNode.createElement('g');
+            svgDoc.appendChild(mainGroup);
             
-            % Add edges (connections) to ensure they're drawn below shapes
-            edgesGroup = svgDoc.createElement('g');
+            % Add edges (connections)
+            edgesGroup = docNode.createElement('g');
             edgesGroup.setAttribute('id', 'connections');
-            
             for i = 1:length(elements.edges)
                 edge = elements.edges{i};
-                pathElem = obj.createPathElement(svgDoc, edge);
+                pathElem = obj.createPathElement(docNode, edge);
                 edgesGroup.appendChild(pathElem);
             end
             mainGroup.appendChild(edgesGroup);
             
             % Add shapes (nodes)
-            shapesGroup = svgDoc.createElement('g');
+            shapesGroup = docNode.createElement('g');
             shapesGroup.setAttribute('id', 'nodes');
-            
             for i = 1:length(elements.shapes)
                 shape = elements.shapes{i};
-                shapeElem = obj.createShapeElement(svgDoc, shape);
+                shapeElem = obj.createShapeElement(docNode, shape);
                 shapesGroup.appendChild(shapeElem);
             end
             mainGroup.appendChild(shapesGroup);
             
-            return;
+            % Return the SVG document
+            svgDoc = docNode;
         end
         
         function pathElem = createPathElement(obj, docNode, edge)
@@ -752,68 +608,48 @@ classdef BPMNDiagramExporter < handle
             hexColor = sprintf('#%02X%02X%02X', r, g, b);
         end
         
-        function success = convertSVGToPNGWithMATLAB(obj, svgPath, pngPath)
-            % Convert SVG to PNG using MATLAB's built-in capabilities
-            success = false;
-            
+        function success = convertSVGToPNG(obj, svgPath, pngPath)
+            % Convert SVG to PNG using MATLAB's saveas
             try
-                % Try to use MATLAB's webread
-                if exist('webread', 'file')
-                    svg_data = fileread(svgPath);
-                    
-                    % Create a figure to render the SVG
-                    fig = figure('Visible', 'off');
-                    ax = axes('Parent', fig, 'Visible', 'off');
-                    
-                    % Create an SVG renderer
-                    if exist('matlab.io.internal.renderSVG', 'file')
-                        img = matlab.io.internal.renderSVG(svg_data);
-                        imshow(img, 'Parent', ax);
-                        
-                        % Export the figure as PNG
-                        print(fig, pngPath, '-dpng', '-r300');
-                        success = true;
-                    end
-                    
-                    close(fig);
+                % Check if we have the Image Processing Toolbox
+                if ~license('test', 'Image_Toolbox')
+                    warning('Image Processing Toolbox is required for PNG export.');
+                    success = false;
+                    return;
                 end
-            catch ME
-                warning('MATLAB SVG to PNG conversion failed: %s', ME.message);
-            end
-        end
-        
-        function success = convertSVGToPNGWithExternal(obj, svgPath, pngPath)
-            % Convert SVG to PNG using an external tool
-            success = false;
-            
-            % Check for ImageMagick
-            [status, ~] = system('convert -version');
-            if status == 0
-                % ImageMagick is available
-                cmd = sprintf('convert -density 300 "%s" "%s"', svgPath, pngPath);
-                [status, ~] = system(cmd);
-                success = (status == 0);
-                return;
-            end
-            
-            % Check for Inkscape
-            [status, ~] = system('inkscape --version');
-            if status == 0
-                % Inkscape is available
-                cmd = sprintf('inkscape --export-type=png --export-dpi=300 --export-filename="%s" "%s"', pngPath, svgPath);
-                [status, ~] = system(cmd);
-                success = (status == 0);
-                return;
-            end
-            
-            % Check for svgexport (Node.js tool)
-            [status, ~] = system('svgexport --version');
-            if status == 0
-                % svgexport is available
-                cmd = sprintf('svgexport "%s" "%s" 2x', svgPath, pngPath);
-                [status, ~] = system(cmd);
-                success = (status == 0);
-                return;
+                
+                figure('visible', 'off');
+                try
+                    plot(0, 0, 'visible', 'off');
+                    axis off;
+                    
+                    % Use webread to load the SVG
+                    svg_str = fileread(svgPath);
+                    
+                    % Display the SVG in the figure
+                    img = matlab.io.internal.renderSVG(svg_str);
+                    imshow(img);
+                    
+                    % Save as PNG
+                    export_fig(pngPath, '-png', '-r300', '-transparent');
+                    success = true;
+                catch e
+                    warning('Error converting to PNG: %s', e.message);
+                    % Fallback method - requires Image Processing Toolbox
+                    try
+                        img = imread(svgPath);
+                        imwrite(img, pngPath);
+                        success = true;
+                    catch e2
+                        warning('Fallback PNG conversion failed: %s', e2.message);
+                        success = false;
+                    end
+                end
+                close;
+                
+            catch e
+                warning('Error converting SVG to PNG: %s', e.message);
+                success = false;
             end
         end
         
