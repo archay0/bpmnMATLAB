@@ -47,8 +47,9 @@ classdef SchemaLoader
                 block = raw(blockStart:blockEnd);
                 lines = regexp(block, '\n', 'split');
 
-                cols = [];
-                fks = [];
+                % Initialize as empty struct arrays with defined fields
+                cols = struct('name', {}, 'type', {}, 'description', {});
+                fks = struct('column', {}, 'refTable', {}, 'refColumn', {});
                 inTable = false;
                 for ln = 1:numel(lines)
                     line = strtrim(lines{ln});
@@ -64,15 +65,27 @@ classdef SchemaLoader
                     % Parse data rows
                     if inTable && startsWith(line, '|')
                         parts = regexp(line, '\|', 'split');
-                        name = strtrim(parts{2});
-                        type = strtrim(parts{3});
-                        desc = strtrim(parts{4});
-                        cols(end+1) = struct('name', name, 'type', type, 'description', desc); %#ok<AGROW>
-                        % Check for foreign key in description
-                        fkMatch = regexp(desc, '[Ff]oreign key to ([^\.\s]+)', 'tokens');
-                        if ~isempty(fkMatch)
-                            fkTable = fkMatch{1}{1};
-                            fks(end+1) = struct('column', name, 'refTable', fkTable, 'refColumn', name); %#ok<AGROW>
+                        if numel(parts) >= 5 % Ensure enough parts exist
+                            name = strtrim(parts{2});
+                            type = strtrim(parts{3});
+                            desc = strtrim(parts{4});
+                            % Append to struct array
+                            cols(end+1) = struct('name', name, 'type', type, 'description', desc);
+                            % Check for foreign key in description
+                            fkMatch = regexp(desc, '[Ff]oreign key to ([^\.\s]+)', 'tokens');
+                            if ~isempty(fkMatch)
+                                fkTableRaw = fkMatch{1}{1};
+                                % Sanitize the referenced table name as well
+                                if ~isvarname(fkTableRaw)
+                                     fkTable = matlab.lang.makeValidName(fkTableRaw, 'ReplacementStyle', 'underscore');
+                                else
+                                     fkTable = fkTableRaw;
+                                end
+                                % Append to struct array
+                                fks(end+1) = struct('column', name, 'refTable', fkTable, 'refColumn', name);
+                            end
+                        else
+                             warning('SchemaLoader:MalformedRow', 'Skipping malformed table row in table %s: %s', tblName, line);
                         end
                     elseif inTable && isempty(line)
                         % blank line ends table

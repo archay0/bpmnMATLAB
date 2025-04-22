@@ -27,30 +27,30 @@ bpmn.addEvent('StartEvent_1', 'Start Process', 'startEvent', '', 100, 100, 36, 3
 bpmn.addTask('Task_1', 'Prepare Order', 200, 100, 100, 80);
 
 % Add a transaction boundary
-transactionId = 'Transaction_1';
-transactionName = 'Payment Processing';
-transactionX = 350;
-transactionY = 50;
-transactionWidth = 400;
-transactionHeight = 200;
+% transactionId = 'Transaction_1';
+% transactionName = 'Payment Processing';
+% transactionX = 350;
+% transactionY = 50;
+% transactionWidth = 400;
+% transactionHeight = 200;
 
 % Define child elements for the transaction
-childElements = struct();
+% childElements = struct();
 
 % Transaction tasks
-childElements.tasks{1} = struct('id', 'Task_Payment', 'name', 'Process Payment', ...
-    'type', 'task', 'x', 50, 'y', 70, 'width', 100, 'height', 80);
-childElements.tasks{2} = struct('id', 'Task_Confirmation', 'name', 'Send Confirmation', ...
-    'type', 'task', 'x', 250, 'y', 70, 'width', 100, 'height', 80);
+% childElements.tasks{1} = struct('id', 'Task_Payment', 'name', 'Process Payment', ...
+%     'type', 'task', 'x', 50, 'y', 70, 'width', 100, 'height', 80);
+% childElements.tasks{2} = struct('id', 'Task_Confirmation', 'name', 'Send Confirmation', ...
+%     'type', 'task', 'x', 250, 'y', 70, 'width', 100, 'height', 80);
 
 % Transaction flows
-childElements.flows{1} = struct('id', 'Flow_InTransaction_1', ...
-    'sourceRef', 'Task_Payment', 'targetRef', 'Task_Confirmation', ...
-    'waypoints', [150, 110; 250, 110]);
+% childElements.flows{1} = struct('id', 'Flow_InTransaction_1', ...
+%     'sourceRef', 'Task_Payment', 'targetRef', 'Task_Confirmation', ...
+%     'waypoints', [150, 110; 250, 110]);
 
 % Add the complete transaction with compensation
-bpmn.addCompleteTransaction(transactionId, transactionName, transactionX, transactionY, ...
-    transactionWidth, transactionHeight, true, childElements);
+% bpmn.addCompleteTransaction(transactionId, transactionName, transactionX, transactionY, ...
+%     transactionWidth, transactionHeight, true, childElements);
 
 % Add sequence flows
 bpmn.addSequenceFlow('Flow_1', 'StartEvent_1', 'Task_1', [136, 118; 200, 118]);

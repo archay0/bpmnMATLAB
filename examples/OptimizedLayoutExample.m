@@ -11,8 +11,15 @@ addpath('../src');
 % Initialize BPMN Generator
 bpmnGen = BPMNGenerator();
 
+% Define the process (Placeholder - Method might not exist)
+% fprintf('Defining process...\n');
+% try
+%     bpmnGen.createDefinitions('OptimizedLayoutProcess', 'urn:sample:optimizedlayout:1.0');
+% catch ME
+%     warning('Could not create definitions (method might be missing): %s', ME.message);
+% end
+
 % Create a business process with multiple paths
-bpmnGen.createDefinitions('OptimizedLayoutProcess', 'urn:sample:optimizedlayout:1.0');
 bpmnGen.createProcess('process1', 'Optimized Layout Process');
 
 % Create start event

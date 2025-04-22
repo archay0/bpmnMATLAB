@@ -5,7 +5,7 @@ function results = runAllTests()
     
     import matlab.unittest.TestSuite;
     import matlab.unittest.TestRunner;
-    import matlab.unittest.plugins.TestReportPlugin;
+    import matlab.unittest.plugins.XMLPlugin; % Correct import for JUnit XML
     import matlab.unittest.plugins.CodeCoveragePlugin;
     import matlab.unittest.plugins.codecoverage.CoverageReport;
     
@@ -44,7 +44,8 @@ function results = runAllTests()
     runner = TestRunner.withTextOutput('Verbosity', 3);
     
     % Add a plugin to write test results to JUnit-style XML file
-    runner.addPlugin(TestReportPlugin.producingJUnitFormat(...
+    % Use XMLPlugin instead of TestReportPlugin for JUnit format
+    runner.addPlugin(XMLPlugin.producingJUnitFormat(... 
         fullfile(reportDir, 'testResults.xml')));
     
     % Add code coverage plugin (if supported by MATLAB version)

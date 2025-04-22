@@ -88,58 +88,46 @@ classdef BPMNGenerator < handle
         end
         
         % Enhanced task creation with task types
-        function addSpecificTask(obj, id, name, taskType, properties, x, y, width, height)
-            % Add a specific task type to the BPMN diagram
-            % id: Unique identifier for the task
-            % name: Name/label of the task
-            % taskType: Type of task (userTask, serviceTask, etc.)
-            % properties: Structure with task-specific properties
-            % x, y: Coordinates for the task in the diagram
-            % width, height: Dimensions of the task box
-            
-            % Get process node
-            processNode = obj.getProcessNode();
-            
-            % Create task element with specific type
-            taskNode = obj.XMLDoc.createElement(taskType);
-            taskNode.setAttribute('id', id);
-            
-            if ~isempty(name)
-                taskNode.setAttribute('name', name);
+        function addSpecificTask(obj, id, name, taskType, additionalAttributes, x, y, width, height)
+            % Adds a specific task type (e.g., userTask, serviceTask) with additional attributes
+            processNode = obj.getCurrentProcessNode();
+            if isempty(processNode)
+                error('BPMNGenerator:NoProcess', 'No process defined to add the task to.');
             end
             
-            % Add all properties as attributes
-            if nargin >= 4 && ~isempty(properties)
-                propFields = fieldnames(properties);
-                for i = 1:length(propFields)
-                    fieldName = propFields{i};
-                    fieldValue = properties.(fieldName);
+            taskNode = obj.docNode.createElement(taskType);
+            taskNode.setAttribute('id', id);
+            taskNode.setAttribute('name', name);
+            processNode.appendChild(taskNode);
+            
+            % Add additional attributes if provided
+            if nargin >= 5 && ~isempty(additionalAttributes) && isstruct(additionalAttributes)
+                fields = fieldnames(additionalAttributes);
+                for i = 1:length(fields)
+                    fieldName = fields{i};
+                    fieldValue = additionalAttributes.(fieldName);
                     
-                    % Handle special properties like implementation attributes
-                    if strcmp(fieldName, 'script') && strcmp(taskType, 'scriptTask')
-                        % Add script as a child element
-                        scriptNode = obj.XMLDoc.createElement('script');
-                        scriptText = obj.XMLDoc.createTextNode(fieldValue);
-                        scriptNode.appendChild(scriptText);
-                        taskNode.appendChild(scriptNode);
-                    elseif strcmp(fieldName, 'multiInstanceLoopCharacteristics')
-                        if ischar(fieldValue) && any(strcmpi(fieldValue, {'sequential', 'parallel'}))
-                            miNode = obj.XMLDoc.createElement('multiInstanceLoopCharacteristics');
-                            miNode.setAttribute('isSequential', lower(strcmpi(fieldValue, 'sequential')));
-                            taskNode.appendChild(miNode);
+                    % Convert simple types to string for attributes
+                    if ischar(fieldValue) || isstring(fieldValue) || isnumeric(fieldValue) || islogical(fieldValue)
+                        if islogical(fieldValue)
+                            if fieldValue
+                                attrValue = 'true';
+                            else
+                                attrValue = 'false';
+                            end
+                        else
+                            attrValue = string(fieldValue); % Use string() for robust conversion
                         end
+                        taskNode.setAttribute(fieldName, attrValue);
                     else
-                        % Regular attribute
-                        taskNode.setAttribute(fieldName, toString(fieldValue));
+                        warning('BPMNGenerator:UnsupportedAttributeType', ...
+                            'Skipping attribute "%s" for task "%s" due to unsupported type: %s', ...
+                            fieldName, id, class(fieldValue));
                     end
                 end
             end
             
-            % Add to process
-            processNode.appendChild(taskNode);
-            
-            % Add to diagram
-            obj.addShapeToVisualization(id, x, y, width, height);
+            obj.addShape(id, x, y, width, height);
         end
         
         function addGateway(obj, id, name, gatewayType, x, y, width, height)
@@ -613,7 +601,7 @@ classdef BPMNGenerator < handle
                 error('Database connector must be a BPMNDatabaseConnector instance');
             end
             
-            if ~dbConnector.Connected
+            if !dbConnector.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -681,7 +669,7 @@ classdef BPMNGenerator < handle
                 
                 % Add condition expression if available
                 condExpr = '';
-                if isfield(flow, 'condition_expr') && ~isempty(flow.condition_expr{1})
+                if isfield(flow, 'condition_expr') && !isempty(flow.condition_expr{1})
                     condExpr = flow.condition_expr{1};
                 end
                 
@@ -718,7 +706,7 @@ classdef BPMNGenerator < handle
                         error('Unsupported database type: %s', dbType);
                 end
                 
-                if ~isempty(obj.DatabaseConn.Message)
+                if !isempty(obj.DatabaseConn.Message)
                     error('Database connection failed: %s', obj.DatabaseConn.Message);
                 end
                 
@@ -742,7 +730,7 @@ classdef BPMNGenerator < handle
             
             % Ensure output directory exists
             [fileDir, ~, ~] = fileparts(obj.FilePath);
-            if ~isempty(fileDir) && ~exist(fileDir, 'dir')
+            if !isempty(fileDir) && !exist(fileDir, 'dir')
                 mkdir(fileDir);
             end
             
@@ -759,7 +747,7 @@ classdef BPMNGenerator < handle
             processNodes = rootNode.getElementsByTagName('process');
             
             % Return specific process if ID provided, otherwise first process
-            if nargin >= 2 && ~isempty(processId)
+            if nargin >= 2 && !isempty(processId)
                 for i = 0:processNodes.getLength()-1
                     node = processNodes.item(i);
                     if strcmp(node.getAttribute('id'), processId)
@@ -808,7 +796,7 @@ classdef BPMNGenerator < handle
                     shapeNode.appendChild(boundsNode);
                     
                     % Add isExpanded attribute for subprocesses
-                    if nargin >= 7 && ~isempty(isExpanded)
+                    if nargin >= 7 && !isempty(isExpanded)
                         shapeNode.setAttribute('isExpanded', lower(toString(isExpanded)));
                     end
                     
