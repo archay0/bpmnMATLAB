@@ -596,9 +596,9 @@ classdef BPMNDatabaseConnector < handle
             end
         end
         
-    end % end regular methods
+    end % End of regular methods block - Ensure this is present and correctly placed
     
-    methods(Static)
+    methods(Static) % Start of static methods block
         function dataStore = getSetTempStore(data)
             % Helper function to manage a persistent temporary data store
             persistent TempDataStore;
@@ -610,7 +610,7 @@ classdef BPMNDatabaseConnector < handle
                 TempDataStore = data;
             end
             dataStore = TempDataStore; % Return current store
-        end
+        end % End of getSetTempStore
 
         function insertedIDs = insertRows(tableName, rows)
             % insertRows - Static method to insert data rows into a temporary store
@@ -703,7 +703,7 @@ classdef BPMNDatabaseConnector < handle
             BPMNDatabaseConnector.getSetTempStore(tempStore); % Save updated store
 
             fprintf('--- Temp insertRows finished for table: %s. Total rows: %d ---\n', tableName, numel(tempStore.(tableName)));
-        end
+        end % End of insertRows
 
         function allData = fetchAll(tableNames)
              % fetchAll - Static method to fetch data from the temporary store
@@ -729,8 +729,8 @@ classdef BPMNDatabaseConnector < handle
                  end
              end
              fprintf('--- Temp fetchAll finished ---\n');
-        end
-        
-    end % end static methods
-    
-end
+        end % End of fetchAll
+
+    end % End of static methods block
+
+end % End of classdef BPMNDatabaseConnector

@@ -17,10 +17,34 @@ classdef SchemaLoader
             schema = struct();
 
             % Find table headers and parse each section
-            [tokens, starts, ends] = regexp(raw, '###\s*\d+\.\s*([^\n]+)', 'tokens','start','end');
+            % Regex updated to capture the number as well, to differentiate examples
+            [tokens, starts, ends] = regexp(raw, '###\s*(\d+)\.\s*([^\n]+)', 'tokens','start','end');
             numTables = numel(tokens);
             for i = 1:numTables
-                tblNameRaw = strtrim(tokens{i}{1});
+                sectionNumberStr = tokens{i}{1}; % Capture the section number (e.g., '1')
+                tblNameRaw = strtrim(tokens{i}{2}); % Capture the text part
+
+                % Check if this section number corresponds to the start of Example Queries
+                % Assuming example queries start at section 15 based on DatabaseSchema.md structure
+                % (This is a bit fragile, relies on the MD structure)
+                try
+                    sectionNumber = str2double(sectionNumberStr);
+                    % Check if section number indicates an example query section
+                    % In the current MD, tables are 1-14, examples start after that.
+                    if sectionNumber > 14 
+                         fprintf('SchemaLoader: Skipping potential example query header based on section number > 14: "%s. %s"\n', sectionNumberStr, tblNameRaw);
+                         continue;
+                    end
+                catch
+                    % Ignore if conversion fails, proceed with name check
+                    fprintf('SchemaLoader: Could not parse section number: %s. Proceeding with name check.\n', sectionNumberStr);
+                end
+
+                % Also keep the original check for safety, in case numbering changes or parsing fails
+                 if endsWith(tblNameRaw, ':')
+                     fprintf('SchemaLoader: Skipping example query header ending with colon: "%s"\n', tblNameRaw);
+                     continue;
+                 end
 
                 % Validate and sanitize table name for use as struct field
                 if ~isvarname(tblNameRaw)
@@ -66,9 +90,9 @@ classdef SchemaLoader
                     if inTable && startsWith(line, '|')
                         parts = regexp(line, '\|', 'split');
                         if numel(parts) >= 5 % Ensure enough parts exist
-                            name = strtrim(parts{2});
-                            type = strtrim(parts{3});
-                            desc = strtrim(parts{4});
+                            name = strtrim(parts[2]);
+                            type = strtrim(parts[3]);
+                            desc = strtrim(parts[4]);
                             % Append to struct array
                             cols(end+1) = struct('name', name, 'type', type, 'description', desc);
                             % Check for foreign key in description
