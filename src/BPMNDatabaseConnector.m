@@ -69,7 +69,7 @@ classdef BPMNDatabaseConnector < handle
             
             try
                 % Load environment variables if not already loaded
-                if isempty(obj.EnvVars) || ~isfield(obj.EnvVars, 'DB_HOST')
+                if isempty(obj.EnvVars) || !isfield(obj.EnvVars, 'DB_HOST')
                     if nargin < 2
                         obj.loadEnvironmentVars();
                     else
@@ -173,7 +173,7 @@ classdef BPMNDatabaseConnector < handle
                         error('Unsupported database type: %s', obj.DbType);
                 end
                 
-                if ~isempty(obj.Connection.Message)
+                if !isempty(obj.Connection.Message)
                     error('Database connection failed: %s', obj.Connection.Message);
                 end
                 
@@ -189,7 +189,7 @@ classdef BPMNDatabaseConnector < handle
         
         function disconnect(obj)
             % Disconnect from database
-            if obj.Connected && ~isempty(obj.Connection)
+            if obj.Connected && !isempty(obj.Connection)
                 close(obj.Connection);
                 obj.Connected = false;
                 fprintf('Disconnected from %s database\n', obj.DbType);
@@ -200,7 +200,7 @@ classdef BPMNDatabaseConnector < handle
             % Query process definitions from database
             % Returns a table of process definitions
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -218,7 +218,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to query elements for
             % Returns a table of process elements
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -237,7 +237,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to query flows for
             % Returns a table of sequence flows
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -256,7 +256,7 @@ classdef BPMNDatabaseConnector < handle
             % tableName: Name of the table to get schema for
             % Returns structure with table schema information
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -276,7 +276,7 @@ classdef BPMNDatabaseConnector < handle
             % List all tables in the current database
             % Returns a cell array of table names
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -295,7 +295,7 @@ classdef BPMNDatabaseConnector < handle
             % query: SQL query string to execute
             % Returns query results
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -319,7 +319,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch elements for
             % Returns a table with element data according to DatabaseSchema.md
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -364,7 +364,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch flows for
             % Returns a table with flow data and associated waypoints
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -402,7 +402,7 @@ classdef BPMNDatabaseConnector < handle
             % Fetch message flows between pools/participants
             % Returns a table with message flow data
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -435,7 +435,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch data objects for
             % Returns a table with data object information
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -467,7 +467,7 @@ classdef BPMNDatabaseConnector < handle
             % Fetch data associations with waypoints
             % Returns a table with data association information
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -500,7 +500,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch diagram info for
             % Returns a table with diagram positioning data
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -533,7 +533,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch annotations for
             % Returns a table with text annotation data
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -565,7 +565,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch associations for
             % Returns a table with association data
             
-            if ~obj.Connected
+            if !obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -595,56 +595,140 @@ classdef BPMNDatabaseConnector < handle
                 data = table();
             end
         end
+        
     end % end regular methods
     
     methods(Static)
-        function insertedIDs = insertRows(tableName, rows)
-            % insertRows - Static method to insert data rows into a table
-            % tableName: Name of the table to insert into
-            % rows: Struct array of data to insert
-            % Returns: Array of IDs for the inserted rows (if applicable)
-            
-            fprintf('--- Attempting to insert %d rows into table: %s ---\n', numel(rows), tableName);
-            
-            % Placeholder implementation - Needs actual database logic
-            % TODO: Implement database connection and insertion logic here.
-            % This might involve:
-            % 1. Creating a temporary BPMNDatabaseConnector instance.
-            % 2. Connecting using environment variables.
-            % 3. Preparing and executing an INSERT SQL statement.
-            % 4. Handling potential errors.
-            % 5. Returning generated IDs if the table uses auto-increment.
-            
-            warning('BPMNDatabaseConnector:insertRows:NotImplemented', ...
-                    'Static insertRows method is not fully implemented. No data inserted into %s.', tableName);
-            
-            % Return dummy IDs for now, matching the number of input rows
-            if ~isempty(rows)
-                insertedIDs = arrayfun(@(x) sprintf('DUMMY_ID_%d', x), 1:numel(rows), 'UniformOutput', false);
-            else
-                insertedIDs = {};
+        function dataStore = getSetTempStore(data)
+            % Helper function to manage a persistent temporary data store
+            persistent TempDataStore;
+            if isempty(TempDataStore)
+                TempDataStore = struct(); % Initialize if first time
             end
-            fprintf('--- Placeholder insertRows finished for table: %s ---\n', tableName);
+
+            if nargin == 1 % Set data
+                TempDataStore = data;
+            end
+            dataStore = TempDataStore; % Return current store
         end
-        
+
+        function insertedIDs = insertRows(tableName, rows)
+            % insertRows - Static method to insert data rows into a temporary store
+            % tableName: Name of the table (field name in the store)
+            % rows: Struct array of data to insert
+            % Returns: Array of dummy IDs for the inserted rows
+
+            fprintf('--- Inserting %d rows into temporary store for table: %s ---\n', numel(rows), tableName);
+
+            if isempty(rows)
+                 insertedIDs = {};
+                 fprintf('--- No rows provided for table: %s. Skipping insertion. ---\n', tableName);
+                 return;
+            end
+
+            % Ensure rows is a struct array
+            if !isstruct(rows)
+                 warning('BPMNDatabaseConnector:insertRows:InvalidInput', ...
+                         'Input "rows" for table %s is not a struct array. Skipping insertion.', tableName);
+                 insertedIDs = {};
+                 return;
+            end
+
+            tempStore = BPMNDatabaseConnector.getSetTempStore(); % Get current store
+
+            % Generate dummy IDs
+            numExisting = 0;
+            if isfield(tempStore, tableName) && isstruct(tempStore.(tableName))
+                numExisting = numel(tempStore.(tableName));
+            end
+            insertedIDs = arrayfun(@(x) sprintf('%s_ID_%d', upper(tableName), numExisting + x), 1:numel(rows), 'UniformOutput', false);
+
+            % Add dummy IDs to the rows if an 'id' field is expected (heuristic)
+            idField = '';
+            if endsWith(tableName, 's') % e.g., processes -> process_id
+                idField = [tableName(1:end-1) '_id'];
+            elseif strcmp(tableName, 'bpmn_elements')
+                idField = 'element_id';
+            % Add more specific cases if needed
+
+            if !isempty(idField) && isfield(rows, idField)
+                 for i = 1:numel(rows)
+                     % Only assign if the field is empty or non-existent,
+                     % assuming LLM might sometimes provide one.
+                     if !isfield(rows(i), idField) || isempty(rows(i).(idField))
+                         rows(i).(idField) = insertedIDs{i};
+                     else
+                         % If LLM provided an ID, use that instead of overwriting
+                         insertedIDs{i} = rows(i).(idField);
+                     end
+                 end
+            elseif !isempty(idField) && !isfield(rows, idField)
+                 % Add the ID field if it doesn't exist at all
+                 for i = 1:numel(rows)
+                     rows(i).(idField) = insertedIDs{i};
+                 end
+            end
+
+
+            % Append rows to the store
+            if isfield(tempStore, tableName) && !isempty(tempStore.(tableName))
+                % Ensure consistent fields before concatenating
+                 existingFields = fieldnames(tempStore.(tableName));
+                 newFields = fieldnames(rows);
+                 allFields = union(existingFields, newFields);
+
+                 % Add missing fields to existing data
+                 for k = 1:numel(existingFields)
+                     fld = existingFields{k};
+                     if !isfield(rows, fld)
+                         [rows.(fld)] = deal([]); % Add missing field with default empty
+                     end
+                 end
+                 % Add missing fields to new data
+                 for k = 1:numel(newFields)
+                     fld = newFields{k};
+                     if !isfield(tempStore.(tableName), fld)
+                          [tempStore.(tableName).(fld)] = deal([]); % Add missing field with default empty
+                     end
+                 end
+
+                 % Reorder fields to match before concatenating
+                 rows = orderfields(rows, tempStore.(tableName)(1)); % Match order of existing data
+
+                tempStore.(tableName) = [tempStore.(tableName); rows(:)];
+            else
+                tempStore.(tableName) = rows(:);
+            end
+
+            BPMNDatabaseConnector.getSetTempStore(tempStore); % Save updated store
+
+            fprintf('--- Temp insertRows finished for table: %s. Total rows: %d ---\n', tableName, numel(tempStore.(tableName)));
+        end
+
         function allData = fetchAll(tableNames)
-             % fetchAll - Static method to fetch data from multiple tables
+             % fetchAll - Static method to fetch data from the temporary store
              % tableNames: Cell array of table names to fetch from
              % Returns: Struct where each field is a table name containing fetched data
-             
-             fprintf('--- Attempting to fetch data for tables: %s ---\n', strjoin(tableNames, ', '));
+
+             fprintf('--- Fetching data from temporary store for tables: %s ---\n', strjoin(tableNames, ', '));
              allData = struct();
-             
-             % Placeholder implementation - Needs actual database logic
-             % TODO: Implement database connection and fetching logic.
-             
-             warning('BPMNDatabaseConnector:fetchAll:NotImplemented', ...
-                    'Static fetchAll method is not fully implemented. Returning empty struct.');
-                    
-             for i = 1:numel(tableNames)
-                 allData.(tableNames{i}) = []; % Return empty data for each table
+             tempStore = BPMNDatabaseConnector.getSetTempStore(); % Get current store
+
+             if !iscell(tableNames)
+                 tableNames = {tableNames}; % Ensure it's a cell array
              end
-             fprintf('--- Placeholder fetchAll finished ---\n');
+
+             for i = 1:numel(tableNames)
+                 tableName = tableNames{i};
+                 if isfield(tempStore, tableName)
+                     allData.(tableName) = tempStore.(tableName);
+                     fprintf('--- Fetched %d rows for table %s ---\n', numel(allData.(tableName)), tableName);
+                 else
+                     allData.(tableName) = struct([]); % Return empty struct array if table not found
+                     fprintf('--- Table %s not found in temporary store ---\n', tableName);
+                 end
+             end
+             fprintf('--- Temp fetchAll finished ---\n');
         end
         
     end % end static methods

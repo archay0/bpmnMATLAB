@@ -74,7 +74,7 @@ classdef APICaller
             ];
             request_data.model = options.model;
             request_data.temperature = options.temperature;
-            request_data.max_tokens = 1000;
+            request_data.max_tokens = 10000;
             
             % Schreibe JSON in temporäre Datei
             input_fid = fopen(input_file, 'w');
