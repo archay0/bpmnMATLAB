@@ -89,24 +89,45 @@ classdef SchemaLoader
                     % Parse data rows
                     if inTable && startsWith(line, '|')
                         parts = regexp(line, '\|', 'split');
-                        if numel(parts) >= 5 % Ensure enough parts exist
-                            name = strtrim(parts(2));
-                            type = strtrim(parts(3));
-                            desc = strtrim(parts(4));
+                        % More robust bounds checking - make sure we have all required elements
+                        % parts(1) is empty because the line starts with |
+                        if numel(parts) >= 5 && length(parts) > 3 % Ensure enough parts exist with a double-check
+                            % Only access array elements that are guaranteed to exist
+                            if length(parts) > 1
+                                name = strtrim(parts(2));
+                            else
+                                name = '';
+                            end
+                            
+                            if length(parts) > 2
+                                type = strtrim(parts(3));
+                            else
+                                type = '';
+                            end
+                            
+                            if length(parts) > 3
+                                desc = strtrim(parts(4));
+                            else
+                                desc = '';
+                            end
+                            
                             % Append to struct array
                             cols(end+1) = struct('name', name, 'type', type, 'description', desc);
-                            % Check for foreign key in description
-                            fkMatch = regexp(desc, '[Ff]oreign key to ([^\.\s]+)', 'tokens');
-                            if ~isempty(fkMatch)
-                                fkTableRaw = fkMatch{1}{1};
-                                % Sanitize the referenced table name as well
-                                if ~isvarname(fkTableRaw)
-                                     fkTable = matlab.lang.makeValidName(fkTableRaw, 'ReplacementStyle', 'underscore');
-                                else
-                                     fkTable = fkTableRaw;
+                            
+                            % Check for foreign key in description only if we have a description
+                            if ~isempty(desc)
+                                fkMatch = regexp(desc, '[Ff]oreign key to ([^\.\s]+)', 'tokens');
+                                if ~isempty(fkMatch) && ~isempty(fkMatch{1}) && numel(fkMatch{1}) > 0
+                                    fkTableRaw = fkMatch{1}{1};
+                                    % Sanitize the referenced table name as well
+                                    if ~isvarname(fkTableRaw)
+                                         fkTable = matlab.lang.makeValidName(fkTableRaw, 'ReplacementStyle', 'underscore');
+                                    else
+                                         fkTable = fkTableRaw;
+                                    end
+                                    % Append to struct array
+                                    fks(end+1) = struct('column', name, 'refTable', fkTable, 'refColumn', name);
                                 end
-                                % Append to struct array
-                                fks(end+1) = struct('column', name, 'refTable', fkTable, 'refColumn', name);
                             end
                         else
                              warning('SchemaLoader:MalformedRow', 'Skipping malformed table row in table %s: %s', tblName, line);
