@@ -80,8 +80,9 @@ classdef ValidationLayer
                 keys = fieldnames(enumMap);
                 for k = 1:numel(keys)
                     key = keys{k};
-                    parts = split(key, '.');
-                    if numel(parts)==2 && strcmp(parts{1}, tableName)
+                    parts = split(key, '_');
+                    tableField = parts{1};
+                    if numel(parts)>=2 && strcmp(tableField, tableName)
                         col = parts{2};
                         if isfield(row, col)
                             val = row.(col);
@@ -353,13 +354,14 @@ classdef ValidationLayer
         function enumMap = getEnumMap()
             % Returns mapping of table.field to allowed enumeration values
             enumMap = struct();
-            enumMap.('bpmn_elements.element_type') = {'task','event','gateway','subProcess','callActivity','transaction','adHocSubProcess'};
-            enumMap.('bpmn_elements.element_subtype') = {'userTask','scriptTask','serviceTask','manualTask','businessRuleTask','receiveTask','sendTask','startEvent','endEvent','intermediateCatchEvent','intermediateThrowEvent','boundaryEvent','exclusiveGateway','parallelGateway','inclusiveGateway','eventBasedGateway','complexGateway'}; % Added boundaryEvent, complexGateway
-            enumMap.('tasks.loop_type') = {'None','Standard','MultiInstance'};
-            enumMap.('tasks.loop_behavior') = {'Sequential','Parallel'};
-            enumMap.('events.event_definition_type') = {'Message','Timer','Error','Signal','Compensation','Conditional','Link','Escalation','Terminate'}; % Added Terminate
-            enumMap.('gateways.gateway_direction') = {'Unspecified','Diverging','Converging','Mixed'}; % Added Unspecified
-            enumMap.('pools_and_lanes.container_type') = {'Pool','Lane'};
+            % Verwende gültige Feldnamen ohne Punkte
+            enumMap.bpmn_elements_element_type = {'task','event','gateway','subProcess','callActivity','transaction','adHocSubProcess'};
+            enumMap.bpmn_elements_element_subtype = {'userTask','scriptTask','serviceTask','manualTask','businessRuleTask','receiveTask','sendTask','startEvent','endEvent','intermediateCatchEvent','intermediateThrowEvent','boundaryEvent','exclusiveGateway','parallelGateway','inclusiveGateway','eventBasedGateway','complexGateway'}; % Added boundaryEvent, complexGateway
+            enumMap.tasks_loop_type = {'None','Standard','MultiInstance'};
+            enumMap.tasks_loop_behavior = {'Sequential','Parallel'};
+            enumMap.events_event_definition_type = {'Message','Timer','Error','Signal','Compensation','Conditional','Link','Escalation','Terminate'}; % Added Terminate
+            enumMap.gateways_gateway_direction = {'Unspecified','Diverging','Converging','Mixed'}; % Added Unspecified
+            enumMap.pools_and_lanes_container_type = {'Pool','Lane'};
         end
     end
 end
