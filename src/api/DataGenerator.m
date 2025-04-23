@@ -17,6 +17,11 @@ classdef DataGenerator
                 options = struct();
             end
             
+            % Set default options
+            if ~isfield(options, 'fallbackOnError')
+                options.fallbackOnError = true; % Default to fallback mode - return data even if problematic
+            end
+            
             % Initialisiere die API-Umgebung, wenn verfügbar
             if exist('initAPIEnvironment', 'file') == 2
                 initAPIEnvironment();
@@ -66,14 +71,18 @@ classdef DataGenerator
                         try text = char(text); catch; text = ''; end
                     end
                     
-                    % Debugging extracted text
-                    if isfield(options, 'debug') && options.debug
-                        fprintf('--- Extracted Text (Attempt %d) ---\n', retryCount + 1);
-                        disp(text);
-                        fprintf('--- End Extracted Text ---\n');
+                    % ALWAYS show a sample of the raw response (not just in debug mode)
+                    % Limited to 500 chars to avoid flooding the console
+                    fprintf('--- Raw LLM Response (truncated) ---\n');
+                    if length(text) > 500
+                        fprintf('%s...\n[...truncated, total length: %d chars]\n', text(1:500), length(text));
+                    else
+                        fprintf('%s\n', text);
                     end
+                    fprintf('--- End Raw Response ---\n');
                     
                     % Robust JSON Cleaning
+                    originalText = text; % Save original before cleaning
                     text = strtrim(text);
                     text = regexprep(text, '^```json\s*', '');
                     text = regexprep(text, '\s*```$', '');
@@ -89,28 +98,66 @@ classdef DataGenerator
                         error('DataGenerator:EmptyContent', 'API response content is empty after cleaning.');
                     end
                     
-                    % Debugging before decode
-                    if isfield(options, 'debug') && options.debug
-                        fprintf('--- Text Before jsondecode (Attempt %d) ---\n', retryCount + 1);
-                        disp(text);
-                        fprintf('--- End Text Before jsondecode ---\n');
+                    % Try to extract JSON if text contains it but has extra content
+                    try
+                        % Find potential JSON boundaries
+                        jsonStart = regexp(text, '[\[{]', 'once');
+                        jsonEnd = regexp(text, '[\]}][^\]}]*$', 'once');
+                        
+                        if ~isempty(jsonStart) && ~isempty(jsonEnd) && jsonEnd > jsonStart
+                            potentialJson = text(jsonStart:jsonEnd);
+                            % Try parsing the potential JSON portion
+                            try
+                                testParse = jsondecode(potentialJson);
+                                % If we get here, the extraction worked!
+                                fprintf('Extracted JSON from partial text (chars %d-%d of %d)\n', ...
+                                       jsonStart, jsonEnd, length(text));
+                                text = potentialJson;
+                            catch
+                                % If extraction failed, continue with full text
+                            end
+                        end
+                    catch
+                        % Ignore errors in JSON extraction attempt
                     end
                     
                     % Attempt to decode the cleaned JSON text
-                    rows = jsondecode(text);
-                    
-                    % Post-processing (e.g., cell array conversion)
-                    if iscell(rows) && ~isempty(rows) && all(cellfun(@isstruct, rows))
-                        try rows = vertcat(rows{:});
-                        catch vertcatME
-                            warning('DataGenerator:CellConversionFailed', 'Could not convert cell array: %s', vertcatME.message);
+                    try
+                        rows = jsondecode(text);
+                        
+                        % Post-processing (e.g., cell array conversion)
+                        if iscell(rows) && ~isempty(rows) && all(cellfun(@isstruct, rows))
+                            try 
+                                rows = vertcat(rows{:});
+                            catch vertcatME
+                                warning('DataGenerator:CellConversionFailed', 'Could not convert cell array: %s', vertcatME.message);
+                            end
+                        end
+                        
+                        % Success! Exit the loop.
+                        fprintf('--- LLM Call Successful (Attempt %d) ---\n', retryCount + 1);
+                        lastError = []; % Clear last error on success
+                        break;
+                        
+                    catch jsonME
+                        % JSON decode failed - decide whether to retry or use fallback
+                        lastError = jsonME;
+                        fprintf('--- JSON Decode Failed: %s ---\n', jsonME.message);
+                        
+                        % If fallbackOnError is enabled and this is the last retry attempt,
+                        % create a simple struct with the raw text to return
+                        if options.fallbackOnError && retryCount >= maxRetries
+                            fprintf('--- Using Fallback Mode - Returning Text As-Is ---\n');
+                            rows = struct('rawText', originalText, ...
+                                          'cleanedText', text, ...
+                                          'isValid', false);
+                            lastError = []; % Clear error since we're using fallback
+                            break; % Exit the loop with the fallback data
+                        else
+                            % Re-throw the error to trigger the retry mechanism
+                            error('DataGenerator:JSONParseError', 'Failed to parse as JSON: %s', jsonME.message);
                         end
                     end
-                    
-                    % Success~ Exit the loop.
-                    fprintf('--- LLM Call Successful (Attempt %d) ---\n', retryCount + 1);
-                    lastError = []; % Clear last error on success
-                    break; 
 
                 catch ME
                     lastError = ME; % Store the error
@@ -136,9 +183,19 @@ classdef DataGenerator
                         rows = []; 
                         continue; % Go to the next iteration of the while loop
                     else
-                        % Max retries exceeded, break the loop to throw error outside
-                        fprintf('--- Max Retries Exceeded ---\n');
-                        break; 
+                        % Max retries exceeded, handle fallback if enabled
+                        if options.fallbackOnError && ~isempty(text)
+                            fprintf('--- Using Fallback Mode After Max Retries ---\n');
+                            rows = struct('rawText', originalPrompt, ...
+                                          'cleanedText', text, ...
+                                          'isValid', false);
+                            lastError = []; % Clear error since we're using fallback
+                            break;
+                        else
+                            % Otherwise, break the loop to throw error outside
+                            fprintf('--- Max Retries Exceeded ---\n');
+                            break;
+                        end 
                     end
                 end % end try-catch
             end % end while loop
@@ -151,7 +208,7 @@ classdef DataGenerator
                        maxRetries, lastError.message, text);
             end
             
-            % If loop finished successfully, 'rows' contains the valid data
+            % If loop finished successfully, 'rows' contains the valid data or fallback
             
         end % end callLLM method
     end % end static methods
