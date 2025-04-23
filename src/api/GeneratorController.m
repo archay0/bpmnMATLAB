@@ -111,18 +111,18 @@ classdef GeneratorController
             for i = 1:numel(fields)
                 fn = fields{i};
                 % Collect all rows that look like element tables
-                if endsWith(fn, 'Rows') && ~strcmp(fn, 'flowRows') && ~strcmp(fn, 'resourceRows') % Use ~ instead of ~
+                if endsWith(fn, 'Rows') && ~strcmp(fn, 'flowRows') && ~strcmp(fn, 'resourceRows')
                     rows = context.(fn);
                     if isstruct(rows) && isfield(rows, 'element_id') % Check if it has element_id
                         % Ensure consistent fields before concatenating (add missing fields with default values)
-                        if ~isempty(rows) % Use ~ instead of ~
-                             if ~isfield(rows, 'attached_to_ref') % Use ~ instead of ~
+                        if ~isempty(rows)
+                             if ~isfield(rows, 'attached_to_ref')
                                  [rows.attached_to_ref] = deal('');
                              end
-                             if ~isfield(rows, 'process_id') % Use ~ instead of ~
+                             if ~isfield(rows, 'process_id')
                                  [rows.process_id] = deal(''); % Or infer based on level if possible
                              end
-                             if ~isfield(rows, 'element_subtype') % Use ~ instead of ~
+                             if ~isfield(rows, 'element_subtype')
                                  [rows.element_subtype] = deal('');
                              end
                              % Select common fields for aggregation
@@ -187,7 +187,7 @@ classdef GeneratorController
 
             % Define final output path
             finalOutputDir = 'doc/temporary';
-            if ~exist(finalOutputDir, 'dir') % Use ~ instead of ~
+            if ~exist(finalOutputDir, 'dir')
                 mkdir(finalOutputDir);
             end
             finalOutputPath = fullfile(finalOutputDir, opts.outputFile);

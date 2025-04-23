@@ -601,7 +601,7 @@ classdef BPMNGenerator < handle
                 error('Database connector must be a BPMNDatabaseConnector instance');
             end
             
-            if !dbConnector.Connected
+            if ~dbConnector.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -669,7 +669,7 @@ classdef BPMNGenerator < handle
                 
                 % Add condition expression if available
                 condExpr = '';
-                if isfield(flow, 'condition_expr') && !isempty(flow.condition_expr{1})
+                if isfield(flow, 'condition_expr') && ~isempty(flow.condition_expr{1})
                     condExpr = flow.condition_expr{1};
                 end
                 
@@ -706,7 +706,7 @@ classdef BPMNGenerator < handle
                         error('Unsupported database type: %s', dbType);
                 end
                 
-                if !isempty(obj.DatabaseConn.Message)
+                if ~isempty(obj.DatabaseConn.Message)
                     error('Database connection failed: %s', obj.DatabaseConn.Message);
                 end
                 
@@ -730,7 +730,7 @@ classdef BPMNGenerator < handle
             
             % Ensure output directory exists
             [fileDir, ~, ~] = fileparts(obj.FilePath);
-            if !isempty(fileDir) && !exist(fileDir, 'dir')
+            if ~isempty(fileDir) && ~exist(fileDir, 'dir')
                 mkdir(fileDir);
             end
             
@@ -747,7 +747,7 @@ classdef BPMNGenerator < handle
             processNodes = rootNode.getElementsByTagName('process');
             
             % Return specific process if ID provided, otherwise first process
-            if nargin >= 2 && !isempty(processId)
+            if nargin >= 2 && ~isempty(processId)
                 for i = 0:processNodes.getLength()-1
                     node = processNodes.item(i);
                     if strcmp(node.getAttribute('id'), processId)
@@ -796,7 +796,7 @@ classdef BPMNGenerator < handle
                     shapeNode.appendChild(boundsNode);
                     
                     % Add isExpanded attribute for subprocesses
-                    if nargin >= 7 && !isempty(isExpanded)
+                    if nargin >= 7 && ~isempty(isExpanded)
                         shapeNode.setAttribute('isExpanded', lower(toString(isExpanded)));
                     end
                     

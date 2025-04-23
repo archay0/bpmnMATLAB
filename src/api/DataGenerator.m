@@ -94,10 +94,10 @@ classdef DataGenerator
                 end
                 
                 % Nehme die bessere der beiden Extraktionsmethoden
-                if !isempty(jsonStart1) && !isempty(jsonEnd1)
+                if ~isempty(jsonStart1) && ~isempty(jsonEnd1)
                     jsonStart = jsonStart1;
                     jsonEnd = jsonEnd1;
-                elseif !isinf(jsonStart2) && jsonEnd2 > 0
+                elseif ~isinf(jsonStart2) && jsonEnd2 > 0
                     jsonStart = jsonStart2;
                     jsonEnd = jsonEnd2;
                 else
