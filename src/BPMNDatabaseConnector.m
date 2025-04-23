@@ -595,5 +595,58 @@ classdef BPMNDatabaseConnector < handle
                 data = table();
             end
         end
-    end
+    end % end regular methods
+    
+    methods(Static)
+        function insertedIDs = insertRows(tableName, rows)
+            % insertRows - Static method to insert data rows into a table
+            % tableName: Name of the table to insert into
+            % rows: Struct array of data to insert
+            % Returns: Array of IDs for the inserted rows (if applicable)
+            
+            fprintf('--- Attempting to insert %d rows into table: %s ---\n', numel(rows), tableName);
+            
+            % Placeholder implementation - Needs actual database logic
+            % TODO: Implement database connection and insertion logic here.
+            % This might involve:
+            % 1. Creating a temporary BPMNDatabaseConnector instance.
+            % 2. Connecting using environment variables.
+            % 3. Preparing and executing an INSERT SQL statement.
+            % 4. Handling potential errors.
+            % 5. Returning generated IDs if the table uses auto-increment.
+            
+            warning('BPMNDatabaseConnector:insertRows:NotImplemented', ...
+                    'Static insertRows method is not fully implemented. No data inserted into %s.', tableName);
+            
+            % Return dummy IDs for now, matching the number of input rows
+            if ~isempty(rows)
+                insertedIDs = arrayfun(@(x) sprintf('DUMMY_ID_%d', x), 1:numel(rows), 'UniformOutput', false);
+            else
+                insertedIDs = {};
+            end
+            fprintf('--- Placeholder insertRows finished for table: %s ---\n', tableName);
+        end
+        
+        function allData = fetchAll(tableNames)
+             % fetchAll - Static method to fetch data from multiple tables
+             % tableNames: Cell array of table names to fetch from
+             % Returns: Struct where each field is a table name containing fetched data
+             
+             fprintf('--- Attempting to fetch data for tables: %s ---\n', strjoin(tableNames, ', '));
+             allData = struct();
+             
+             % Placeholder implementation - Needs actual database logic
+             % TODO: Implement database connection and fetching logic.
+             
+             warning('BPMNDatabaseConnector:fetchAll:NotImplemented', ...
+                    'Static fetchAll method is not fully implemented. Returning empty struct.');
+                    
+             for i = 1:numel(tableNames)
+                 allData.(tableNames{i}) = []; % Return empty data for each table
+             end
+             fprintf('--- Placeholder fetchAll finished ---\n');
+        end
+        
+    end % end static methods
+    
 end

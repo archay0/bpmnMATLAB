@@ -23,9 +23,8 @@ function setEnvironmentVariables()
     % Ersetze 'your_openrouter_api_key_here' durch deinen tatsächlichen OpenRouter-Token
     setenv('OPENROUTER_API_KEY', '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');
     
-    % GitHub Models API Token (falls benötigt)
-    % setenv('GITHUB_TOKEN', 'GITHUB_API_TOKEN=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
-');
+    % GitHub Models API Token (falls benötigt) - Ensure this line is correctly commented or valid
+    % setenv('GITHUB_TOKEN', 'your_github_pat_here'); % Example placeholder
     % setenv('GITHUB_API_TOKEN', getenv('GITHUB_TOKEN'));
     
     % OpenAI API Token (falls benötigt)

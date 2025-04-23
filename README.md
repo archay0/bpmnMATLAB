@@ -185,6 +185,44 @@ This project now uses the OpenRouter API with the `microsoft/mai-ds-r1:free` mod
 
 For more details on API integration, see `doc/APIIntegration.md`.
 
+## AI-Assisted Data Generation
+
+This project includes a utility script `generate_bpmn_data.m` that leverages an AI model (via OpenRouter) to iteratively generate BPMN process data based on a textual description of a product or process.
+
+### Usage
+
+You can run the script from the MATLAB command window:
+
+```matlab
+generate_bpmn_data(productDescription, batchSize, outputFile, options)
+```
+
+**Arguments:**
+
+*   `productDescription` (string): A brief description of the product or process you want to model (e.g., 'Assembly process for a bicycle').
+*   `batchSize` (integer): The number of data rows to generate per table in each iteration. Controls the granularity of the generation process.
+*   `outputFile` (string): The path where the generated BPMN XML data should be saved (e.g., 'output/generated_bicycle_process.xml').
+*   `options` (struct, optional): A structure to provide additional configuration:
+    *   `options.model` (string): Specify the LLM model to use (default: 'microsoft/mai-ds-r1:free').
+    *   `options.temperature` (double): Controls the creativity/randomness of the LLM output (default: 0.7).
+    *   `options.debug` (logical): Set to `true` to enable verbose debug output (default: `false`).
+
+**Example:**
+
+```matlab
+% Simple generation
+generate_bpmn_data('Manufacturing process for a smartphone', 10, 'output/smartphone_process.xml')
+
+% Generation with custom options
+options = struct('model', 'anthropic/claude-3-haiku-20240307', 'temperature', 0.5);
+generate_bpmn_data('Order fulfillment workflow', 5, 'output/order_fulfillment.xml', options)
+```
+
+**Prerequisites:**
+
+*   Ensure your API environment is configured correctly as described in the "API Integration" section above.
+*   Make sure the necessary source directories (`src/`, `src/api/`, `src/util/`) are added to your MATLAB path. The script attempts to do this automatically, but manual path management might be needed in some environments.
+
 ## Future Plans
 
 - Generate comprehensive BPMN for a single product with subparts: automated creation of hierarchical subprocesses to represent product assembly, quality checks, packaging, and validation flows.

@@ -38,11 +38,13 @@ classdef DataGenerator
             
             % Optionales Debugging
             if isfield(options, 'debug') && options.debug
-                disp('Rohe API-Antwort:');
+                fprintf('--- Raw API Response ---\n');
                 disp(raw);
+                fprintf('--- End Raw API Response ---\n');
             end
             
             % Verarbeite die Antwort basierend auf der API-Struktur
+            text = ''; % Initialize text
             try
                 % Bestimme, von welchem API-Anbieter die Antwort stammt
                 if isfield(raw, 'choices') && ~isempty(raw.choices) && isfield(raw.choices(1), 'message') && isfield(raw.choices(1).message, 'content')
@@ -51,107 +53,97 @@ classdef DataGenerator
                 elseif isfield(raw, 'choices') && ~isempty(raw.choices) && isfield(raw.choices(1), 'text')
                     % GitHub Models API v1 Format
                     text = raw.choices(1).text;
-                elseif isfield(raw, 'data')
+                elseif isfield(raw, 'data') && ischar(raw.data) % Ensure data is char/string
                     % Alternatives Format
                     text = raw.data;
+                elseif ischar(raw) % Handle case where raw itself is the string
+                    text = raw;
                 else
-                    % Fallback
-                    warning('DataGenerator:UnknownFormat', 'Unbekanntes Antwortformat. Versuche die gesamte Antwort zu verwenden.');
-                    text = jsonencode(raw);
+                    % Fallback: Try to encode the whole structure if text extraction fails
+                    warning('DataGenerator:UnknownFormat', 'Unknown response format or content structure. Attempting to encode the entire response.');
+                    try
+                        text = jsonencode(raw); % This might fail if raw is complex
+                    catch encodeME
+                         warning('DataGenerator:EncodingFallbackFailed', 'Failed to encode the entire raw response: %s', encodeME.message);
+                         text = ''; % Set text to empty if encoding fails
+                    end
                 end
-                
+
+                % Ensure text is a character vector
+                if ~ischar(text)
+                    warning('DataGenerator:NonCharContent', 'Extracted content is not a character vector. Trying to convert.');
+                    try
+                        text = char(text); % Attempt conversion
+                    catch convertME
+                        warning('DataGenerator:ConversionFailed', 'Failed to convert content to character vector: %s', convertME.message);
+                        text = ''; % Set text to empty if conversion fails
+                    end
+                end
+
                 % Debugging für den extrahierten Text
                 if isfield(options, 'debug') && options.debug
-                    disp('Extrahierter Text aus der API-Antwort:');
+                    fprintf('--- Extracted Text ---\n');
                     disp(text);
+                    fprintf('--- End Extracted Text ---\n');
+                end
+
+                % --- Robust JSON Cleaning ---
+                % 1. Trim whitespace
+                text = strtrim(text);
+
+                % 2. Remove potential markdown code block fences (```json ... ``` or ``` ... ```)
+                text = regexprep(text, '^```json\s*', '');
+                text = regexprep(text, '\s*```$', '');
+                text = regexprep(text, '^```\s*', '');
+                text = regexprep(text, '\s*```$', '');
+                
+                % 3. Remove potential single backticks if they enclose the whole string
+                if startsWith(text, '`') && endsWith(text, '`')
+                    text = text(2:end-1);
+                end
+
+                % 4. Trim whitespace again after cleaning
+                text = strtrim(text);
+
+                % Check if text is empty after cleaning
+                if isempty(text)
+                    warning('DataGenerator:EmptyContent', 'API response content is empty after cleaning.');
+                    rows = []; % Return empty
+                    return;
+                end
+
+                % Debugging before decoding
+                if isfield(options, 'debug') && options.debug
+                    fprintf('--- Text Before jsondecode ---\n');
+                    disp(text);
+                    fprintf('--- End Text Before jsondecode ---\n');
+                end
+
+                % 5. Attempt to decode the cleaned JSON text
+                try
+                    rows = jsondecode(text);
+                catch decodeME
+                    % If decoding fails, throw a specific error with the problematic text
+                    error('DataGenerator:ParseError', 'Failed to parse LLM JSON response: %s\n\nProblematic Text:\n%s', decodeME.message, text);
                 end
                 
-                % Entferne Code-Block-Markierungen, falls vorhanden (```json, ```, etc.)
-                text = regexprep(text, '```json\s*', '');
-                text = regexprep(text, '```\s*', '');
-                
-                % Entferne Markdown-Formatierungen und andere nicht-JSON-Zeichen
-                text = regexprep(text, '^\s+', ''); % Whitespace am Anfang
-                text = regexprep(text, '\s+$', ''); % Whitespace am Ende
-                
-                % Robuste JSON-Extraktion
-                % Suche nach dem ersten { oder [ und dem letzten } oder ]
-                jsonStart1 = regexp(text, '[\[{]', 'once');
-                jsonEnd1 = regexp(text, '[\]}](?!.*[\]}])', 'once');
-                
-                % Alternative Methode mit strfind für bessere Kompatibilität
-                jsonStart2 = min([strfind(text, '{'), strfind(text, '[')]);
-                if isempty(jsonStart2)
-                    jsonStart2 = inf;
-                end
-                
-                jsonEnd2a = strfind(text, '}');
-                jsonEnd2b = strfind(text, ']');
-                if ~isempty(jsonEnd2a) || ~isempty(jsonEnd2b)
-                    jsonEnd2 = max([jsonEnd2a, jsonEnd2b]);
-                else
-                    jsonEnd2 = 0;
-                end
-                
-                % Nehme die bessere der beiden Extraktionsmethoden
-                if ~isempty(jsonStart1) && ~isempty(jsonEnd1)
-                    jsonStart = jsonStart1;
-                    jsonEnd = jsonEnd1;
-                elseif ~isinf(jsonStart2) && jsonEnd2 > 0
-                    jsonStart = jsonStart2;
-                    jsonEnd = jsonEnd2;
-                else
-                    % Kein JSON gefunden - verwende den ganzen Text in der Hoffnung,
-                    % dass es trotzdem funktioniert
-                    jsonStart = 1;
-                    jsonEnd = length(text);
-                    warning('DataGenerator:NoJsonMarkers', 'Keine JSON-Marker gefunden, verwende den gesamten Text.');
-                end
-                
-                % Extrahiere den JSON-Teil
-                if jsonStart <= jsonEnd && jsonEnd <= length(text)
-                    jsonText = text(jsonStart:jsonEnd);
-                    
-                    % Debugging für den extrahierten JSON-Text
-                    if isfield(options, 'debug') && options.debug
-                        disp('Extrahierter JSON-Text:');
-                        disp(jsonText);
+                % If the result is a cell array, try converting to struct array if appropriate
+                % This might need adjustment based on expected output structure
+                if iscell(rows) && ~isempty(rows) && all(cellfun(@isstruct, rows))
+                    try
+                        rows = vertcat(rows{:}); % More robust conversion for cell array of structs
+                    catch vertcatME
+                        warning('DataGenerator:CellConversionFailed', 'Could not automatically convert cell array to struct array: %s', vertcatME.message);
+                        % Keep rows as cell array if conversion fails
                     end
-                else
-                    % Fallback, wenn Marker inkonsistent sind
-                    warning('DataGenerator:InvalidJsonMarkers', 'Ungültige JSON-Marker, verwende den gesamten Text.');
-                    jsonText = text;
                 end
-                
-                % Letzter Versuch, das JSON zu reparieren, wenn es immer noch ungültig ist
-                % Überprüfe auf ungleiche Klammerzahl
-                openBraces = sum(jsonText == '{');
-                closeBraces = sum(jsonText == '}');
-                openBrackets = sum(jsonText == '[');
-                closeBrackets = sum(jsonText == ']');
-                
-                if openBraces > closeBraces
-                    % Füge fehlende schließende Klammern hinzu
-                    jsonText = [jsonText, repmat('}', 1, openBraces - closeBraces)];
-                    warning('DataGenerator:AddedMissingBraces', 'Füge %d fehlende } hinzu', openBraces - closeBraces);
-                end
-                
-                if openBrackets > closeBrackets
-                    % Füge fehlende schließende Klammern hinzu
-                    jsonText = [jsonText, repmat(']', 1, openBrackets - closeBrackets)];
-                    warning('DataGenerator:AddedMissingBrackets', 'Füge %d fehlende ] hinzu', openBrackets - closeBrackets);
-                end
-                
-                % Konvertiere zu MATLAB-Struktur
-                rows = jsondecode(jsonText);
-                
-                % Wenn das Ergebnis ein Zellarray ist, konvertieren zu struct array
-                if iscell(rows)
-                    rows = cell2mat(rows);
-                end
-                
-            catch ME
-                error('DataGenerator:ParseError', 'Fehler beim Parsen der LLM-Antwort: %s\n\nAntworttext: %s', ME.message, text);
+
+            catch ME % Catch errors during the extraction/parsing process
+                 % Provide more context in the error message
+                 baseME = MException('DataGenerator:ProcessingError', ...
+                     sprintf('Error processing API response: %s\nAttempted Text: %s', ME.message, text));
+                 baseME = addCause(baseME, ME);
+                 throw(baseME);
             end
         end
     end
