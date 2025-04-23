@@ -90,9 +90,9 @@ classdef SchemaLoader
                     if inTable && startsWith(line, '|')
                         parts = regexp(line, '\|', 'split');
                         if numel(parts) >= 5 % Ensure enough parts exist
-                            name = strtrim(parts[2]);
-                            type = strtrim(parts[3]);
-                            desc = strtrim(parts[4]);
+                            name = strtrim(parts(2));
+                            type = strtrim(parts(3));
+                            desc = strtrim(parts(4));
                             % Append to struct array
                             cols(end+1) = struct('name', name, 'type', type, 'description', desc);
                             % Check for foreign key in description
