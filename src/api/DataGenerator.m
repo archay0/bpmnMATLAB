@@ -22,129 +22,137 @@ classdef DataGenerator
                 initAPIEnvironment();
             end
             
-            % Format-Anweisungen hinzufügen, wenn nicht explizit deaktiviert
-            if ~isfield(options, 'skipFormatting') || ~options.skipFormatting
-                % Füge explizite Format-Anweisungen zum Prompt hinzu
-                formatInstructions = [
-                    '\n\nWICHTIG: Antworte ausschließlich mit einem gültigen JSON-Array oder -Objekt. ', ...
-                    'Verwende keine Code-Blöcke mit ```json oder ```. ', ...
-                    'Beginne deine Antwort direkt mit [ oder { und füge keinen zusätzlichen Text hinzu.'
-                ];
-                prompt = [prompt, formatInstructions];
-            end
-            
-            % API aufrufen mit den gegebenen Optionen
-            raw = APICaller.sendPrompt(prompt, options);
-            
-            % Optionales Debugging
-            if isfield(options, 'debug') && options.debug
-                fprintf('--- Raw API Response ---\n');
-                disp(raw);
-                fprintf('--- End Raw API Response ---\n');
-            end
-            
-            % Verarbeite die Antwort basierend auf der API-Struktur
-            text = ''; % Initialize text
-            try
-                % Bestimme, von welchem API-Anbieter die Antwort stammt
-                if isfield(raw, 'choices') && ~isempty(raw.choices) && isfield(raw.choices(1), 'message') && isfield(raw.choices(1).message, 'content')
-                    % OpenRouter/OpenAI-Format
-                    text = raw.choices(1).message.content;
-                elseif isfield(raw, 'choices') && ~isempty(raw.choices) && isfield(raw.choices(1), 'text')
-                    % GitHub Models API v1 Format
-                    text = raw.choices(1).text;
-                elseif isfield(raw, 'data') && ischar(raw.data) % Ensure data is char/string
-                    % Alternatives Format
-                    text = raw.data;
-                elseif ischar(raw) % Handle case where raw itself is the string
-                    text = raw;
-                else
-                    % Fallback: Try to encode the whole structure if text extraction fails
-                    warning('DataGenerator:UnknownFormat', 'Unknown response format or content structure. Attempting to encode the entire response.');
-                    try
-                        text = jsonencode(raw); % This might fail if raw is complex
-                    catch encodeME
-                         warning('DataGenerator:EncodingFallbackFailed', 'Failed to encode the entire raw response: %s', encodeME.message);
-                         text = ''; % Set text to empty if encoding fails
-                    end
-                end
+            originalPrompt = prompt; % Store the initial prompt for potential retry
+            maxRetries = 1; % Allow one retry attempt to fix the response
+            retryCount = 0;
+            rows = []; % Initialize output
+            lastError = []; % Store the last error encountered
+            text = ''; % Initialize text variable in outer scope
 
-                % Ensure text is a character vector
-                if ~ischar(text)
-                    warning('DataGenerator:NonCharContent', 'Extracted content is not a character vector. Trying to convert.');
-                    try
-                        text = char(text); % Attempt conversion
-                    catch convertME
-                        warning('DataGenerator:ConversionFailed', 'Failed to convert content to character vector: %s', convertME.message);
-                        text = ''; % Set text to empty if conversion fails
-                    end
-                end
-
-                % Debugging für den extrahierten Text
-                if isfield(options, 'debug') && options.debug
-                    fprintf('--- Extracted Text ---\n');
-                    disp(text);
-                    fprintf('--- End Extracted Text ---\n');
-                end
-
-                % --- Robust JSON Cleaning ---
-                % 1. Trim whitespace
-                text = strtrim(text);
-
-                % 2. Remove potential markdown code block fences (```json ... ``` or ``` ... ```)
-                text = regexprep(text, '^```json\s*', '');
-                text = regexprep(text, '\s*```$', '');
-                text = regexprep(text, '^```\s*', '');
-                text = regexprep(text, '\s*```$', '');
-                
-                % 3. Remove potential single backticks if they enclose the whole string
-                if startsWith(text, '`') && endsWith(text, '`')
-                    text = text(2:end-1);
-                end
-
-                % 4. Trim whitespace again after cleaning
-                text = strtrim(text);
-
-                % Check if text is empty after cleaning
-                if isempty(text)
-                    warning('DataGenerator:EmptyContent', 'API response content is empty after cleaning.');
-                    rows = []; % Return empty
-                    return;
-                end
-
-                % Debugging before decoding
-                if isfield(options, 'debug') && options.debug
-                    fprintf('--- Text Before jsondecode ---\n');
-                    disp(text);
-                    fprintf('--- End Text Before jsondecode ---\n');
-                end
-
-                % 5. Attempt to decode the cleaned JSON text
+            while retryCount <= maxRetries
                 try
-                    rows = jsondecode(text);
-                catch decodeME
-                    % If decoding fails, throw a specific error with the problematic text
-                    error('DataGenerator:ParseError', 'Failed to parse LLM JSON response: %s\n\nProblematic Text:\n%s', decodeME.message, text);
-                end
-                
-                % If the result is a cell array, try converting to struct array if appropriate
-                % This might need adjustment based on expected output structure
-                if iscell(rows) && ~isempty(rows) && all(cellfun(@isstruct, rows))
-                    try
-                        rows = vertcat(rows{:}); % More robust conversion for cell array of structs
-                    catch vertcatME
-                        warning('DataGenerator:CellConversionFailed', 'Could not automatically convert cell array to struct array: %s', vertcatME.message);
-                        % Keep rows as cell array if conversion fails
+                    % Add format instructions if not skipped (do this each attempt)
+                    currentPrompt = prompt; % Use potentially updated prompt (original or fix-it)
+                    if ~isfield(options, 'skipFormatting') || ~options.skipFormatting
+                        formatInstructions = [
+                            '\n\nWICHTIG: Antworte ausschließlich mit einem gültigen JSON-Array oder -Objekt. ', ...
+                            'Verwende keine Code-Blöcke mit ```json oder ```. ', ...
+                            'Beginne deine Antwort direkt mit [ oder { und füge keinen zusätzlichen Text hinzu.'
+                        ];
+                        currentPrompt = [currentPrompt, formatInstructions];
                     end
-                end
+                    
+                    % Make the API call
+                    fprintf('--- Calling LLM (Attempt %d/%d) ---\n', retryCount + 1, maxRetries + 1);
+                    raw = APICaller.sendPrompt(currentPrompt, options);
+                    
+                    % --- Start Response Processing --- 
+                    text = ''; % Reset text for each attempt
+                    % Determine response format and extract content
+                    if isfield(raw, 'choices') && ~isempty(raw.choices) && isfield(raw.choices(1), 'message') && isfield(raw.choices(1).message, 'content')
+                        text = raw.choices(1).message.content;
+                    elseif isfield(raw, 'choices') && ~isempty(raw.choices) && isfield(raw.choices(1), 'text')
+                        text = raw.choices(1).text;
+                    elseif isfield(raw, 'data') && ischar(raw.data)
+                        text = raw.data;
+                    elseif ischar(raw)
+                        text = raw;
+                    else
+                        warning('DataGenerator:UnknownFormat', 'Unknown response format. Attempting to encode.');
+                        try text = jsonencode(raw); catch; text = ''; end
+                    end
+                    if ~ischar(text)
+                        warning('DataGenerator:NonCharContent', 'Extracted content not char. Trying conversion.');
+                        try text = char(text); catch; text = ''; end
+                    end
+                    
+                    % Debugging extracted text
+                    if isfield(options, 'debug') && options.debug
+                        fprintf('--- Extracted Text (Attempt %d) ---\n', retryCount + 1);
+                        disp(text);
+                        fprintf('--- End Extracted Text ---\n');
+                    end
+                    
+                    % Robust JSON Cleaning
+                    text = strtrim(text);
+                    text = regexprep(text, '^```json\s*', '');
+                    text = regexprep(text, '\s*```$', '');
+                    text = regexprep(text, '^```\s*', '');
+                    text = regexprep(text, '\s*```$', '');
+                    if startsWith(text, '`') && endsWith(text, '`')
+                        text = text(2:end-1);
+                    end
+                    text = strtrim(text);
+                    
+                    % Check if text is empty after cleaning
+                    if isempty(text)
+                        error('DataGenerator:EmptyContent', 'API response content is empty after cleaning.');
+                    end
+                    
+                    % Debugging before decode
+                    if isfield(options, 'debug') && options.debug
+                        fprintf('--- Text Before jsondecode (Attempt %d) ---\n', retryCount + 1);
+                        disp(text);
+                        fprintf('--- End Text Before jsondecode ---\n');
+                    end
+                    
+                    % Attempt to decode the cleaned JSON text
+                    rows = jsondecode(text);
+                    
+                    % Post-processing (e.g., cell array conversion)
+                    if iscell(rows) && ~isempty(rows) && all(cellfun(@isstruct, rows))
+                        try rows = vertcat(rows{:});
+                        catch vertcatME
+                            warning('DataGenerator:CellConversionFailed', 'Could not convert cell array: %s', vertcatME.message);
+                        end
+                    end
+                    
+                    % Success~ Exit the loop.
+                    fprintf('--- LLM Call Successful (Attempt %d) ---\n', retryCount + 1);
+                    lastError = []; % Clear last error on success
+                    break; 
 
-            catch ME % Catch errors during the extraction/parsing process
-                 % Provide more context in the error message
-                 baseME = MException('DataGenerator:ProcessingError', ...
-                     sprintf('Error processing API response: %s\nAttempted Text: %s', ME.message, text));
-                 baseME = addCause(baseME, ME);
-                 throw(baseME);
+                catch ME
+                    lastError = ME; % Store the error
+                    fprintf('--- LLM Call Attempt %d FAILED: %s ---\n', retryCount + 1, ME.message);
+                    
+                    retryCount = retryCount + 1; % Increment retry counter
+                    
+                    if retryCount <= maxRetries
+                        fprintf('--- Preparing Retry (%d/%d) ---\n', retryCount, maxRetries);
+                        % Build the fix-it prompt
+                        fixitPrompt = sprintf([...
+                            'The previous response to the prompt below was problematic and could not be parsed as valid JSON.\n\n' ...
+                            '===== ORIGINAL PROMPT =====\n%s\n\n' ...
+                            '===== PROBLEMATIC RESPONSE TEXT =====\n%s\n\n' ...
+                            '===== ERROR =====\n%s\n\n' ...
+                            '===== INSTRUCTIONS =====\n' ...
+                            'Please correct the response. Ensure it is VALID and COMPLETE JSON, starting directly with [ or {, containing NO explanatory text or markdown formatting (like ```json or ```), and fulfilling the original request. Respond ONLY with the corrected JSON data.'], ...
+                            originalPrompt, text, ME.message); % Use 'text' which holds the problematic string from the failed attempt
+                        
+                        % Update the prompt for the next iteration
+                        prompt = fixitPrompt; 
+                        % Optionally clear 'rows' if needed before retry
+                        rows = []; 
+                        continue; % Go to the next iteration of the while loop
+                    else
+                        % Max retries exceeded, break the loop to throw error outside
+                        fprintf('--- Max Retries Exceeded ---\n');
+                        break; 
+                    end
+                end % end try-catch
+            end % end while loop
+            
+            % After the loop, check if we ended due to an error
+            if ~isempty(lastError)
+                 % Throw a new error indicating retries failed, including the last error message
+                 error('DataGenerator:RetryFailed', ...
+                       'Failed to get valid JSON from LLM after %d retries. Last Error: %s\n\nLast Problematic Text:\n%s', ...
+                       maxRetries, lastError.message, text);
             end
-        end
-    end
+            
+            % If loop finished successfully, 'rows' contains the valid data
+            
+        end % end callLLM method
+    end % end static methods
 end

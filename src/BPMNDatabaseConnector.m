@@ -69,7 +69,7 @@ classdef BPMNDatabaseConnector < handle
             
             try
                 % Load environment variables if not already loaded
-                if isempty(obj.EnvVars) || !isfield(obj.EnvVars, 'DB_HOST')
+                if isempty(obj.EnvVars) || ~isfield(obj.EnvVars, 'DB_HOST')
                     if nargin < 2
                         obj.loadEnvironmentVars();
                     else
@@ -173,7 +173,7 @@ classdef BPMNDatabaseConnector < handle
                         error('Unsupported database type: %s', obj.DbType);
                 end
                 
-                if !isempty(obj.Connection.Message)
+                if ~isempty(obj.Connection.Message)
                     error('Database connection failed: %s', obj.Connection.Message);
                 end
                 
@@ -189,7 +189,7 @@ classdef BPMNDatabaseConnector < handle
         
         function disconnect(obj)
             % Disconnect from database
-            if obj.Connected && !isempty(obj.Connection)
+            if obj.Connected && ~isempty(obj.Connection)
                 close(obj.Connection);
                 obj.Connected = false;
                 fprintf('Disconnected from %s database\n', obj.DbType);
@@ -200,7 +200,7 @@ classdef BPMNDatabaseConnector < handle
             % Query process definitions from database
             % Returns a table of process definitions
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -218,7 +218,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to query elements for
             % Returns a table of process elements
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -237,7 +237,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to query flows for
             % Returns a table of sequence flows
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -256,7 +256,7 @@ classdef BPMNDatabaseConnector < handle
             % tableName: Name of the table to get schema for
             % Returns structure with table schema information
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -276,7 +276,7 @@ classdef BPMNDatabaseConnector < handle
             % List all tables in the current database
             % Returns a cell array of table names
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -295,7 +295,7 @@ classdef BPMNDatabaseConnector < handle
             % query: SQL query string to execute
             % Returns query results
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -319,7 +319,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch elements for
             % Returns a table with element data according to DatabaseSchema.md
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -364,7 +364,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch flows for
             % Returns a table with flow data and associated waypoints
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -402,7 +402,7 @@ classdef BPMNDatabaseConnector < handle
             % Fetch message flows between pools/participants
             % Returns a table with message flow data
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -435,7 +435,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch data objects for
             % Returns a table with data object information
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -467,7 +467,7 @@ classdef BPMNDatabaseConnector < handle
             % Fetch data associations with waypoints
             % Returns a table with data association information
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -500,7 +500,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch diagram info for
             % Returns a table with diagram positioning data
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -533,7 +533,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch annotations for
             % Returns a table with text annotation data
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -565,7 +565,7 @@ classdef BPMNDatabaseConnector < handle
             % processId: ID of the process to fetch associations for
             % Returns a table with association data
             
-            if !obj.Connected
+            if ~obj.Connected
                 error('Database connection not established. Call connect first.');
             end
             
@@ -627,7 +627,7 @@ classdef BPMNDatabaseConnector < handle
             end
 
             % Ensure rows is a struct array
-            if !isstruct(rows)
+            if ~isstruct(rows)
                  warning('BPMNDatabaseConnector:insertRows:InvalidInput', ...
                          'Input "rows" for table %s is not a struct array. Skipping insertion.', tableName);
                  insertedIDs = {};
@@ -651,18 +651,18 @@ classdef BPMNDatabaseConnector < handle
                 idField = 'element_id';
             % Add more specific cases if needed
 
-            if !isempty(idField) && isfield(rows, idField)
+            if ~isempty(idField) && isfield(rows, idField)
                  for i = 1:numel(rows)
                      % Only assign if the field is empty or non-existent,
                      % assuming LLM might sometimes provide one.
-                     if !isfield(rows(i), idField) || isempty(rows(i).(idField))
+                     if ~isfield(rows(i), idField) || isempty(rows(i).(idField))
                          rows(i).(idField) = insertedIDs{i};
                      else
                          % If LLM provided an ID, use that instead of overwriting
                          insertedIDs{i} = rows(i).(idField);
                      end
                  end
-            elseif !isempty(idField) && !isfield(rows, idField)
+            elseif ~isempty(idField) && ~isfield(rows, idField)
                  % Add the ID field if it doesn't exist at all
                  for i = 1:numel(rows)
                      rows(i).(idField) = insertedIDs{i};
@@ -671,7 +671,7 @@ classdef BPMNDatabaseConnector < handle
 
 
             % Append rows to the store
-            if isfield(tempStore, tableName) && !isempty(tempStore.(tableName))
+            if isfield(tempStore, tableName) && ~isempty(tempStore.(tableName))
                 % Ensure consistent fields before concatenating
                  existingFields = fieldnames(tempStore.(tableName));
                  newFields = fieldnames(rows);
@@ -680,14 +680,14 @@ classdef BPMNDatabaseConnector < handle
                  % Add missing fields to existing data
                  for k = 1:numel(existingFields)
                      fld = existingFields{k};
-                     if !isfield(rows, fld)
+                     if ~isfield(rows, fld)
                          [rows.(fld)] = deal([]); % Add missing field with default empty
                      end
                  end
                  % Add missing fields to new data
                  for k = 1:numel(newFields)
                      fld = newFields{k};
-                     if !isfield(tempStore.(tableName), fld)
+                     if ~isfield(tempStore.(tableName), fld)
                           [tempStore.(tableName).(fld)] = deal([]); % Add missing field with default empty
                      end
                  end
@@ -714,7 +714,7 @@ classdef BPMNDatabaseConnector < handle
              allData = struct();
              tempStore = BPMNDatabaseConnector.getSetTempStore(); % Get current store
 
-             if !iscell(tableNames)
+             if ~iscell(tableNames)
                  tableNames = {tableNames}; % Ensure it's a cell array
              end
 
