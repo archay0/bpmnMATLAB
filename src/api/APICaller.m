@@ -76,66 +76,26 @@ classdef APICaller
             request_data.temperature = options.temperature;
             request_data.max_tokens = 10000;
             
-            % Schreibe JSON in temporäre Datei
-            input_fid = fopen(input_file, 'w');
-            if input_fid == -1
-                error('APICaller:FileError', 'Fehler beim Erstellen der temporären Eingabedatei');
-            end
-            fprintf(input_fid, '%s', jsonencode(request_data));
-            fclose(input_fid);
-            
-            % Erstelle und führe den curl-Befehl aus
-            curl_cmd = sprintf('curl -s -X POST https://openrouter.ai/api/v1/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer %s" -H "HTTP-Referer: http://localhost:3000" -H "X-Title: BPMN MATLAB Generator" -d @"%s" > "%s"', ...
-                api_key, input_file, output_file);
-            
+            % Send HTTP request via MATLAB webwrite instead of curl
             if options.debug
-                fprintf('Führe curl-Befehl aus:\n%s\n', curl_cmd);
-                tic;
+                fprintf('Sending HTTP request via webwrite to https://openrouter.ai/api/v1/chat/completions\n');
             end
-            
-            % Befehl ausführen
-            [status, cmdout] = system(curl_cmd);
-            
-            if options.debug
-                elapsed = toc;
-                fprintf('curl-Aufruf abgeschlossen in %.2f Sekunden mit Status: %d\n', elapsed, status);
-                
-                if ~isempty(cmdout)
-                    fprintf('curl-Ausgabe: %s\n', cmdout);
-                end
-            end
-            
-            % Fehlerbehandlung
-            if status ~= 0
-                error('APICaller:CurlError', 'curl-Fehler: %s', cmdout);
-            end
-            
-            % Lese Ausgabe
             try
-                output_fid = fopen(output_file, 'r');
-                if output_fid == -1
-                    error('APICaller:FileError', 'Fehler beim Öffnen der temporären Ausgabedatei');
-                end
-                response_text = fread(output_fid, '*char')';
-                fclose(output_fid);
-                
-                % Parse JSON response
-                raw = jsondecode(response_text);
-                
-                % Für Abwärtskompatibilität
-                if isfield(raw, 'choices') && ~isempty(raw.choices)
-                    if isfield(raw.choices(1), 'message') && isfield(raw.choices(1).message, 'content')
-                        % Extrahiere den Text für die Abwärtskompatibilität
-                        raw.choices(1).text = raw.choices(1).message.content;
-                    end
-                end
-                
-                if options.debug
-                    fprintf('API-Antwort empfangen und erfolgreich geparst.\n');
-                end
-                
+                opts_http = weboptions('MediaType','application/json', ...
+                                       'HeaderFields',{'Authorization', ['Bearer ' api_key]}, ...
+                                       'Timeout',60);
+                raw = webwrite('https://openrouter.ai/api/v1/chat/completions', request_data, opts_http);
             catch ME
-                error('APICaller:ResponseError', 'Fehler beim Verarbeiten der API-Antwort: %s', ME.message);
+                error('APICaller:WebError', 'Fehler beim Senden der Anfrage: %s', ME.message);
+            end
+            % For backward compatibility: extract content field
+            if isstruct(raw) && isfield(raw, 'choices') && !isempty(raw.choices)
+                if isfield(raw.choices(1), 'message') && isfield(raw.choices(1).message, 'content')
+                    raw.choices(1).text = raw.choices(1).message.content;
+                end
+            end
+            if options.debug
+                fprintf('API response received and parsed via webwrite.\n');
             end
             
             % Aufräumen
