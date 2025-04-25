@@ -1,64 +1,64 @@
 classdef SchemaLoader
-    % SchemaLoader reads and parses the BPMN database schema
+    % Schemaloader Reads and Parses the BPMN Database Scheme
 
     methods(Static)
         function schema = load()
-            % Load raw schema markdown
-            mdPath = fullfile(fileparts(mfilename('fullpath')), '..', '..', 'doc', 'DatabaseSchema.md');
+            % Load Raw Scheme Markdown
+            mdPath = fullfile(fileparts(mfilename('fullpath')), '..', '..', 'Doc', 'DatabaseSchema.md');
             try
                 fid = fopen(mdPath, 'r');
-                raw = fread(fid, '*char')';
+                raw = fread(fid, '*Char')';
                 fclose(fid);
             catch
-                error('SchemaLoader:FileRead', 'Could not read DatabaseSchema.md at %s', mdPath);
+                error('Schemaloader: Fileread', 'Could not read database scheme.md at %s', mdPath);
             end
 
-            % Initialize schema struct
+            % Initialize Scheme Struct
             schema = struct();
 
-            % Find table headers and parse each section
-            % Regex updated to capture the number as well, to differentiate examples
-            [tokens, starts, ends] = regexp(raw, '###\s*(\d+)\.\s*([^\n]+)', 'tokens','start','end');
+            % Find table header and parse each section
+            % Regex updated to capture the number as well, to difference
+            [tokens, starts, ends] = regexp(raw, '### \ S*(\ d+) \. \ S*([^\ n]+)', 'tokens','start','end');
             numTables = numel(tokens);
             for i = 1:numTables
                 sectionNumberStr = tokens{i}{1}; % Capture the section number (e.g., '1')
                 tblNameRaw = strtrim(tokens{i}{2}); % Capture the text part
 
-                % Check if this section number corresponds to the start of Example Queries
-                % Assuming example queries start at section 15 based on DatabaseSchema.md structure
-                % (This is a bit fragile, relies on the MD structure)
+                % Check If this Section Number Corresponds to the Start of Example Querties
+                % Assuming Example Quample Start AT Section 15 Based on Databaseschema.md Structure
+                % (This is a bit fragile, relies on the md structure)
                 try
                     sectionNumber = str2double(sectionNumberStr);
-                    % Check if section number indicates an example query section
-                    % In the current MD, tables are 1-14, examples start after that.
+                    % Check If Section Number Indicates on Example Query Section
+                    % In The Current MD, Tables are 1-14, Examples start after that.
                     if sectionNumber > 14 
-                         fprintf('SchemaLoader: Skipping potential example query header based on section number > 14: "%s. %s"\n', sectionNumberStr, tblNameRaw);
+                         fprintf('Schemaloader: Skipping potential Example query header based on section Number> 14:"%s. %s"\ n', sectionNumberStr, tblNameRaw);
                          continue;
                     end
                 catch
-                    % Ignore if conversion fails, proceed with name check
-                    fprintf('SchemaLoader: Could not parse section number: %s. Proceeding with name check.\n', sectionNumberStr);
+                    % Ignore IF Conversion Fails, Proceed with name Check
+                    fprintf('Schemaloader: Could not parse section Number: %s.Proceeding with name check. \ N', sectionNumberStr);
                 end
 
-                % Also keep the original check for safety, in case numbering changes or parsing fails
+                % So Keep the Original Check for Safety, in Case Numbering Changes or Parsing Fails
                  if endsWith(tblNameRaw, ':')
-                     fprintf('SchemaLoader: Skipping example query header ending with colon: "%s"\n', tblNameRaw);
+                     fprintf('Schemaloader: Skipping Examle Query Header Ending with Colon:"%s"\ n', tblNameRaw);
                      continue;
                  end
 
-                % Validate and sanitize table name for use as struct field
+                % Validate and Sanitize Table Name for Use as Struct Field
                 if ~isvarname(tblNameRaw)
-                    tblName = matlab.lang.makeValidName(tblNameRaw, 'ReplacementStyle', 'underscore');
+                    tblName = matlab.lang.makeValidName(tblNameRaw, 'Replacement style', 'undercore');
                     if ~strcmp(tblName, tblNameRaw)
-                        warning('SchemaLoader:InvalidName', 'Table name "%s" was converted to "%s" to be a valid MATLAB field name.', tblNameRaw, tblName);
+                        warning('Schemaloader: Invalid name', 'Table name"%s"What converted to"%s"to be a valid matlab field name.', tblNameRaw, tblName);
                     end
                 else
                     tblName = tblNameRaw;
                 end
 
-                % Skip if the table name is empty after sanitization
+                % Skip if the table name is empty after sanitation
                 if isempty(tblName)
-                    warning('SchemaLoader:EmptyTableName', 'Skipping table with empty or invalid name originating from: "%s" ', tblNameRaw);
+                    warning('Schemaloader: Emptytablename', 'Skipping Table with Empty or invalid name Originating from:"%s" ', tblNameRaw);
                     continue;
                 end
 
@@ -69,30 +69,30 @@ classdef SchemaLoader
                     blockEnd = numel(raw);
                 end
                 block = raw(blockStart:blockEnd);
-                lines = regexp(block, '\n', 'split');
+                lines = regexp(block, '\ n', 'split');
 
-                % Initialize as empty struct arrays with defined fields
+                % Initialize as Empty Struct Arrays with Defined Fields
                 cols = struct('name', {}, 'type', {}, 'description', {});
-                fks = struct('column', {}, 'refTable', {}, 'refColumn', {});
+                fks = struct('column', {}, 'refuge', {}, 'refcolumn', {});
                 inTable = false;
                 for ln = 1:numel(lines)
                     line = strtrim(lines{ln});
-                    % Detect header row of markdown table
+                    % Detect Header Row of Markdown Table
                     if startsWith(line, '|') && contains(line, 'Column') && contains(line, 'Type')
                         inTable = true;
                         continue;
                     end
-                    % Skip separator row
-                    if inTable && startsWith(line, '|') && all(ismember(strrep(line,'|',''), '- '))
+                    % Skip separator ROW
+                    if inTable && startsWith(line, '|') && all(ismember(strrep(line,'|',''),'- '))
                         continue;
                     end
-                    % Parse data rows
+                    % PARSE Data Rows
                     if inTable && startsWith(line, '|')
-                        parts = regexp(line, '\|', 'split');
-                        % More robust bounds checking - make sure we have all required elements
-                        % parts(1) is empty because the line starts with |
+                        parts = regexp(line, '\ |', 'split');
+                        % More robust Bounds Checking - Make Sure We Have All Required Elements
+                        % Parts (1) is empty because the line starts with |
                         if numel(parts) >= 5 && length(parts) > 3 % Ensure enough parts exist with a double-check
-                            % Only access array elements that are guaranteed to exist
+                            % ONLY Access Array Elements that Are Guaranteed to Exist
                             if length(parts) > 1
                                 name = strtrim(parts(2));
                             else
@@ -111,36 +111,36 @@ classdef SchemaLoader
                                 desc = '';
                             end
                             
-                            % Append to struct array
+                            % Append to Struct Array
                             cols(end+1) = struct('name', name, 'type', type, 'description', desc);
                             
-                            % Check for foreign key in description only if we have a description
+                            % Check for Foreign Key in Description only if we have a description
                             if ~isempty(desc)
-                                fkMatch = regexp(desc, '[Ff]oreign key to ([^\.\s]+)', 'tokens');
+                                fkMatch = regexp(desc, '[Ff] Foreign key to ([^\. \ S]+)', 'tokens');
                                 if ~isempty(fkMatch) && ~isempty(fkMatch{1}) && numel(fkMatch{1}) > 0
                                     fkTableRaw = fkMatch{1}{1};
-                                    % Sanitize the referenced table name as well
+                                    % Sanitize the referned table name as well
                                     if ~isvarname(fkTableRaw)
-                                         fkTable = matlab.lang.makeValidName(fkTableRaw, 'ReplacementStyle', 'underscore');
+                                         fkTable = matlab.lang.makeValidName(fkTableRaw, 'Replacement style', 'undercore');
                                     else
                                          fkTable = fkTableRaw;
                                     end
-                                    % Append to struct array
-                                    fks(end+1) = struct('column', name, 'refTable', fkTable, 'refColumn', name);
+                                    % Append to Struct Array
+                                    fks(end+1) = struct('column', name, 'refuge', fkTable, 'refcolumn', name);
                                 end
                             end
                         else
-                             warning('SchemaLoader:MalformedRow', 'Skipping malformed table row in table %s: %s', tblName, line);
+                             warning('Schemaloader: Malformedrow', 'Skipping Malformed Table Row in Table %S: %S', tblName, line);
                         end
                     elseif inTable && isempty(line)
-                        % blank line ends table
+                        % Blank line ends table
                         break;
                     end
                 end
-                schema.(tblName) = struct('columns', cols, 'foreignKeys', fks);
+                schema.(tblName) = struct('columns', cols, 'Foreignkeys', fks);
             end
 
-            % Keep raw markdown for reference
+            % Keep Raw Markdown for Reference
             schema.rawMarkdown = raw;
         end
     end

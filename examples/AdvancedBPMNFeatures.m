@@ -1,141 +1,95 @@
 %% Advanced BPMN Features Example
-% This example demonstrates the advanced BPMN features including:
-% - Transaction boundaries
-% - Parallel Event-based Gateways
+% This example demonstrates the advanced bpmn features included:
+% - transaction Boundaries
+% - In parallel event-based gateways
 % - Groups
-% - Import/Export capabilities
-% - SVG/PNG Export
-
-%% Initialize the BPMN Generator
-clear;
-close all;
-
-% Create output directory if it doesn't exist
-if ~exist('output', 'dir')
+% - import/export capabilities
+% - SVG/PNG export
+n%% Initialize the bpmn generator
+nnn% Create Output Directory if it does not exist
+if ~exist('output', 'you')
     mkdir('output');
-end
-
-% Create a new BPMN generator
-bpmn = BPMNGenerator('output/advanced_bpmn_example.bpmn');
-
-%% Create a complex process with transactions and compensation
-
-% Add start event
-bpmn.addEvent('StartEvent_1', 'Start Process', 'startEvent', '', 100, 100, 36, 36);
-
-% Add first task
-bpmn.addTask('Task_1', 'Prepare Order', 200, 100, 100, 80);
-
-% Add a transaction boundary
-% transactionId = 'Transaction_1';
-% transactionName = 'Payment Processing';
-% transactionX = 350;
-% transactionY = 50;
-% transactionWidth = 400;
-% transactionHeight = 200;
-
-% Define child elements for the transaction
-% childElements = struct();
-
-% Transaction tasks
-% childElements.tasks{1} = struct('id', 'Task_Payment', 'name', 'Process Payment', ...
-%     'type', 'task', 'x', 50, 'y', 70, 'width', 100, 'height', 80);
-% childElements.tasks{2} = struct('id', 'Task_Confirmation', 'name', 'Send Confirmation', ...
-%     'type', 'task', 'x', 250, 'y', 70, 'width', 100, 'height', 80);
-
-% Transaction flows
-% childElements.flows{1} = struct('id', 'Flow_InTransaction_1', ...
-%     'sourceRef', 'Task_Payment', 'targetRef', 'Task_Confirmation', ...
-%     'waypoints', [150, 110; 250, 110]);
-
-% Add the complete transaction with compensation
-% bpmn.addCompleteTransaction(transactionId, transactionName, transactionX, transactionY, ...
-%     transactionWidth, transactionHeight, true, childElements);
-
-% Add sequence flows
-bpmn.addSequenceFlow('Flow_1', 'StartEvent_1', 'Task_1', [136, 118; 200, 118]);
-bpmn.addSequenceFlow('Flow_2', 'Task_1', 'Transaction_1', [300, 118; 350, 118]);
-
-% Add compensation handler task
-bpmn.addSpecificTask('Task_Compensation', 'Payment Rollback', 'serviceTask', ...
+nn% Create a new bpmn generator
+bpmn = BPMNGenerator('output/advanced_bpmpmn_example.bpmn');
+n%% Create a Complex Process with transactions and compensation
+n% Add Start Event
+bpmn.addEvent('Start event_1', 'Start Process', 'start event', '', 100, 100, 36, 36);
+n% Add First Task
+bpmn.addTask('Task_1', 'Prepare order', 200, 100, 100, 80);
+n% Add a transaction boundary
+% transactionid = 'transaction_1';
+% transaction name = 'Payment Processing';
+% transactionx = 350;
+% transactiony = 50;
+% transactionwidth = 400;
+% transactiontheight = 200;
+n% Define Child Elements for the transaction
+% Childelements = Struct ();
+n% transaction tasks
+% Childelements.takks {1} = Struct ('id', 'Task_payment', 'Name', 'Process Payment', ...
+% 'Type', 'Task', 'X', 50, 'Y', 70, 'Width', 100, 'Height', 80);
+% Childelements.takks {2} = Struct ('id', 'Task_Confirmation', 'Name', 'Send Confirmation', ...
+% 'Type', 'Task', 'X', 250, 'Y', 70, 'Width', 100, 'Height', 80);
+n% transaction flows
+% Childelements.flows {1} = Struct ('id', 'Flow_intransaction_1', ...
+% 'sourceRef', 'Task_Payment', 'targetRef', 'Task_Confirmation', ...
+% 'Waypoints', [150, 110;250, 110]);
+n% Add the Complete transaction with Compensation
+% BPMN.ADDDCOMPLETEtransaction (transactionide, transaction name, transactionx, transactiony, ...
+% transactionwidth, transactiontheight, True, Childelements);
+n% Add Sequence Flows
+bpmn.addSequenceFlow('Flow_1', 'Start event_1', 'Task_1', [136, 118; 200, 118]);
+bpmn.addSequenceFlow('Flow_2', 'Task_1', 'transaction_1', [300, 118; 350, 118]);
+n% Add Compensation Handler Task
+bpmn.addSpecificTask('Task_Compensation', 'Payment rollback', 'service act', ...
     struct('isForCompensation', 'true'), 350, 300, 100, 80);
-
-% Add association from compensation boundary to compensation handler
-compBoundaryEventId = [transactionId, '_CompensationBoundary'];
-bpmn.addAssociation('Assoc_Comp_1', compBoundaryEventId, 'Task_Compensation', ...
+n% Add Association from Compensation Boundary to Compensation Handler
+compBoundaryEventId = [transactionId, '_Compensationboundary'];
+bpmn.addAssociation('Assoc_comp_1', compBoundaryEventId, 'Task_Compensation', ...
     [550, 235; 550, 300; 450, 300], 'One');
-
-% Add a parallel event-based gateway
-bpmn.addGateway('Gateway_Parallel', 'Parallel Events', 'parallelEventBasedGateway', 800, 100, 50, 50);
-
-% Add outgoing event paths from gateway
-bpmn.addEvent('Event_Timer', 'Wait 24h', 'intermediateCatchEvent', 'timerEventDefinition', 900, 100, 36, 36);
-bpmn.addEvent('Event_Message', 'Receive Update', 'intermediateCatchEvent', 'messageEventDefinition', 800, 200, 36, 36);
-
-% Connect gateway to events
-bpmn.addSequenceFlow('Flow_3', 'Transaction_1', 'Gateway_Parallel', [750, 118; 800, 118]);
-bpmn.addSequenceFlow('Flow_4', 'Gateway_Parallel', 'Event_Timer', [850, 118; 900, 118]);
-bpmn.addSequenceFlow('Flow_5', 'Gateway_Parallel', 'Event_Message', [825, 150; 825, 200; 818, 200]);
-
-% Add end tasks
-bpmn.addTask('Task_Complete', 'Complete Order', 1000, 100, 100, 80);
-bpmn.addTask('Task_Update', 'Update Order', 900, 200, 100, 80);
-
-% Connect events to end tasks
-bpmn.addSequenceFlow('Flow_6', 'Event_Timer', 'Task_Complete', [936, 118; 1000, 118]);
-bpmn.addSequenceFlow('Flow_7', 'Event_Message', 'Task_Update', [836, 200; 900, 200]);
-
-% Add end events
-bpmn.addEvent('EndEvent_1', 'Order Completed', 'endEvent', '', 1150, 100, 36, 36);
-bpmn.addEvent('EndEvent_2', 'Order Updated', 'endEvent', '', 1050, 200, 36, 36);
-
-% Connect to end events
-bpmn.addSequenceFlow('Flow_8', 'Task_Complete', 'EndEvent_1', [1100, 118; 1150, 118]);
-bpmn.addSequenceFlow('Flow_9', 'Task_Update', 'EndEvent_2', [1000, 200; 1050, 200]);
-
-% Add a group around the events
-bpmn.addGroup('Group_1', 'Event Handling', '', 780, 70, 180, 180);
-
-% Add text annotation
-bpmn.addTextAnnotation('TextAnnotation_1', 'Transaction requires compensation on failure', 400, 300, 180, 40);
-bpmn.addAssociation('Assoc_1', 'TextAnnotation_1', 'Transaction_1', [450, 300; 450, 250], 'None');
-
-%% Save the BPMN file
-bpmn.saveToBPMNFile();
-fprintf('BPMN file with advanced features saved to: %s\n', bpmn.FilePath);
-
-%% Export to SVG and PNG
-% Create a diagram exporter 
-exporter = BPMNDiagramExporter(bpmn.FilePath);
-
-% Set diagram properties
-exporter.Width = 1300;
-exporter.Height = 600;
-exporter.BackgroundColor = [1, 1, 1]; % White background
-
-% Export to SVG
+n% Add a parallel event-based gateway
+bpmn.addGateway('Gateway_ parallel', 'Parallel events', 'parallel event baseway', 800, 100, 50, 50);
+n% Add outgoing event paths from gateway
+bpmn.addEvent('Event_Timer', 'Wait 24h', 'Intermediatecatch event', 'timer', 900, 100, 36, 36);
+bpmn.addEvent('Event_message', 'Receive update', 'Intermediatecatch event', 'Message event definition', 800, 200, 36, 36);
+n% Connect Gateway to Events
+bpmn.addSequenceFlow('Flow_3', 'transaction_1', 'Gateway_ parallel', [750, 118; 800, 118]);
+bpmn.addSequenceFlow('Flow_4', 'Gateway_ parallel', 'Event_Timer', [850, 118; 900, 118]);
+bpmn.addSequenceFlow('Flow_5', 'Gateway_ parallel', 'Event_message', [825, 150; 825, 200; 818, 200]);
+n% Add end tasks
+bpmn.addTask('Task_complete', 'Complete Order', 1000, 100, 100, 80);
+bpmn.addTask('Task_update', 'Update order', 900, 200, 100, 80);
+n% Connect events to end tasks
+bpmn.addSequenceFlow('Flow_6', 'Event_Timer', 'Task_complete', [936, 118; 1000, 118]);
+bpmn.addSequenceFlow('Flow_7', 'Event_message', 'Task_update', [836, 200; 900, 200]);
+n% Add end events
+bpmn.addEvent('Endvent_1', 'Order Completed', 'end event', '', 1150, 100, 36, 36);
+bpmn.addEvent('Endvent_2', 'Order updated', 'end event', '', 1050, 200, 36, 36);
+n% Connect to end events
+bpmn.addSequenceFlow('Flow_8', 'Task_complete', 'Endvent_1', [1100, 118; 1150, 118]);
+bpmn.addSequenceFlow('Flow_9', 'Task_update', 'Endvent_2', [1000, 200; 1050, 200]);
+n% Add a Group Around the events
+bpmn.addGroup('Group_1', 'Event handling', '', 780, 70, 180, 180);
+n% Add text annotation
+bpmn.addTextAnnotation('Textannotation_1', 'transaction Requires Compensation on Failure', 400, 300, 180, 40);
+bpmn.addAssociation('Assoc_1', 'Textannotation_1', 'transaction_1', [450, 300; 450, 250], 'None');
+n%% Save the BPMN File
+nfprintf('Bpmn file with advanced features saved to: %s \n', bpmn.FilePath);
+n%% Export to SVG and PNG
+% Create A Diagram Exporter
+nn% Set Diagram Properties
+nnnn% Export to SVG
 svgFilePath = 'output/advanced_bpmn_example.svg';
-exporter.OutputFilePath = svgFilePath;
-exporter.generateSVG();
-fprintf('SVG exported to: %s\n', svgFilePath);
-
-% Export to PNG
-pngFilePath = 'output/advanced_bpmn_example.png';
-exporter.exportToPNG(pngFilePath);
-fprintf('PNG export complete.\n');
-
-%% Test Import functionality
+nnfprintf('SVG exported to: %s \n', svgFilePath);
+n% Export to PNG
+pngFilePath = 'output/advanced_bpmpmn_example.png';
+nfprintf('PNG Export Complete. \n');
+n%% Test Import Functionality
 % Create a new generator
-importedBpmn = BPMNGenerator();
-
-% Import the file we just created
-importedBpmn.importFromFile(bpmn.FilePath);
-
-% Modify an element in the imported diagram
+nn% Import The File We Just Created
+nn% Modify to element in the imported diagram
 importedBpmn.modifyElement('Task_1', struct('name', 'Prepare Customer Order'));
-
-% Save the modified file
-importedBpmn.saveToBPMNFile('output/modified_bpmn_example.bpmn');
-fprintf('Modified BPMN file saved to: %s\n', importedBpmn.FilePath);
-
-fprintf('Advanced BPMN features demonstration completed.\n');
+n% Save the Modified File
+importedBpmn.saveToBPMNFile('output/modified_bpmpmn_example.bpmn');
+fprintf('Modified bpmn file saved to: %s \n', importedBpmn.FilePath);
+nfprintf('Advanced BPMN Features Demonstration Completed. \n');

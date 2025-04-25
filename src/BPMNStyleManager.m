@@ -1,8 +1,9 @@
 classdef BPMNStyleManager < handle
-    % BPMNStyleManager - Klasse für die Verwaltung von visuellen Stilen in BPMN-Diagrammen
+    % BPMnstylemanager - class for the management of visual styles in BPMN diagrams
     %
-    % Diese Klasse ermöglicht die konsistente Anwendung von Stilen auf BPMN-Elemente und
-    % unterstützt verschiedene voreingestellte Style-Themes sowie benutzerdefinierte Stile.
+
+    % This class enables the consistent use of styles to BPMN elements and
+    % Supports various preset style themes and custom styles.
     
     properties
         diagram             % Referenz zum BPMN-Diagramm
@@ -14,31 +15,32 @@ classdef BPMNStyleManager < handle
     
     methods
         function obj = BPMNStyleManager(diagram, options)
-            % Konstruktor für BPMNStyleManager
+            % Constructor for BPMnstylemanager
             %
-            % Eingabe:
-            %   diagram - BPMN-Diagramm Objekt
-            %   options - Struct mit Stil-Optionen (optional)
+
+            % Input:
+            % Diagram - BPMN diagram object
+            % Options - Struct with style options (optional)
             
             obj.diagram = diagram;
             
-            % Standardoptionen festlegen
+            % Set standard options
             defaultOptions = struct(...
                 'theme', 'standard', ...          % standard, modern, minimal, highlight
-                'lineStyle', 'orthogonal', ...    % orthogonal, curved, direct
-                'colorScheme', 'default', ...     % default, monochrome, colorful, custom
-                'fontFamily', 'Arial', ...
-                'defaultFontSize', 12, ...
-                'highlightCriticalPath', false, ...
-                'useGradients', false, ...
-                'useShadows', false, ...
-                'roundCorners', true, ...
-                'iconSet', 'standard');           % standard, minimal, detailed
+                'linestyle', 'orthogonal', ...    % orthogonal, curved, direct
+                'color scheme', 'default', ...     % default, monochrome, colorful, custom
+                'font family', 'Arial', ...
+                'default fontsize', 12, ...
+                'highlight clit', false, ...
+                'Usegradient', false, ...
+                'useshadows', false, ...
+                'Roundcorner', true, ...
+                'iconset', 'standard');           % standard, minimal, detailed
             
-            % Standard-Stile für jeden Element-Typ definieren
+            % Define standard styles for each element type
             obj.defaultStyles = obj.createDefaultStyles();
             
-            % Wenn Optionen bereitgestellt wurden, überschreiben Sie die Standardwerte
+            % If options have been provided, overwrite the standard values
             if nargin > 1 && ~isempty(options)
                 optFields = fieldnames(options);
                 for i = 1:length(optFields)
@@ -50,160 +52,161 @@ classdef BPMNStyleManager < handle
             obj.currentTheme = obj.styleOptions.theme;
             obj.customStyles = containers.Map();
             
-            % Initial-Stile anwenden
+            % Use initial styles
             obj.applyTheme(obj.currentTheme);
         end
         
         function defaultStyles = createDefaultStyles(~)
-            % Erstellt Standard-Stile für jeden BPMN-Element-Typ
+            % Creates standard styles for every BPMN element type
             
-            % Grundlegende Stil-Definitionen
+            % Basic style definitions
             defaultStyles = struct();
             
             % Tasks
             defaultStyles.task = struct(...
-                'fillColor', [255, 255, 255], ...
-                'strokeColor', [0, 0, 0], ...
-                'strokeWidth', 1.5, ...
-                'textColor', [0, 0, 0], ...
-                'cornerRadius', 5, ...
-                'fontSize', 12);
+                'fillcolor', [255, 255, 255], ...
+                'strokecolor', [0, 0, 0], ...
+                'Strokewidth', 1.5, ...
+                'text color', [0, 0, 0], ...
+                'Corner radius', 5, ...
+                'fontsize', 12);
             
             % Events
             defaultStyles.startEvent = struct(...
-                'fillColor', [255, 255, 255], ...
-                'strokeColor', [0, 128, 0], ...
-                'strokeWidth', 1.5, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 11);
+                'fillcolor', [255, 255, 255], ...
+                'strokecolor', [0, 128, 0], ...
+                'Strokewidth', 1.5, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 11);
             
             defaultStyles.endEvent = struct(...
-                'fillColor', [255, 255, 255], ...
-                'strokeColor', [128, 0, 0], ...
-                'strokeWidth', 1.5, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 11);
+                'fillcolor', [255, 255, 255], ...
+                'strokecolor', [128, 0, 0], ...
+                'Strokewidth', 1.5, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 11);
             
             defaultStyles.intermediateEvent = struct(...
-                'fillColor', [255, 255, 255], ...
-                'strokeColor', [0, 0, 128], ...
-                'strokeWidth', 1.5, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 11);
+                'fillcolor', [255, 255, 255], ...
+                'strokecolor', [0, 0, 128], ...
+                'Strokewidth', 1.5, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 11);
             
             % Gateways
             defaultStyles.exclusiveGateway = struct(...
-                'fillColor', [255, 255, 255], ...
-                'strokeColor', [0, 0, 0], ...
-                'strokeWidth', 1.5, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 11);
+                'fillcolor', [255, 255, 255], ...
+                'strokecolor', [0, 0, 0], ...
+                'Strokewidth', 1.5, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 11);
             
             defaultStyles.parallelGateway = struct(...
-                'fillColor', [255, 255, 255], ...
-                'strokeColor', [0, 0, 0], ...
-                'strokeWidth', 1.5, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 11);
+                'fillcolor', [255, 255, 255], ...
+                'strokecolor', [0, 0, 0], ...
+                'Strokewidth', 1.5, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 11);
             
             defaultStyles.inclusiveGateway = struct(...
-                'fillColor', [255, 255, 255], ...
-                'strokeColor', [0, 0, 0], ...
-                'strokeWidth', 1.5, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 11);
+                'fillcolor', [255, 255, 255], ...
+                'strokecolor', [0, 0, 0], ...
+                'Strokewidth', 1.5, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 11);
             
             % Flows
             defaultStyles.sequenceFlow = struct(...
-                'lineColor', [0, 0, 0], ...
-                'lineWidth', 1.2, ...
-                'lineStyle', '-', ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 10);
+                'linecolor', [0, 0, 0], ...
+                'Linewidth', 1.2, ...
+                'linestyle', '-', ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 10);
             
             defaultStyles.messageFlow = struct(...
-                'lineColor', [100, 100, 100], ...
-                'lineWidth', 1.2, ...
-                'lineStyle', '--', ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 10);
+                'linecolor', [100, 100, 100], ...
+                'Linewidth', 1.2, ...
+                'linestyle', '--', ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 10);
             
             defaultStyles.associationFlow = struct(...
-                'lineColor', [150, 150, 150], ...
-                'lineWidth', 1.0, ...
-                'lineStyle', '-.', ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 10);
+                'linecolor', [150, 150, 150], ...
+                'Linewidth', 1.0, ...
+                'linestyle', '-.', ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 10);
             
             % Container Elements
             defaultStyles.pool = struct(...
-                'fillColor', [240, 240, 240], ...
-                'strokeColor', [0, 0, 0], ...
-                'strokeWidth', 1.5, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 14);
+                'fillcolor', [240, 240, 240], ...
+                'strokecolor', [0, 0, 0], ...
+                'Strokewidth', 1.5, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 14);
             
             defaultStyles.lane = struct(...
-                'fillColor', [250, 250, 250], ...
-                'strokeColor', [180, 180, 180], ...
-                'strokeWidth', 1.0, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 12);
+                'fillcolor', [250, 250, 250], ...
+                'strokecolor', [180, 180, 180], ...
+                'Strokewidth', 1.0, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 12);
             
-            % Data Objects
+            % Data objects
             defaultStyles.dataObject = struct(...
-                'fillColor', [255, 255, 220], ...
-                'strokeColor', [100, 100, 100], ...
-                'strokeWidth', 1.0, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 10);
+                'fillcolor', [255, 255, 220], ...
+                'strokecolor', [100, 100, 100], ...
+                'Strokewidth', 1.0, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 10);
             
             defaultStyles.dataStore = struct(...
-                'fillColor', [255, 255, 220], ...
-                'strokeColor', [100, 100, 100], ...
-                'strokeWidth', 1.0, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 10);
+                'fillcolor', [255, 255, 220], ...
+                'strokecolor', [100, 100, 100], ...
+                'Strokewidth', 1.0, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 10);
             
             % Annotations
             defaultStyles.textAnnotation = struct(...
-                'fillColor', [255, 255, 255], ...
-                'strokeColor', [120, 120, 120], ...
-                'strokeWidth', 1.0, ...
-                'textColor', [0, 0, 0], ...
-                'fontSize', 10);
+                'fillcolor', [255, 255, 255], ...
+                'strokecolor', [120, 120, 120], ...
+                'Strokewidth', 1.0, ...
+                'text color', [0, 0, 0], ...
+                'fontsize', 10);
             
             % Groups
             defaultStyles.group = struct(...
-                'fillColor', [0, 0, 0], ... % Transparent
-                'strokeColor', [180, 180, 180], ...
-                'strokeWidth', 1.0, ...
-                'strokeStyle', '--', ...
-                'textColor', [120, 120, 120], ...
-                'fontSize', 11);
+                'fillcolor', [0, 0, 0], ... % Transparent
+                'strokecolor', [180, 180, 180], ...
+                'Strokewidth', 1.0, ...
+                'strokestyle', '--', ...
+                'text color', [120, 120, 120], ...
+                'fontsize', 11);
         end
         
         function applyTheme(obj, themeName)
-            % Wendet ein vordefiniertes Theme auf das Diagramm an
+            % Apply a predefined theme to the diagram
             %
-            % Eingabe:
-            %   themeName - Name des Themes ('standard', 'modern', 'minimal', 'highlight')
+
+            % Input:
+            % Topic name - name of the theme ('Standard', 'Modern', 'Minimal', 'Highlight')
             
             obj.currentTheme = themeName;
             
-            % Basieren auf dem ausgewählten Theme modifizieren wir die Standardstile
+            % Based on the selected theme, we modify the standard styles
             switch lower(themeName)
                 case 'standard'
-                    % Standard-Theme: Wir verwenden die Standard-Stile
-                    % Keine Änderungen nötig
+                    % Standard theme: We use the standard styles
+                    % No changes necessary
                     
                 case 'modern'
-                    % Modernes Theme mit lebendigen Farben und Abrundungen
+                    % Modern theme with lively colors and rounds
                     obj.styleOptions.useGradients = true;
                     obj.styleOptions.useShadows = true;
                     obj.styleOptions.roundCorners = true;
                     
-                    % Aktualisiere Farben für ein modernes Aussehen
+                    % Update colors for a modern look
                     obj.defaultStyles.task.fillColor = [240, 248, 255];
                     obj.defaultStyles.task.strokeColor = [70, 130, 180];
                     
@@ -223,32 +226,32 @@ classdef BPMNStyleManager < handle
                     obj.defaultStyles.lane.fillColor = [250, 250, 255];
                     
                 case 'minimal'
-                    % Minimalistisches Theme mit reduzierten visuellen Elementen
+                    % Minimalist theme with reduced visual elements
                     obj.styleOptions.useGradients = false;
                     obj.styleOptions.useShadows = false;
                     obj.styleOptions.roundCorners = false;
                     obj.styleOptions.lineStyle = 'direct';
                     obj.styleOptions.iconSet = 'minimal';
                     
-                    % Monochrome Farben für ein minimalistisches Design
+                    % Monochrome colors for a minimalist design
                     for field = fieldnames(obj.defaultStyles)'
                         fieldName = field{1};
-                        if isfield(obj.defaultStyles.(fieldName), 'strokeWidth')
+                        if isfield(obj.defaultStyles.(fieldName), 'Strokewidth')
                             obj.defaultStyles.(fieldName).strokeWidth = 1.0;
                         end
-                        if isfield(obj.defaultStyles.(fieldName), 'strokeColor')
+                        if isfield(obj.defaultStyles.(fieldName), 'strokecolor')
                             obj.defaultStyles.(fieldName).strokeColor = [100, 100, 100];
                         end
                     end
                     
                 case 'highlight'
-                    % Theme zur Hervorhebung wichtiger Prozesselemente
+                    % Thema for the highlighting of important process elements
                     obj.styleOptions.highlightCriticalPath = true;
                     obj.styleOptions.useGradients = true;
                     obj.styleOptions.useShadows = true;
-                    obj.styleOptions.colorScheme = 'colorful';
+                    obj.styleOptions.colorScheme = 'Colorful';
                     
-                    % Stärkere Farben für bessere Sichtbarkeit
+                    % Stronger colors for better visibility
                     obj.defaultStyles.task.fillColor = [255, 255, 224];
                     obj.defaultStyles.task.strokeColor = [0, 0, 0];
                     obj.defaultStyles.task.strokeWidth = 2.0;
@@ -266,33 +269,34 @@ classdef BPMNStyleManager < handle
                     obj.defaultStyles.exclusiveGateway.strokeWidth = 2.0;
                     
                 otherwise
-                    warning('Unbekanntes Theme: %s. Verwende Standard-Theme.', themeName);
+                    warning('Unknown theme: %s.Use standard theme.', themeName);
                     obj.currentTheme = 'standard';
             end
             
-            % Wende die aktualisierten Stile auf das Diagramm an
+            % Apply the updated styles to the diagram
             obj.applyStylesToElements();
         end
         
         function applyColorScheme(obj, schemeName)
-            % Wendet ein Farbschema auf das Diagramm an
+            % Use a color scheme to the diagram
             %
-            % Eingabe:
-            %   schemeName - Name des Farbschemas ('default', 'monochrome', 'colorful', 'custom')
+
+            % Input:
+            % Schemame - name of the color scheme ('default', 'monochrome', 'Colorful', 'Custom')
             
             obj.styleOptions.colorScheme = schemeName;
             
             switch lower(schemeName)
                 case 'default'
-                    % Wir verwenden die Standard-Farben des aktuellen Themes
-                    % Keine Änderungen nötig
+                    % We use the standard colors of the current theme
+                    % No changes necessary
                     
                 case 'monochrome'
-                    % Monochrome Farbschema mit Grautönen
+                    % Monochrome color scheme with shades of gray
                     for field = fieldnames(obj.defaultStyles)'
                         fieldName = field{1};
                         
-                        % Verschiedene Grautöne für verschiedene Element-Typen
+                        % Different shades of gray for different element types
                         if contains(fieldName, 'task')
                             grayLevel = 240;
                         elseif contains(fieldName, 'event')
@@ -305,21 +309,21 @@ classdef BPMNStyleManager < handle
                             grayLevel = 230;
                         end
                         
-                        if isfield(obj.defaultStyles.(fieldName), 'fillColor')
+                        if isfield(obj.defaultStyles.(fieldName), 'fillcolor')
                             obj.defaultStyles.(fieldName).fillColor = [grayLevel, grayLevel, grayLevel];
                         end
                         
-                        if isfield(obj.defaultStyles.(fieldName), 'strokeColor')
+                        if isfield(obj.defaultStyles.(fieldName), 'strokecolor')
                             obj.defaultStyles.(fieldName).strokeColor = [100, 100, 100];
                         end
                         
-                        if isfield(obj.defaultStyles.(fieldName), 'lineColor')
+                        if isfield(obj.defaultStyles.(fieldName), 'linecolor')
                             obj.defaultStyles.(fieldName).lineColor = [100, 100, 100];
                         end
                     end
                     
-                case 'colorful'
-                    % Lebendiges Farbschema mit hohem Kontrast
+                case 'Colorful'
+                    % Lively color scheme with high contrast
                     obj.defaultStyles.task.fillColor = [255, 255, 200]; % Hellgelb
                     obj.defaultStyles.task.strokeColor = [0, 0, 150];   % Dunkelblau
                     
@@ -348,68 +352,71 @@ classdef BPMNStyleManager < handle
                     obj.defaultStyles.dataStore.fillColor = [255, 255, 180];  % Hellgelb
                     
                 case 'custom'
-                    % Bei benutzerdefiniertem Farbschema werden keine automatischen Änderungen vorgenommen
-                    % Farben müssen manuell über setCustomStyle gesetzt werden
+                    % If the color scheme is customary, no automatic changes are made
+                    % Colors must be set manually via setc tuslum style
                     
                 otherwise
-                    warning('Unbekanntes Farbschema: %s. Verwende Standard-Farbschema.', schemeName);
+                    warning('Unknown color scheme: %s.Use standard color scheme.', schemeName);
                     obj.styleOptions.colorScheme = 'default';
             end
             
-            % Wende die aktualisierten Stile auf das Diagramm an
+            % Apply the updated styles to the diagram
             obj.applyStylesToElements();
         end
         
         function setLineStyle(obj, lineStyleName)
-            % Setzt den Linienstil für Flows im Diagramm
+            % Sets the line style for flows in the diagram
             %
-            % Eingabe:
-            %   lineStyleName - Linienstil ('orthogonal', 'curved', 'direct')
+
+            % Input:
+            % Linestyle name - Line style ('Orthogonal', 'Curved', 'Direct')
             
             validStyles = {'orthogonal', 'curved', 'direct'};
             if ~ismember(lower(lineStyleName), validStyles)
-                warning('Ungültiger Linienstil: %s. Gültige Werte: orthogonal, curved, direct', lineStyleName);
+                warning('Invalid line style: %s.Valid values: Orthogonal, Curved, Direct', lineStyleName);
                 return;
             end
             
             obj.styleOptions.lineStyle = lower(lineStyleName);
             
-            % Wende den ausgewählten Linienstil auf das Diagramm an
+            % Apply the selected line style to the diagram
             obj.applyLineStylesToFlows();
         end
         
         function setCustomStyle(obj, elementId, styleProperties)
-            % Setzt benutzerdefinierte Stileigenschaften für ein bestimmtes Element
+            % Sets custom style properties for a certain element
             %
-            % Eingabe:
-            %   elementId - ID des Elements, für das der Stil gesetzt werden soll
-            %   styleProperties - Struct mit den zu setzenden Stilattributen
+
+            % Input:
+            % Elementid - ID of the element for which the style is to be set
+            % Styleproperties - Struct with the style attributes to be set
             
-            % Finde das Element im Diagramm
+            % Find the element in the diagram
             element = obj.findElementById(elementId);
             
             if isempty(element)
-                warning('Element mit ID "%s" nicht gefunden.', elementId);
+                warning('Element with ID"%s"not found.', elementId);
                 return;
             end
             
-            % Speichere den benutzerdefinierten Stil für das Element
+            % Save the custom style for the element
             obj.customStyles(elementId) = styleProperties;
             
-            % Aktualisiere das Element mit dem benutzerdefinierten Stil
+            % Update the element with the custom style
             obj.applyStylesToElement(element);
         end
         
         function clearCustomStyle(obj, elementId)
-            % Entfernt den benutzerdefinierten Stil für ein Element
+            % Removes the custom style for an element
             %
-            % Eingabe:
-            %   elementId - ID des Elements
+
+            % Input:
+            % Elementid - ID of the Element
             
             if obj.customStyles.isKey(elementId)
                 obj.customStyles.remove(elementId);
                 
-                % Reset auf Standard-Stil
+                % Reset on standard style
                 element = obj.findElementById(elementId);
                 if ~isempty(element)
                     obj.applyStylesToElement(element);
@@ -418,66 +425,69 @@ classdef BPMNStyleManager < handle
         end
         
         function highlightElements(obj, elementIds, highlightStyle)
-            % Hebt ausgewählte Elemente hervor
+            % Removes selected elements
             %
-            % Eingabe:
-            %   elementIds - Array von Element-IDs, die hervorgehoben werden sollen
-            %   highlightStyle - Struct mit Stil für die Hervorhebung (optional)
+
+            % Input:
+            % Elementids - Array by element IDS that are to be emphasized
+            % Highlight style - Struct with style for the emphasis (optional)
             
-            % Standardstil für Hervorhebung, falls nicht angegeben
+            % Standard style for highlighting, if not specified
             if nargin < 3 || isempty(highlightStyle)
                 highlightStyle = struct(...
-                    'strokeColor', [255, 0, 0], ...  % Rot
-                    'strokeWidth', 2.5, ...
-                    'fillColor', [255, 230, 230]);   % Hellrosa
+                    'strokecolor', [255, 0, 0], ...  % Rot
+                    'Strokewidth', 2.5, ...
+                    'fillcolor', [255, 230, 230]);   % Hellrosa
             end
             
-            % Wende den Hervorhebungsstil auf jedes Element an
+            % Apply the highlighting style to each element
             for i = 1:length(elementIds)
                 obj.setCustomStyle(elementIds{i}, highlightStyle);
             end
         end
         
         function highlightPath(obj, elementIds)
-            % Hebt einen Pfad von Elementen hervor, häufig für kritische Pfade verwendet
+            % Emphasizes a path of elements, often used for critical paths
             %
-            % Eingabe:
-            %   elementIds - Geordnetes Array von Element-IDs entlang des Pfades
+
+            % Input:
+            % Elementids - Ordered array by element IDS along the path
             
-            % Spezielle Hervorhebung für Pfade
+            % Special highlighting for paths
             pathStyle = struct(...
-                'strokeColor', [220, 20, 60], ...     % Crimson
-                'strokeWidth', 2.5, ...
-                'fillColor', [255, 240, 245]);        % Hellrosa
+                'strokecolor', [220, 20, 60], ...     % Crimson
+                'Strokewidth', 2.5, ...
+                'fillcolor', [255, 240, 245]);        % Hellrosa
             
             obj.highlightElements(elementIds, pathStyle);
             
-            % Verbessere auch die Flows zwischen den Elementen im Pfad
+            % Also improve the flows between the elements in the path
             obj.highlightPathFlows(elementIds);
         end
         
         function highlightPathFlows(obj, elementIds)
-            % Hebt Flows zwischen den Elementen des Pfads hervor
+            % Lifts flows between the elements of the path
             %
-            % Eingabe:
-            %   elementIds - Geordnetes Array von Element-IDs entlang des Pfades
+
+            % Input:
+            % Elementids - Ordered array by element IDS along the path
             
             flows = obj.diagram.flows;
             
-            % Flow-Hervorhebungsstil
+            % Flow removal style
             flowStyle = struct(...
-                'lineColor', [220, 20, 60], ...       % Crimson
-                'lineWidth', 2.0);
+                'linecolor', [220, 20, 60], ...       % Crimson
+                'Linewidth', 2.0);
             
-            % Finde und aktualisiere alle Flows zwischen aufeinanderfolgenden Elementen im Pfad
+            % Find and update all flows between consecutive elements in the path
             for i = 1:length(elementIds)-1
                 sourceId = elementIds{i};
                 targetId = elementIds{i+1};
                 
-                % Finde den Flow von source zu target
+                % Find the flow from Source to Target
                 for j = 1:length(flows)
                     if strcmp(flows{j}.sourceRef, sourceId) && strcmp(flows{j}.targetRef, targetId)
-                        % Wende den Flow-Stil an
+                        % Apply the flow style
                         flowId = flows{j}.id;
                         obj.setCustomStyle(flowId, flowStyle);
                         break;
@@ -487,86 +497,86 @@ classdef BPMNStyleManager < handle
         end
         
         function applyStylesToElements(obj)
-            % Wendet die Stile auf alle Elemente des Diagramms an
+            % Use the styles to all elements of the diagram
             
             elements = obj.diagram.elements;
             flows = obj.diagram.flows;
             
-            % Stile auf Elemente anwenden
+            % Apply styles to elements
             for i = 1:length(elements)
                 obj.applyStylesToElement(elements{i});
             end
             
-            % Stile auf Flows anwenden
+            % Apply styles to flows
             for i = 1:length(flows)
                 obj.applyStylesToFlow(flows{i});
             end
         end
         
         function applyStylesToElement(obj, element)
-            % Wendet Stile auf ein einzelnes Element an
+            % Use styles to a single element
             
-            % Bestimme den Elementtyp
+            % Determine the element type
             elementType = element.type;
             
-            % Wähle den entsprechenden Stil basierend auf dem Elementtyp
+            % Choose the corresponding style based on the element type
             if isfield(obj.defaultStyles, elementType)
                 style = obj.defaultStyles.(elementType);
             else
-                % Wenn kein spezifischer Stil gefunden wurde, verwende den Standardstil für Tasks
+                % If no specific style has been found, use the standard style for tasks
                 style = obj.defaultStyles.task;
             end
             
-            % Prüfe, ob es einen benutzerdefinierten Stil für dieses Element gibt
+            % Check whether there is a custom style for this element
             if obj.customStyles.isKey(element.id)
                 customStyle = obj.customStyles(element.id);
                 styleFields = fieldnames(customStyle);
                 
-                % Überschreibe die Standardstile mit benutzerdefinierten Werten
+                % Overwrite the standard styles with custom values
                 for j = 1:length(styleFields)
                     style.(styleFields{j}) = customStyle.(styleFields{j});
                 end
             end
             
-            % Wende die Stileigenschaften auf das Element an
-            if isfield(style, 'fillColor')
+            % Apply the style properties to the element
+            if isfield(style, 'fillcolor')
                 element.fillColor = style.fillColor;
             end
             
-            if isfield(style, 'strokeColor')
+            if isfield(style, 'strokecolor')
                 element.strokeColor = style.strokeColor;
             end
             
-            if isfield(style, 'strokeWidth')
+            if isfield(style, 'Strokewidth')
                 element.strokeWidth = style.strokeWidth;
             end
             
-            if isfield(style, 'textColor')
+            if isfield(style, 'text color')
                 element.textColor = style.textColor;
             end
             
-            if isfield(style, 'fontSize')
+            if isfield(style, 'fontsize')
                 element.fontSize = style.fontSize;
             end
             
-            if isfield(style, 'cornerRadius') && obj.styleOptions.roundCorners
+            if isfield(style, 'Corner radius') && obj.styleOptions.roundCorners
                 element.cornerRadius = style.cornerRadius;
             elseif obj.styleOptions.roundCorners && (strcmp(elementType, 'task') || ...
-                   strcmp(elementType, 'subProcess'))
+                   strcmp(elementType, 'subprocess'))
                 element.cornerRadius = 5;
             else
                 element.cornerRadius = 0;
             end
             
-            % Füge Gradient-Effekte hinzu, wenn aktiviert
-            if obj.styleOptions.useGradients && ~strcmp(elementType, 'textAnnotation') && ...
+            % Add gradient effects when activated
+            if obj.styleOptions.useGradients && ~strcmp(elementType, 'text notation') && ...
                ~strcmp(elementType, 'group')
                 if ~isfield(element, 'gradient')
                     element.gradient = struct();
                 end
                 
-                % Erstelle einen helleren Farbton für den Gradienten
-                if isfield(element, 'fillColor')
+                % Create a lighter color for the gradient
+                if isfield(element, 'fillcolor')
                     baseColor = element.fillColor;
                     lighterColor = min(255, baseColor + 40);  % Hellerer Farbton
                     element.gradient.startColor = lighterColor;
@@ -575,14 +585,14 @@ classdef BPMNStyleManager < handle
                     element.gradient.direction = 'vertical';
                 end
             else
-                % Entferne Gradient, wenn nicht aktiviert
+                % Remove gradient, if not activated
                 if isfield(element, 'gradient')
                     element = rmfield(element, 'gradient');
                 end
             end
             
-            % Füge Schatten-Effekte hinzu, wenn aktiviert
-            if obj.styleOptions.useShadows && ~strcmp(elementType, 'textAnnotation') && ...
+            % Add shadow effects when activated
+            if obj.styleOptions.useShadows && ~strcmp(elementType, 'text notation') && ...
                ~strcmp(elementType, 'group') && ~contains(elementType, 'Flow')
                 if ~isfield(element, 'shadow')
                     element.shadow = struct();
@@ -594,27 +604,27 @@ classdef BPMNStyleManager < handle
                 element.shadow.offsetY = 3;
                 element.shadow.blur = 5;
             else
-                % Entferne Schatten, wenn nicht aktiviert
+                % Remove shadows if not activated
                 if isfield(element, 'shadow')
                     element = rmfield(element, 'shadow');
                 end
             end
             
-            % Setze die Schriftart, falls angegeben
+            % Set the font if specified
             if ~isempty(obj.styleOptions.fontFamily)
                 element.fontFamily = obj.styleOptions.fontFamily;
             end
         end
         
         function applyStylesToFlow(obj, flow)
-            % Wendet Stile auf einen einzelnen Flow an
+            % Turn styles to a single flow
             
-            % Bestimme den Flow-Typ
+            % Determine the flow type
             if isfield(flow, 'type')
                 flowType = flow.type;
             else
-                % Standard: sequenceFlow
-                flowType = 'sequenceFlow';
+                % Standard: Sequenceflow
+                flowType = 'sequenceflow';
             end
             
             % Wähle den entsprechenden Stil basierend auf dem Flow-Typ
@@ -625,46 +635,46 @@ classdef BPMNStyleManager < handle
                 style = obj.defaultStyles.sequenceFlow;
             end
             
-            % Prüfe, ob es einen benutzerdefinierten Stil für diesen Flow gibt
+            % Check whether there is a custom style for this flow
             if obj.customStyles.isKey(flow.id)
                 customStyle = obj.customStyles(flow.id);
                 styleFields = fieldnames(customStyle);
                 
-                % Überschreibe die Standardstile mit benutzerdefinierten Werten
+                % Overwrite the standard styles with custom values
                 for j = 1:length(styleFields)
                     style.(styleFields{j}) = customStyle.(styleFields{j});
                 end
             end
             
-            % Wende die Stileigenschaften auf den Flow an
-            if isfield(style, 'lineColor')
+            % Apply the style properties to the flow
+            if isfield(style, 'linecolor')
                 flow.lineColor = style.lineColor;
             end
             
-            if isfield(style, 'lineWidth')
+            if isfield(style, 'Linewidth')
                 flow.lineWidth = style.lineWidth;
             end
             
-            if isfield(style, 'lineStyle')
+            if isfield(style, 'linestyle')
                 flow.lineStyle = style.lineStyle;
             end
             
-            if isfield(style, 'textColor')
+            if isfield(style, 'text color')
                 flow.textColor = style.textColor;
             end
             
-            if isfield(style, 'fontSize')
+            if isfield(style, 'fontsize')
                 flow.fontSize = style.fontSize;
             end
             
-            % Wende den ausgewählten Linienstil auf die Geometrie des Flows an
+            % Apply the selected line style to the geometry of the flows
             obj.applyLineStyleToFlow(flow);
         end
         
         function applyLineStyleToFlow(obj, flow)
-            % Wendet den ausgewählten Linienstil auf einen Flow an
+            % Apply the selected line style to a flow
             
-            % Finde die Quell- und Zielelemente
+            % Find the source and target elements
             sourceElement = obj.findElementById(flow.sourceRef);
             targetElement = obj.findElementById(flow.targetRef);
             
@@ -672,32 +682,32 @@ classdef BPMNStyleManager < handle
                 return;
             end
             
-            % Je nach gewähltem Linienstil die Wegpunkte berechnen
+            % Depending on the selected line style, calculate the waypoints
             switch obj.styleOptions.lineStyle
                 case 'orthogonal'
-                    % Rechtwinklige Verbindungen
+                    % Right -angled connections
                     waypoints = obj.calculateOrthogonalWaypoints(sourceElement, targetElement);
                     
                 case 'curved'
-                    % Gebogene Verbindungen
+                    % Curved connections
                     waypoints = obj.calculateCurvedWaypoints(sourceElement, targetElement);
                     flow.curved = true;
                     
                 case 'direct'
-                    % Direkte Verbindungen
+                    % Direct connections
                     waypoints = obj.calculateDirectWaypoints(sourceElement, targetElement);
                     
                 otherwise
-                    % Standard: orthogonal
+                    % Standard: Orthogonal
                     waypoints = obj.calculateOrthogonalWaypoints(sourceElement, targetElement);
             end
             
-            % Anwenden der berechneten Wegpunkte
+            % Apply the calculated waypoints
             flow.waypoints = waypoints;
         end
         
         function applyLineStylesToFlows(obj)
-            % Wendet den aktuellen Linienstil auf alle Flows im Diagramm an
+            % Apply the current line style to all flows in the diagram
             
             flows = obj.diagram.flows;
             
@@ -707,44 +717,44 @@ classdef BPMNStyleManager < handle
         end
         
         function waypoints = calculateOrthogonalWaypoints(obj, source, target)
-            % Berechnet Wegpunkte für einen rechtwinkligen Pfad zwischen zwei Elementen
+            % Calculates waypoints for a right -angled path between two elements
             
-            % Mittelpunkte der Elemente
+            % Center of the elements
             sourceX = source.x + source.width/2;
             sourceY = source.y + source.height/2;
             targetX = target.x + target.width/2;
             targetY = target.y + target.height/2;
             
-            % Einfacher Fall: gleiche Höhe
+            % Simple case: same height
             if abs(sourceY - targetY) < obj.styleOptions.minNodeDistance
                 waypoints = [sourceX, sourceY; targetX, targetY];
                 return;
             end
             
-            % Standard: 3-Punkt-Verbindung mit horizontalem Segment
+            % Standard: 3-point connection with a horizontal segment
             midY = (sourceY + targetY) / 2;
             waypoints = [sourceX, sourceY; sourceX, midY; targetX, midY; targetX, targetY];
         end
         
         function waypoints = calculateCurvedWaypoints(~, source, target)
-            % Berechnet Wegpunkte für eine gebogene Verbindung
-            % Bei einer gebogenen Linie benötigen wir normalerweise nur Start- und Endpunkt
-            % plus Kontrollpunkte für die Kurve
+            % Calculates waypoints for a curved connection
+            % With a curved line we usually only need the start and end point
+            % Plus control points for the curve
             
-            % Berechne die Mittelpunkte der Elemente als Start- und Endpunkte
+            % Calculate the centerpoints of the elements as start and end points
             sourceX = source.x + source.width/2;
             sourceY = source.y + source.height/2;
             targetX = target.x + target.width/2;
             targetY = target.y + target.height/2;
             
-            % Für eine einfache Bézier-Kurve brauchen wir auch Kontrollpunkte
-            % bei einer kubischen Bézier-Kurve sind dies zwei zusätzliche Punkte
+            % For a simple Bézier curve we also need control points
+            % With a Cubic Bézier curve, these are two additional points
             controlPoint1X = sourceX + (targetX - sourceX) * 0.25;
             controlPoint1Y = sourceY;
             controlPoint2X = sourceX + (targetX - sourceX) * 0.75;
             controlPoint2Y = targetY;
             
-            % Wegpunkte für eine Bézier-Kurve
+            % Ways for a Bézier curve
             waypoints = [sourceX, sourceY; ...
                          controlPoint1X, controlPoint1Y; ...
                          controlPoint2X, controlPoint2Y; ...
@@ -752,9 +762,9 @@ classdef BPMNStyleManager < handle
         end
         
         function waypoints = calculateDirectWaypoints(~, source, target)
-            % Berechnet Wegpunkte für eine direkte Verbindung zwischen zwei Elementen
+            % Calculates waypoints for a direct connection between two elements
             
-            % Bei einer direkten Verbindung verwenden wir einfach die Mittelpunkte der Elemente
+            % With a direct connection we simply use the centerpoints of the elements
             sourceX = source.x + source.width/2;
             sourceY = source.y + source.height/2;
             targetX = target.x + target.width/2;
@@ -764,7 +774,7 @@ classdef BPMNStyleManager < handle
         end
         
         function element = findElementById(obj, id)
-            % Findet ein Element anhand seiner ID
+            % Finds an element based on its ID
             
             elements = obj.diagram.elements;
             

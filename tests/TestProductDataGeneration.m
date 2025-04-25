@@ -1,69 +1,39 @@
-%% TestProductDataGeneration.m
-% Test für die iterative Generierung von BPMN-Daten für ein spezifisches Produkt
-% Dieses Skript verwendet den GeneratorController, um einen kompletten BPMN-Prozess
-% für ein bestimmtes Produkt zu generieren, mit allen Modulen und Teilen
-
-% Bereinigen der Umgebung
-clear all;
-close all;
-clc;
-
-% Pfade hinzufügen
-addpath(fullfile(pwd, '..', 'src'));
-addpath(fullfile(pwd, '..', 'src', 'api'));
-addpath(fullfile(pwd, '..', 'src', 'util'));
-
-% Produktname für die Generierung
-productName = 'Industrieller Lidar-Sensor mit integrierter Kamera';
-
-try
-    % API-Umgebung initialisieren
-    fprintf('Initialisiere API-Umgebung...\n');
-    initAPIEnvironment();
-    
-    % Konfiguration für die vollständige Datengeneration
-    opts = struct();
-    opts.mode = 'iterative';
-    % Vollständige Generierungsreihenfolge für ein komplexes Produkt
-    opts.order = {'process_definitions', 'modules', 'parts', 'subparts'};
-    opts.batchSize = 4;  % Mehr Elemente für ein realistisches Ergebnis
-    opts.outputFile = 'product_bpmn_output.xml';
-    opts.productDescription = productName;
-    opts.debug = true;  % Ausführliches Logging aktivieren
-    
-    % OpenRouter-Modell verwenden
-    opts.model = 'microsoft/mai-ds-r1:free';
-    
-    fprintf('Starte Datengenerierung für Produkt: %s\n', productName);
-    fprintf('Verwende Modell: %s\n', opts.model);
-    
-    % Generiere die Daten mit dem GeneratorController
-    fprintf('Beginne iterative Datengenerierung...\n');
-    tic;  % Zeitmessung starten
-    GeneratorController.generateIterative(opts);
-    elapsed = toc;  % Zeitmessung beenden
-    
-    fprintf('\n✅ Datengenerierung erfolgreich abgeschlossen! (%.2f Sekunden)\n', elapsed);
-    fprintf('Temporäre Datei mit generierten Daten: doc/temporary/temp_generated_data.json\n');
-    fprintf('BPMN-Ausgabedatei: doc/temporary/%s\n', opts.outputFile);
-    
-    % Zusätzliche Informationen für Analyse
-    fprintf('\nDie generierte BPMN-Datei enthält:\n');
-    fprintf('- Prozessdefinition für das Produkt\n');
-    fprintf('- Module und deren Abhängigkeiten\n');
-    fprintf('- Teile und Unterteile für jedes Modul\n');
-    fprintf('- Alle Sequenzflüsse zwischen den Elementen\n');
-    fprintf('- Ressourcenzuweisungen für die Prozessschritte\n');
-    
-catch ME
-    fprintf('\n❌ [FEHLER] Generierung fehlgeschlagen: %s\n', ME.message);
-    
-    % Ausführlichen Stack-Trace ausgeben
-    if ~isempty(ME.stack)
-        fprintf('\nStack-Trace:\n');
-        for i = 1:length(ME.stack)
-            fprintf('  In %s (Zeile %d): %s\n', ...
-                ME.stack(i).name, ME.stack(i).line, ME.stack(i).file);
-        end
-    end
-end
+%% Test Productdageneration.M
+% Test for the iterative generation of BPMN data for a specific product
+% This script uses the generator controller to a complete BPMN process
+% to generate for a specific product, with all modules and parts
+n% Clean up the area
+nnnn% Add paths
+addpath(fullfile(pwd, '..', 'SRC'));
+addpath(fullfile(pwd, '..', 'SRC', 'API'));
+addpath(fullfile(pwd, '..', 'SRC', 'util'));
+n% Product name for generation
+productName = 'Industrial lidar sensor with integrated camera';
+nn    % Initialize API environment
+    fprintf('Initialize API environment ... \n');
+nn    % Configuration for complete data generation
+n    opts.mode = 'iterative';
+    % Full generation order for a complex product
+    opts.order = {'Process_definitions', 'module', 'parts', 'subpars'};
+n    opts.outputFile = 'product_bpmn_outPut.xml';
+nnn    % Use OpenRouter model
+    opts.model = 'Microsoft/Mai-DS-R1: Free';
+n    fprintf('Start data generation for product: %s \n', productName);
+    fprintf('Use model: %s \n', opts.model);
+n    % Generate the data with the generator controller
+    fprintf('Start iterative data generation ... \n');
+nnnn    fprintf('\nann data generation successfully completed!(%.2f seconds) \n', elapsed);
+    fprintf('Temporary file with generated data: Doc/Temporary/Temp_generated_Data.json \n');
+    fprintf('BPMN output file: Doc/Temporary/%S \n', opts.outputFile);
+n    % Additional information for analysis
+    fprintf('\nthe generated BPMN file contains: \n');
+    fprintf('- Process definition for the product \n');
+    fprintf('- Modules and their dependencies \n');
+    fprintf('- Parts and sub -parts for each module \n');
+    fprintf('- All sequence flows between the elements \n');
+    fprintf('- Resource assignments for the process steps \n');
+nn    fprintf('\n❌ [error] generation failed: %s \n', ME.message);
+n    % Spend detailed stack trace
+n        fprintf('\nstack-trace: \n');
+n            fprintf('In %s (line %d): %s \n', ...
+nnnn

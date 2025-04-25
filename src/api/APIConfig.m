@@ -1,33 +1,12 @@
-classdef APIConfig
-    % APIConfig enthält zentrale Konfigurationseinstellungen für die API-Integration
-    
-    properties (Constant)
-        % Standard-API-Modellkonfiguration
-        DEFAULT_MODEL = 'microsoft/mai-ds-r1:free';
-        DEFAULT_TEMPERATURE = 0.7;
-        DEFAULT_SYSTEM_MESSAGE = 'Du bist ein Experte für Business Process Model and Notation (BPMN). Generiere präzise, konsistente und standardkonforme BPMN-Informationen.';
-        
-        % Debug-Einstellungen
-        DEBUG_MODE = false; % Auf true setzen für ausführliche API-Protokollierung
-        
-        % Definiert die Formatierungsanweisungen für die API-Antworten
-        FORMAT_INSTRUCTIONS = ['Antworte ausschließlich mit einem gültigen JSON-Array oder -Objekt. ', ...
-                             'Achte auf eine korrekte und vollständige JSON-Syntax ohne zusätzlichen Text.'];
-    end
-    
-    methods(Static)
-        function options = getDefaultOptions()
-            % Gibt die Standardoptionen für API-Aufrufe zurück
-            options = struct();
-            options.model = APIConfig.DEFAULT_MODEL;
-            options.temperature = APIConfig.DEFAULT_TEMPERATURE;
-            options.system_message = APIConfig.DEFAULT_SYSTEM_MESSAGE;
-            options.debug = APIConfig.DEBUG_MODE;
-        end
-        
-        function prompt = formatPrompt(prompt)
-            % Fügt Format-Anweisungen zum Prompt hinzu
-            prompt = sprintf('%s\n\n%s', prompt, APIConfig.FORMAT_INSTRUCTIONS);
-        end
-    end
-end
+n    % Apiconfig contains central configuration settings for API integration
+nn        % Standard API model configuration
+        DEFAULT_MODEL = 'Microsoft/Mai-DS-R1: Free';
+n        DEFAULT_SYSTEM_MESSAGE = 'You are an expert in Business Process Model and notation (BPMN).Generate precise, consistent and standard-compliant BPMN information.';
+n        % Debug settings
+nn        % Defines the formatting instructions for the API answers
+        FORMAT_INSTRUCTIONS = ['Opt exclusively with a valid JSON array or object.', ...
+                             'Pay attention to a correct and complete JSON syntax without additional text.'];
+nnnn            % Returns the standard options for API calls
+nnnnnnnn            % Adds format instructions for prompt
+            prompt = sprintf('%s \n \n%s', prompt, APIConfig.FORMAT_INSTRUCTIONS);
+nnn

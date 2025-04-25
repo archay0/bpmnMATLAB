@@ -1,58 +1,68 @@
 function initAPIEnvironment()
-% INITAPIENVIRONMENT Initialisiert die Umgebung für API-Aufrufe
-%
-% Diese Hilfsfunktion stellt sicher, dass alle notwendigen Pfade gesetzt sind
-% und Umgebungsvariablen für API-Aufrufe korrekt geladen wurden.
-%
-% Verwendung:
-%   initAPIEnvironment();
+% Initapienvironment initializes the environment for API calls
 %
 
-    fprintf('Initialisiere API-Umgebung...\n');
+% This auxiliary function ensures that all the necessary paths are set
+% and the ambient variables for API calls were loaded correctly.
+%
+
+% Use:
+% Initapienvironment ();
+%
+
+
+    fprintf('Initialize API environment ... \ n');
     
-    % Projektpfade ermitteln
+    % Determine the project path
     currentFile = mfilename('fullpath');
     [apiPath, ~, ~] = fileparts(currentFile);
     srcPath = fileparts(apiPath);
     projectRoot = fileparts(srcPath);
     
-    % Wichtige Pfade hinzufügen
+    % Add important paths
     if ~any(contains(path, apiPath))
-        fprintf('Füge API-Pfad hinzu: %s\n', apiPath);
+        fprintf('Add api path: %s \ n', apiPath);
         addpath(apiPath);
     end
     
     if ~any(contains(path, fullfile(srcPath, 'util')))
-        fprintf('Füge Util-Pfad hinzu: %s\n', fullfile(srcPath, 'util'));
+        fprintf('Add util path: %s \ n', fullfile(srcPath, 'util'));
         addpath(fullfile(srcPath, 'util'));
     end
+
+    % Add bridges folder for datatobpmnbridge
+    bridgesPath = fullfile(srcPath, 'bridges');
+    if ~any(contains(path, bridgesPath))
+        fprintf('Add bridges path: %s \ n', bridgesPath);
+        addpath(bridgesPath);
+    end
     
-    % Umgebungsvariablen laden
+    % Environment variables shop
     try
-        % Prüfen, ob .env bereits geladen wurde
-        if isempty(getenv('OPENROUTER_API_KEY'))
-            fprintf('Lade Umgebungsvariablen aus .env-Datei...\n');
+        % Check whether .ENV has already been loaded
+        if isempty(getenv('OpenRouter_api_Key'))
+            fprintf('Charge ambient variables from .ENV file ... \ n');
             env = loadEnvironment(fullfile(projectRoot, '.env'));
             
-            % Umgebungsvariablen setzen, falls gefunden
-            if isfield(env, 'OPENROUTER_API_KEY')
-                setenv('OPENROUTER_API_KEY', env.OPENROUTER_API_KEY);
-                fprintf('OPENROUTER_API_KEY erfolgreich gesetzt.\n');
+            % Set ambient variables if found
+            if isfield(env, 'OpenRouter_api_Key')
+                setenv('OpenRouter_api_Key', env.OPENROUTER_API_KEY);
+                fprintf('OpenRouter_api_Key successfully set. \ N');
             end
         else
-            fprintf('OPENROUTER_API_KEY ist bereits gesetzt.\n');
+            fprintf('OpenRouter_api_Key is already set. \ N');
         end
     catch ME
-        warning('Fehler beim Laden der Umgebungsvariablen: %s', ME.message);
+        warning('Errors when loading the environment variables: %S', ME.message);
     end
     
-    % Prüfen, ob APICaller verfügbar ist
-    apiCallerPath = which('APICaller');
+    % Check whether apical is available
+    apiCallerPath = which('Apical');
     if isempty(apiCallerPath)
-        error('APICaller nicht gefunden. Überprüfen Sie die Installation.');
+        error('Apicaller not found.check the installation.');
     else
-        fprintf('APICaller gefunden in: %s\n', apiCallerPath);
+        fprintf('Apicaller found in: %s \ n', apiCallerPath);
     end
     
-    fprintf('API-Umgebung erfolgreich initialisiert.\n');
+    fprintf('API environment successfully initiated. \ N');
 end

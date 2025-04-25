@@ -1,15 +1,15 @@
 classdef BPMNElements
-    % BPMNElements Static class with utility functions for creating BPMN elements
-    % This class provides static methods to create various BPMN element types
+    % BPMNElements Static Class with Utility Functions for Creating BPMN Elements
+    % This Class provides static methods to create various BPMN element types
     % and their attributes according to the BPMN 2.0 specification
     
     methods (Static)
         function taskNode = createTask(xmlDoc, id, name, taskType)
             % Create a task node with specified attributes
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the task
             % name: Name/label of the task
-            % taskType: Type of task ('userTask', 'serviceTask', 'scriptTask', etc.)
+            % taskType: Type of Task ('userTask', 'serviceTask', 'scriptTask', etc.)
             
             if nargin < 4
                 taskType = 'task'; % Default task type
@@ -34,10 +34,10 @@ classdef BPMNElements
         
         function gatewayNode = createGateway(xmlDoc, id, name, gatewayType)
             % Create a gateway node with specified attributes
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the gateway
             % name: Name/label of the gateway
-            % gatewayType: Type of gateway ('exclusiveGateway', 'parallelGateway', etc.)
+            % gatewayType: Type of Gateway ('exclusiveGateway', 'parallelGateway', etc.)
             
             gatewayNode = xmlDoc.createElement(gatewayType);
             gatewayNode.setAttribute('id', id);
@@ -59,11 +59,11 @@ classdef BPMNElements
         
         function eventNode = createEvent(xmlDoc, id, name, eventType, eventDefinition)
             % Create an event node with specified attributes
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the event
             % name: Name/label of the event
-            % eventType: Type of event ('startEvent', 'endEvent', 'intermediateThrowEvent', etc.)
-            % eventDefinition: Type of event definition ('messageEventDefinition', etc.)
+            % eventType: Type of Event ('startEvent', 'endEvent', 'intermediateThrowEvent', etc.)
+            % eventDefinition: Type of Event Definition ('messageEventDefinition', etc.)
             
             eventNode = xmlDoc.createElement(eventType);
             eventNode.setAttribute('id', id);
@@ -82,7 +82,7 @@ classdef BPMNElements
         
         function flowNode = createSequenceFlow(xmlDoc, id, sourceRef, targetRef, condition)
             % Create a sequence flow element
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the flow
             % sourceRef: ID of the source element
             % targetRef: ID of the target element
@@ -105,7 +105,7 @@ classdef BPMNElements
         
         function laneSetNode = createLaneSet(xmlDoc, id, lanes)
             % Create a lane set with specified lanes
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the lane set
             % lanes: Cell array of structures with lane information
             
@@ -131,9 +131,9 @@ classdef BPMNElements
             end
         end
         
-        function poolNode = createCollaboration(xmlDoc, id, participants)
+        function collabNode = createCollaboration(xmlDoc, id, participants)
             % Create a collaboration with pools/participants
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the collaboration
             % participants: Cell array of structures with participant information
             
@@ -147,13 +147,11 @@ classdef BPMNElements
                 partNode.setAttribute('processRef', participants{i}.processRef);
                 collabNode.appendChild(partNode);
             end
-            
-            return collabNode;
         end
         
         function transactionNode = createTransaction(xmlDoc, id, name, method)
             % Create a transaction subprocess element with specified attributes
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the transaction
             % name: Name/label of the transaction
             % method: Transaction method ('Compensate', 'Image', 'Store')
@@ -180,11 +178,11 @@ classdef BPMNElements
         
         function boundaryEventNode = createBoundaryEvent(xmlDoc, id, name, attachedToRef, eventDefinition, cancelActivity)
             % Create a boundary event with specified attributes
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the event
             % name: Name/label of the event
             % attachedToRef: ID of the activity this event is attached to
-            % eventDefinition: Type of event definition
+            % eventDefinition: Type of Event Definition
             % cancelActivity: Whether the event interrupts/cancels the activity (true/false)
             
             boundaryEventNode = xmlDoc.createElement('boundaryEvent');
@@ -211,7 +209,7 @@ classdef BPMNElements
         
         function compensateEventDefinitionNode = createCompensateEventDefinition(xmlDoc, id, activityRef, waitForCompletion)
             % Create a compensate event definition
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the event definition
             % activityRef: Optional reference to the activity to compensate
             % waitForCompletion: Whether to wait for completion before continuing
@@ -230,7 +228,7 @@ classdef BPMNElements
         
         function groupNode = createGroup(xmlDoc, id, categoryValue)
             % Create a group artifact
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the group
             % categoryValue: Optional category value reference
             
@@ -244,7 +242,7 @@ classdef BPMNElements
         
         function categoryNode = createCategory(xmlDoc, id, name)
             % Create a category element
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the category
             % name: Name of the category
             
@@ -258,7 +256,7 @@ classdef BPMNElements
         
         function gatewayNode = createParallelEventBasedGateway(xmlDoc, id, name)
             % Create a parallel event-based gateway with specified attributes
-            % xmlDoc: XML document object
+            % xmlDoc: XML Document Object
             % id: Unique identifier for the gateway
             % name: Name/label of the gateway
             

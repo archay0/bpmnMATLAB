@@ -1,53 +1,28 @@
-%% TestBPMNGeneration.m
-% Ein Testskript für die Generierung von BPMN-Daten mit der OpenRouter API
-% Dieses Skript verwendet die neue API-Integration mit dem microsoft/mai-ds-r1:free-Modell
-% und generiert eine temporäre Datei mit BPMN-Daten
-
-% Bereinigen der Umgebung
-clear all;
-close all;
-clc;
-
-% Pfade hinzufügen
-addpath(fullfile(pwd, '..', 'src'));
-addpath(fullfile(pwd, '..', 'src', 'api'));
-addpath(fullfile(pwd, '..', 'src', 'util'));
-
-try
-    % API-Umgebung initialisieren
-    fprintf('Initialisiere API-Umgebung...\n');
-    initAPIEnvironment();
-    
-    % Konfiguration für die Datengeneration
-    opts = struct();
-    opts.mode = 'iterative';
-    opts.order = {'process_definitions'};  % Nur Prozessdefinitionen für einen schnellen Test
-    opts.batchSize = 2;  % Eine kleine Anzahl für den Test
-    opts.outputFile = 'test_bpmn_output.xml';
-    opts.productDescription = 'Ein einfaches Bestellsystem für eine Online-Buchhandlung';
-    opts.debug = true;  % Ausführliches Logging aktivieren
-    
-    % Explizite Festlegung des OpenRouter-Modells
-    opts.model = 'microsoft/mai-ds-r1:free';
-    
-    fprintf('Starte Testgenerierung mit folgendem Modell: %s\n', opts.model);
-    
-    % Generiere die Daten mit dem GeneratorController
-    GeneratorController.generateIterative(opts);
-    
-    fprintf('\nDaten wurden erfolgreich generiert!\n');
-    fprintf('Temporäre Datei sollte unter doc/temporary/temp_generated_data.json zu finden sein\n');
-    fprintf('BPMN-Ausgabedatei sollte unter doc/temporary/%s zu finden sein\n', opts.outputFile);
-    
-catch ME
-    fprintf('\n[FEHLER] Generierung fehlgeschlagen: %s\n', ME.message);
-    
-    % Ausführlichen Stack-Trace ausgeben
-    if ~isempty(ME.stack)
-        fprintf('\nStack-Trace:\n');
-        for i = 1:length(ME.stack)
-            fprintf('  In %s (Zeile %d): %s\n', ...
-                ME.stack(i).name, ME.stack(i).line, ME.stack(i).file);
-        end
-    end
-end
+%% Testbpmnggeneration.m
+% A test script for the generation of BPMN data with the OpenRouter API
+% This script uses the new API integration with the Microsoft/Mai-DS-R1: Free model
+% and generates a temporary file with BPMN data
+n% Clean up the area
+nnnn% Add paths
+addpath(fullfile(pwd, '..', 'SRC'));
+addpath(fullfile(pwd, '..', 'SRC', 'API'));
+addpath(fullfile(pwd, '..', 'SRC', 'util'));
+nn    % Initialize API environment
+    fprintf('Initialize API environment ... \n');
+nn    % Configuration for data generation
+n    opts.mode = 'iterative';
+    opts.order = {'Process_definitions'};  % Nur Prozessdefinitionen für einen schnellen Test
+n    opts.outputFile = 'test_bpmn_outPut.xml';
+    opts.productDescription = 'A simple order system for an online bookstore';
+nn    % Explicit determination of the OpenRouter model
+    opts.model = 'Microsoft/Mai-DS-R1: Free';
+n    fprintf('Start test generation with the following model: %s \n', opts.model);
+n    % Generate the data with the generator controller
+nn    fprintf('\ndes were successfully generated! \n');
+    fprintf('Temporary file should be found under Doc/Temporary/Temp_Generated_Data.json \n');
+    fprintf('BPMN output file should be found under Doc/Temporary/%S \n', opts.outputFile);
+nn    fprintf('\n [error] generation failed: %s \n', ME.message);
+n    % Spend detailed stack trace
+n        fprintf('\nstack-trace: \n');
+n            fprintf('In %s (line %d): %s \n', ...
+nnnn

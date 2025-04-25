@@ -1,7 +1,7 @@
 classdef BPMNDatabaseConnector < handle
-    % BPMNDatabaseConnector Class for database interactions
-    % This class provides methods for connecting to databases and extracting
-    % process information for BPMN generation
+    % BPMndatabaseConnector Class for Database Interactions
+    % This Class Provides Methods for Connecting to Databases and Extracting
+    % Process Information for BPMN Generation
     
     properties
         Connection      % Database connection object
@@ -13,22 +13,22 @@ classdef BPMNDatabaseConnector < handle
     
     methods
         function obj = BPMNDatabaseConnector(dbType)
-            % Constructor for BPMNDatabaseConnector
-            % dbType: Type of database (mysql, postgresql, etc.)
+            % Constructor for BPMndatabaseConnector
+            % DBType: Type of Database (MySQL, PostgreSQL, etc.)
             
             if nargin > 0
                 obj.DbType = dbType;
             else
-                % Try to load from environment file
+                % Try to Load from Environment File
                 try
                     obj.loadEnvironmentVars();
-                    if isfield(obj.EnvVars, 'DB_TYPE')
+                    if isfield(obj.EnvVars, 'Db_type')
                         obj.DbType = obj.EnvVars.DB_TYPE;
                     else
                         obj.DbType = '';
                     end
                 catch ex
-                    fprintf('Could not load environment variables: %s\n', ex.message);
+                    fprintf('Could not load environment variables: %s \ n', ex.message);
                     obj.DbType = '';
                 end
             end
@@ -38,16 +38,16 @@ classdef BPMNDatabaseConnector < handle
         end
         
         function loadEnvironmentVars(obj, envFilePath)
-            % Load environment variables from the .env file
-            % envFilePath: Optional path to the .env file
+            % Load Environment Variables from the .ENV File
+            % Envfilepath: Optional Path to the .ENV File
             
             try
                 if nargin < 2
-                    % Use the default loadEnvironment function to get the variables
+                    % Use the default loadenvirth function to get the variables
                     utilPath = fileparts(mfilename('fullpath'));
                     utilFolder = fullfile(utilPath, 'util');
                     
-                    % Ensure the util folder is on the path
+                    % Ensure The Util Folder is on the Path
                     if ~any(contains(path, utilFolder))
                         addpath(utilFolder);
                     end
@@ -56,7 +56,7 @@ classdef BPMNDatabaseConnector < handle
                 else
                     obj.EnvVars = loadEnvironment(envFilePath);
                 end
-                fprintf('Environment variables loaded successfully\n');
+                fprintf('Environment Variables Loaded Successfully \ n');
             catch ex
                 warning('Error loading environment variables: %s', ex.message);
                 obj.EnvVars = struct();
@@ -64,12 +64,12 @@ classdef BPMNDatabaseConnector < handle
         end
         
         function success = connectWithEnvFile(obj, envFilePath)
-            % Connect to database using credentials from the .env file
-            % envFilePath: Optional path to the .env file
+            % Connect to Database Using credentials from the .ENV File
+            % Envfilepath: Optional Path to the .ENV File
             
             try
-                % Load environment variables if not already loaded
-                if isempty(obj.EnvVars) || ~isfield(obj.EnvVars, 'DB_HOST')
+                % Load Environment Variables if not already loaded
+                if isempty(obj.EnvVars) || ~isfield(obj.EnvVars, 'Db_host')
                     if nargin < 2
                         obj.loadEnvironmentVars();
                     else
@@ -77,94 +77,94 @@ classdef BPMNDatabaseConnector < handle
                     end
                 end
                 
-                % Set database type if specified in the environment
-                if isfield(obj.EnvVars, 'DB_TYPE') && isempty(obj.DbType)
+                % Set Database Type IF Specified in the Environment
+                if isfield(obj.EnvVars, 'Db_type') && isempty(obj.DbType)
                     obj.DbType = obj.EnvVars.DB_TYPE;
                 end
                 
-                % Build connection parameters from environment variables
+                % Build Connection Parameters from Environment Variables
                 connectionParams = struct();
                 
-                if isfield(obj.EnvVars, 'DB_NAME')
+                if isfield(obj.EnvVars, 'Db_name')
                     connectionParams.dbName = obj.EnvVars.DB_NAME;
                 else
-                    error('DB_NAME not found in environment variables');
+                    error('DB_Name not found in Environment Variables');
                 end
                 
-                if isfield(obj.EnvVars, 'DB_USER')
+                if isfield(obj.EnvVars, 'Db_user')
                     connectionParams.username = obj.EnvVars.DB_USER;
                 else
                     connectionParams.username = '';
                 end
                 
-                if isfield(obj.EnvVars, 'DB_PASSWORD')
+                if isfield(obj.EnvVars, 'Db_password')
                     connectionParams.password = obj.EnvVars.DB_PASSWORD;
                 else
                     connectionParams.password = '';
                 end
                 
-                if isfield(obj.EnvVars, 'DB_HOST')
+                if isfield(obj.EnvVars, 'Db_host')
                     connectionParams.server = obj.EnvVars.DB_HOST;
                 else
-                    connectionParams.server = 'localhost';
+                    connectionParams.server = 'local host';
                 end
                 
-                if isfield(obj.EnvVars, 'DB_PORT')
+                if isfield(obj.EnvVars, 'Db_port')
                     connectionParams.port = obj.EnvVars.DB_PORT;
                 else
                     connectionParams.port = 3306;
                 end
                 
                 % Additional configuration for SQLite
-                if strcmpi(obj.DbType, 'sqlite') && isfield(obj.EnvVars, 'DB_FILE_PATH')
+                if strcmpi(obj.DbType, 'sqlite') && isfield(obj.EnvVars, 'Db_file_path')
                     connectionParams.filePath = obj.EnvVars.DB_FILE_PATH;
                 end
                 
                 % Additional configuration for ODBC
-                if strcmpi(obj.DbType, 'odbc') && isfield(obj.EnvVars, 'DB_DSN')
+                if strcmpi(obj.DbType, 'ODBC') && isfield(obj.EnvVars, 'Db_dsn')
                     connectionParams.dsn = obj.EnvVars.DB_DSN;
                 end
                 
-                % Connect using the standard connect method
+                % Connect Using the Standard Connect Method
                 success = obj.connect(connectionParams);
                 
             catch ex
                 success = false;
-                error('Error connecting with environment file: %s', ex.message);
+                error('Error Connecting with Environment File: %S', ex.message);
             end
         end
         
         function success = connect(obj, connectionParams)
             % Connect to database
-            % connectionParams: Structure with connection parameters
-            %   - dbName: Database name
-            %   - username: Database username
-            %   - password: Database password
-            %   - server: Database server address
-            %   - port: Database port number
+            % Connectionparams: Structure with Connection Parameters
+            % - DBNAME: Database name
+            % - Username: database username
+            % - Password: Database Password
+            % - Server: Database Server Address
+            % - Port: Database Port Number
             
             try
-                % Use MATLAB Database Toolbox to establish connection
+                % Use MATLAB DATABASE TOOLBOX TO ESTABLISH Connection
                 switch lower(obj.DbType)
                     case 'mysql'
                         obj.Connection = database(connectionParams.dbName, ...
                                                 connectionParams.username, ...
                                                 connectionParams.password, ...
-                                                'Vendor', 'MySQL', ...
-                                                'Server', connectionParams.server, ...
-                                                'PortNumber', connectionParams.port);
-                    case 'postgresql'
+                                                'Vendor', 'Mysql', ...
+                                                'server', connectionParams.server, ...
+                                                'Port', connectionParams.port);
+                    case 'PostgreSql'
                         obj.Connection = database(connectionParams.dbName, ...
                                                 connectionParams.username, ...
                                                 connectionParams.password, ...
-                                                'Vendor', 'PostgreSQL', ...
-                                                'Server', connectionParams.server, ...
-                                                'PortNumber', connectionParams.port);
+                                                'Vendor', 'PostgreSql', ...
+                                                'server', connectionParams.server, ...
+                                                'Port', connectionParams.port);
                     case 'sqlite'
-                        obj.Connection = database(connectionParams.dbName, '', '', ...
-                                                'Vendor', 'SQLite', ...
+                        obj.Connection = database(connectionParams.dbName, '',,'', ...
+                                                'Vendor', 'Sqlite', ...
                                                 'DataSource', connectionParams.filePath);
-                    case 'odbc'
+                    case 'ODBC'
                         obj.Connection = database('', connectionParams.username, ...
                                                 connectionParams.password, ...
                                                 'Vendor', 'ODBC', ...
@@ -174,16 +174,16 @@ classdef BPMNDatabaseConnector < handle
                 end
                 
                 if ~isempty(obj.Connection.Message)
-                    error('Database connection failed: %s', obj.Connection.Message);
+                    error('Database Connection Failed: %S', obj.Connection.Message);
                 end
                 
                 obj.Connected = true;
                 success = true;
-                fprintf('Successfully connected to %s database\n', obj.DbType);
+                fprintf('Successfully connected to %s database \ n', obj.DbType);
             catch ex
                 obj.Connected = false;
                 success = false;
-                error('Error connecting to database: %s', ex.message);
+                error('Error Connecting to Database: %S', ex.message);
             end
         end
         
@@ -192,41 +192,41 @@ classdef BPMNDatabaseConnector < handle
             if obj.Connected && ~isempty(obj.Connection)
                 close(obj.Connection);
                 obj.Connected = false;
-                fprintf('Disconnected from %s database\n', obj.DbType);
+                fprintf('Disconnected from %s Database \ n', obj.DbType);
             end
         end
         
         function data = queryProcessDefinitions(obj)
             % Query process definitions from database
-            % Returns a table of process definitions
+            % Returns A Table of Process Definitions
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
-            % Query depends on database structure - this is a generic example
-            query = ['SELECT process_id, process_name, description ', ...
-                     'FROM process_definitions ', ...
-                     'ORDER BY process_id'];
+            % Query destends on database Structure - this is a generic example
+            query = ['Select process_id, process_name, description', ...
+                     'From process_definitions', ...
+                     'Order by process_id'];
             
             data = exec(obj.Connection, query);
             data = fetch(data);
         end
         
         function data = queryProcessElements(obj, processId)
-            % Query process elements for a specific process
-            % processId: ID of the process to query elements for
-            % Returns a table of process elements
+            % Query Process Elements for A Specific Process
+            % Processid: ID of the Process to query elements for
+            % Returns a Table of Process Elements
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
-            % Query depends on database structure - this is a generic example
-            query = ['SELECT element_id, element_type, element_name, properties ', ...
-                     'FROM process_elements ', ...
-                     'WHERE process_id = ''', processId, ''' ', ...
-                     'ORDER BY element_id'];
+            % Query destends on database Structure - this is a generic example
+            query = ['Select element_id, element_type, element_name, property', ...
+                     'From Process_elements', ...
+                     'Where process_id =''', Processid,''' ', ...
+                     'Order by element_id'];
             
             data = exec(obj.Connection, query);
             data = fetch(data);
@@ -234,54 +234,54 @@ classdef BPMNDatabaseConnector < handle
         
         function data = querySequenceFlows(obj, processId)
             % Query sequence flows for a specific process
-            % processId: ID of the process to query flows for
-            % Returns a table of sequence flows
+            % Processid: ID of the Process to query flows for
+            % Returns A Table of Sequence Flows
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
-            % Query depends on database structure - this is a generic example
-            query = ['SELECT flow_id, source_ref, target_ref, condition_expr ', ...
-                     'FROM process_flows ', ...
-                     'WHERE process_id = ''', processId, ''' ', ...
-                     'ORDER BY flow_id'];
+            % Query destends on database Structure - this is a generic example
+            query = ['Select Flow_id, Source_Ref, Target_Ref, Condition_EXPR', ...
+                     'From Process_flows', ...
+                     'Where process_id =''', Processid,''' ', ...
+                     'Order by Flow_ID'];
             
             data = exec(obj.Connection, query);
             data = fetch(data);
         end
         
         function schemaInfo = getTableSchema(obj, tableName)
-            % Get schema information for a specific table
-            % tableName: Name of the table to get schema for
-            % Returns structure with table schema information
+            % Get Scheme Information for A Specific Table
+            % Tablename: Name of the Table to get scheme for
+            % Return's Structure with Table Scheme Information
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
-            % Get table information
-            tableInfo = obj.Connection.sqltables('TableType', 'TABLE', 'Table', tableName);
+            % Get Table Information
+            tableInfo = obj.Connection.sqltables('Tabletype', 'Table', 'Table', tableName);
             
             % Get column information
             columnInfo = obj.Connection.sqlcolumns('Table', tableName);
             
-            % Combine into schema info structure
-            schemaInfo = struct('tableName', tableName, ...
+            % Combine into scheme info structure
+            schemaInfo = struct('tablet name', tableName, ...
                                'columns', columnInfo, ...
-                               'tableInfo', tableInfo);
+                               'tablage', tableInfo);
         end
         
         function tables = listTables(obj)
-            % List all tables in the current database
-            % Returns a cell array of table names
+            % List All Tables in the Current Database
+            % Returns a Cell Array of Table Names
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             % Get all tables
-            tableInfo = obj.Connection.sqltables('TableType', 'TABLE');
+            tableInfo = obj.Connection.sqltables('Tabletype', 'Table');
             
             if isempty(tableInfo)
                 tables = {};
@@ -291,12 +291,12 @@ classdef BPMNDatabaseConnector < handle
         end
         
         function result = executeCustomQuery(obj, query)
-            % Execute a custom SQL query
+            % Execute a Custom SQL query
             % query: SQL query string to execute
-            % Returns query results
+            % Return's query results
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             % Check if query is in cache
@@ -307,7 +307,7 @@ classdef BPMNDatabaseConnector < handle
                 result = exec(obj.Connection, query);
                 result = fetch(result);
                 
-                % Cache result if it's not too large
+                % Cache Result if's not Too Large
                 if height(result) < 1000
                     obj.QueryCache(query) = result;
                 end
@@ -315,83 +315,83 @@ classdef BPMNDatabaseConnector < handle
         end
         
         function data = fetchElements(obj, processId)
-            % Fetch all BPMN elements with their attributes for a process
-            % processId: ID of the process to fetch elements for
-            % Returns a table with element data according to DatabaseSchema.md
+            % Fetch all bpmn elements with their attributes for a process
+            % Processid: ID of the Process to Fetch Elements for
+            % Returns A Table with Element Data According to DatabaseSchema.md
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
-            % Check if we have the schema that matches DatabaseSchema.md
+            % Check if we have the schema that matches database scheme.md
             tables = obj.listTables();
             
-            % Check if we have the modern schema structure
+            % Check if we have the modern scheme Structure
             if ismember('bpmn_elements', tables)
-                % Use the schema from DatabaseSchema.md
-                query = ['SELECT e.*, t.implementation, t.script, t.script_format, ', ...
-                         'ev.event_definition_type, ev.is_interrupting, ev.attached_to_ref, ', ...
-                         'g.gateway_direction, p.container_type, p.process_ref, p.parent_id, ', ...
-                         'ep.x, ep.y, ep.width, ep.height, ep.is_expanded ', ...
-                         'FROM bpmn_elements e ', ...
-                         'LEFT JOIN tasks t ON e.element_id = t.task_id ', ...
-                         'LEFT JOIN events ev ON e.element_id = ev.event_id ', ...
-                         'LEFT JOIN gateways g ON e.element_id = g.gateway_id ', ...
-                         'LEFT JOIN pools_and_lanes p ON e.element_id = p.container_id ', ...
-                         'LEFT JOIN element_positions ep ON e.element_id = ep.element_id ', ...
-                         'WHERE e.process_id = ''', processId, ''' ', ...
-                         'ORDER BY e.element_id'];
+                % Use the schema from database scheme.md
+                query = ['Select e.*, T.Implementation, T.Script, T.Script_Format,', ...
+                         'Ev.event_definition_type, Ev.IS_Interrupting, ev.attached_to_ref,', ...
+                         'g.gateway_direction, p.container_type, p.process_ref, p.parent_id,', ...
+                         'ep.x, ep.y, ep.width, ep.height, ep.is_expanded', ...
+                         'From bpmn_elements e', ...
+                         'Left Join Tasks T on E.element_ID = T.Task_ID', ...
+                         'Left Join Events Ev on E.element_ID = Ev.event_ID', ...
+                         'Left Join Gateways G on E.element_ID = G.Gateway_ID', ...
+                         'Left join pools_and_lanes p on e.element_id = p.container_id', ...
+                         'Left join element_positions ep on e.element_id = ep.element_id', ...
+                         'Where E.ProCess_ID =''', Processid,''' ', ...
+                         'Order by E.element_id'];
             else
-                % Use a generic query for backwards compatibility
-                query = ['SELECT element_id, element_type, element_name, properties ', ...
-                         'FROM process_elements ', ...
-                         'WHERE process_id = ''', processId, ''' ', ...
-                         'ORDER BY element_id'];
+                % Use A Generic Query for Backwards Compatibility
+                query = ['Select element_id, element_type, element_name, property', ...
+                         'From Process_elements', ...
+                         'Where process_id =''', Processid,''' ', ...
+                         'Order by element_id'];
             end
             
             data = exec(obj.Connection, query);
             data = fetch(data);
             
-            % Cache the result
-            cacheKey = ['elements_', processId];
+            % Cache The Result
+            cacheKey = ['Elements_', processId];
             if height(data) < 1000
                 obj.QueryCache(cacheKey) = data;
             end
         end
         
         function data = fetchSequenceFlows(obj, processId)
-            % Fetch sequence flows with waypoints for a process
-            % processId: ID of the process to fetch flows for
-            % Returns a table with flow data and associated waypoints
+            % Fetch Sequence Flows with Waypoints for a Process
+            % Processid: ID of the Process to fetch flows for
+            % Returns A Table with Flow Data and Associated Waypoints
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             tables = obj.listTables();
             
-            % Check if we have the modern schema structure
-            if ismember('sequence_flows', tables) && ismember('waypoints', tables)
-                % Join with waypoints table to get the path data
-                query = ['SELECT sf.*, GROUP_CONCAT(CONCAT(wp.sequence, ":", wp.x, ":", wp.y) ', ...
-                         'ORDER BY wp.sequence SEPARATOR ";") as waypoints_data ', ...
-                         'FROM sequence_flows sf ', ...
-                         'LEFT JOIN waypoints wp ON sf.flow_id = wp.flow_id ', ...
-                         'WHERE sf.process_id = ''', processId, ''' ', ...
-                         'GROUP BY sf.flow_id ', ...
-                         'ORDER BY sf.flow_id'];
+            % Check if we have the modern scheme Structure
+            if ismember('sequence_flows', tables) && ismember('Waypoints', tables)
+                % Join with Waypoints Table to get the Path Data
+                query = ['Select Sf.*, Group_concat (Concat (wp.sequence,":", wp.x,":", wp.y)', ...
+                         'Order by wp.sequence separator";") as waypoints_data', ...
+                         'From sequence_flows SF', ...
+                         'Left Join Waypoints Wp on Sf.Flow_ID = wp.flow_id', ...
+                         'Where Sf.Process_ID =''', Processid,''' ', ...
+                         'Group by Sf.flow_ID', ...
+                         'Order by Sf.flow_id'];
             else
-                % Fallback to generic query
-                query = ['SELECT flow_id, source_ref, target_ref, condition_expr ', ...
-                         'FROM process_flows ', ...
-                         'WHERE process_id = ''', processId, ''' ', ...
-                         'ORDER BY flow_id'];
+                % Fallback to Generic query
+                query = ['Select Flow_id, Source_Ref, Target_Ref, Condition_EXPR', ...
+                         'From Process_flows', ...
+                         'Where process_id =''', Processid,''' ', ...
+                         'Order by Flow_ID'];
             end
             
             data = exec(obj.Connection, query);
             data = fetch(data);
             
-            % Cache the result
+            % Cache The Result
             cacheKey = ['flows_', processId];
             if height(data) < 1000
                 obj.QueryCache(cacheKey) = data;
@@ -399,161 +399,161 @@ classdef BPMNDatabaseConnector < handle
         end
         
         function data = fetchMessageFlows(obj)
-            % Fetch message flows between pools/participants
-            % Returns a table with message flow data
+            % Fetch message flows between pools/particular
+            % Returns A Table with Message Flow Data
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             tables = obj.listTables();
             
-            % Check if we have the modern schema structure
-            if ismember('message_flows', tables) && ismember('waypoints', tables)
-                query = ['SELECT mf.*, GROUP_CONCAT(CONCAT(wp.sequence, ":", wp.x, ":", wp.y) ', ...
-                         'ORDER BY wp.sequence SEPARATOR ";") as waypoints_data ', ...
-                         'FROM message_flows mf ', ...
-                         'LEFT JOIN waypoints wp ON mf.flow_id = wp.flow_id ', ...
-                         'GROUP BY mf.flow_id ', ...
-                         'ORDER BY mf.flow_id'];
+            % Check if we have the modern scheme Structure
+            if ismember('Message_flows', tables) && ismember('Waypoints', tables)
+                query = ['Select mf.*, Group_concat (Concat (wp.sequence,":", wp.x,":", wp.y)', ...
+                         'Order by wp.sequence separator";") as waypoints_data', ...
+                         'From Message_flows MF', ...
+                         'Left Join Waypoints WP on Mf.Flow_ID = wp.flow_id', ...
+                         'Group by Mf.Flow_ID', ...
+                         'Order by Mf.flow_id'];
                          
                 data = exec(obj.Connection, query);
                 data = fetch(data);
             else
-                % Return empty table if the schema doesn't support message flows
+                % Return Empty Table if the schema Doesn't Support Message Flows
                 data = table();
             end
             
-            % Cache the result
+            % Cache The Result
             if height(data) < 1000
-                obj.QueryCache('message_flows') = data;
+                obj.QueryCache('Message_flows') = data;
             end
         end
         
         function data = fetchDataObjects(obj, processId)
-            % Fetch data objects and associations for a process
-            % processId: ID of the process to fetch data objects for
-            % Returns a table with data object information
+            % Fetch Data Objects and Associations for a Process
+            % Processid: Id of the Process to fetch Data Objects for
+            % Returns A Table with Data Object Information
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             tables = obj.listTables();
             
-            % Check if we have the modern schema structure
+            % Check if we have the modern scheme Structure
             if ismember('data_objects', tables)
-                query = ['SELECT do.*, ep.x, ep.y, ep.width, ep.height ', ...
-                         'FROM data_objects do ', ...
-                         'LEFT JOIN element_positions ep ON do.data_object_id = ep.element_id ', ...
-                         'WHERE do.process_id = ''', processId, ''' ', ...
-                         'ORDER BY do.data_object_id'];
+                query = ['Select do.*, Ep.x, Ep.y, Ep.Width, Ep.Hight', ...
+                         'From data_objects do', ...
+                         'Left join element_positions ep on do.data_object_id = ep.element_id', ...
+                         'Where do.process_id =''', Processid,''' ', ...
+                         'Order by do.data_object_id'];
                          
                 data = exec(obj.Connection, query);
                 data = fetch(data);
                 
-                % Cache the result
+                % Cache The Result
                 cacheKey = ['data_objects_', processId];
                 if height(data) < 1000
                     obj.QueryCache(cacheKey) = data;
                 end
             else
-                % Return empty table if schema doesn't support data objects
+                % Return Empty Table If Scheme Doesn't Support Data Objects
                 data = table();
             end
         end
         
         function data = fetchDataAssociations(obj)
-            % Fetch data associations with waypoints
-            % Returns a table with data association information
+            % Fetch Data Associations with Waypoints
+            % Returns A Table with Data Association Information
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             tables = obj.listTables();
             
-            % Check if we have the modern schema structure
-            if ismember('data_associations', tables) && ismember('waypoints', tables)
-                query = ['SELECT da.*, GROUP_CONCAT(CONCAT(wp.sequence, ":", wp.x, ":", wp.y) ', ...
-                         'ORDER BY wp.sequence SEPARATOR ";") as waypoints_data ', ...
-                         'FROM data_associations da ', ...
-                         'LEFT JOIN waypoints wp ON da.association_id = wp.flow_id ', ...
-                         'GROUP BY da.association_id ', ...
-                         'ORDER BY da.association_id'];
+            % Check if we have the modern scheme Structure
+            if ismember('data_associations', tables) && ismember('Waypoints', tables)
+                query = ['Select da.*, Group_Concat (Concat (wp.sequence,":", wp.x,":", wp.y)', ...
+                         'Order by wp.sequence separator";") as waypoints_data', ...
+                         'From data_associations there', ...
+                         'Left Join Waypoints WP on da.AsSociation_id = wp.flow_id', ...
+                         'Group by da.association_id', ...
+                         'Order by da.association_id'];
                 
                 data = exec(obj.Connection, query);
                 data = fetch(data);
                 
-                % Cache the result
+                % Cache The Result
                 if height(data) < 1000
                     obj.QueryCache('data_associations') = data;
                 end
             else
-                % Return empty table if schema doesn't support data associations
+                % Return Empty Table If Scheme Doesn't Support Data Associations
                 data = table();
             end
         end
         
         function data = fetchDiagramInfo(obj, processId)
-            % Fetch diagram information (element positions and waypoints)
-            % processId: ID of the process to fetch diagram info for
-            % Returns a table with diagram positioning data
+            % Fetch Diagram Information (element positions and waypoints)
+            % Processid: ID of the Process to Fetch Diagram Info for
+            % Returns A Table with diagram positioning data
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             tables = obj.listTables();
             
-            % Check if we have the modern schema structure
+            % Check if we have the modern scheme Structure
             if ismember('element_positions', tables)
-                query = ['SELECT ep.* ', ...
-                         'FROM element_positions ep ', ...
-                         'JOIN bpmn_elements e ON ep.element_id = e.element_id ', ...
-                         'WHERE e.process_id = ''', processId, ''' ', ...
-                         'ORDER BY ep.element_id'];
+                query = ['Select ep.*', ...
+                         'From element_positions EP', ...
+                         'Join bpmn_elements e on ep.element_id = e.element_id', ...
+                         'Where E.ProCess_ID =''', Processid,''' ', ...
+                         'Order by ep.element_id'];
                 
                 data = exec(obj.Connection, query);
                 data = fetch(data);
                 
-                % Cache the result
-                cacheKey = ['diagram_info_', processId];
+                % Cache The Result
+                cacheKey = ['Diagram_info_', processId];
                 if height(data) < 1000
                     obj.QueryCache(cacheKey) = data;
                 end
             else
-                % Return empty table if schema doesn't support element positions
+                % Return Empty Table If Scheme Doesn't Support Element Positions
                 data = table();
             end
         end
         
         function data = fetchAnnotations(obj, processId)
             % Fetch text annotations for a process
-            % processId: ID of the process to fetch annotations for
-            % Returns a table with text annotation data
+            % Processid: ID of the Process to fetch annotations for
+            % Returns A Table with Text Annotation Data
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             % Try to find text annotations in the elements table
-            query = ['SELECT e.*, ep.x, ep.y, ep.width, ep.height ', ...
-                     'FROM bpmn_elements e ', ...
-                     'LEFT JOIN element_positions ep ON e.element_id = ep.element_id ', ...
-                     'WHERE e.element_type = ''textAnnotation'' ', ...
-                     'AND e.process_id = ''', processId, ''' ', ...
-                     'ORDER BY e.element_id'];
+            query = ['Select e.*, Ep.x, Ep.y, Ep.Width, Ep.Hight', ...
+                     'From bpmn_elements e', ...
+                     'Left join element_positions ep on e.element_id = ep.element_id', ...
+                     'Where e.element_type =''text notation'' ', ...
+                     'And e.process_id =''', Processid,''' ', ...
+                     'Order by E.element_id'];
             
             data = exec(obj.Connection, query);
             data = fetch(data);
             
-            % If no annotations found, return empty table
+            % If no annotations found, return Empty Table
             if isempty(data)
                 data = table();
             else
-                % Cache the result
-                cacheKey = ['annotations_', processId];
+                % Cache The Result
+                cacheKey = ['Annotations_', processId];
                 if height(data) < 1000
                     obj.QueryCache(cacheKey) = data;
                 end
@@ -561,37 +561,37 @@ classdef BPMNDatabaseConnector < handle
         end
         
         function data = fetchAssociations(obj, processId)
-            % Fetch non-data associations for a process (like text annotation connections)
-            % processId: ID of the process to fetch associations for
-            % Returns a table with association data
+            % Fetch non-data association for a process (Like text annotation connections)
+            % Processid: ID of the Process to Fetch Associations for
+            % Returns A Table with Association Data
             
             if ~obj.Connected
-                error('Database connection not established. Call connect first.');
+                error('Database Connection not Established.call Connect First.');
             end
             
             tables = obj.listTables();
             
-            % Try to query associations
+            % Try to Query Associations
             if ismember('sequence_flows', tables)
-                query = ['SELECT sf.*, GROUP_CONCAT(CONCAT(wp.sequence, ":", wp.x, ":", wp.y) ', ...
-                         'ORDER BY wp.sequence SEPARATOR ";") as waypoints_data ', ...
-                         'FROM sequence_flows sf ', ...
-                         'LEFT JOIN waypoints wp ON sf.flow_id = wp.flow_id ', ...
-                         'WHERE sf.process_id = ''', processId, ''' ', ...
-                         'AND sf.flow_type = ''association'' ', ... % Assuming flow_type column exists
-                         'GROUP BY sf.flow_id ', ...
-                         'ORDER BY sf.flow_id'];
+                query = ['Select Sf.*, Group_concat (Concat (wp.sequence,":", wp.x,":", wp.y)', ...
+                         'Order by wp.sequence separator";") as waypoints_data', ...
+                         'From sequence_flows SF', ...
+                         'Left Join Waypoints Wp on Sf.Flow_ID = wp.flow_id', ...
+                         'Where Sf.Process_ID =''', Processid,''' ', ...
+                         'And sf.flow_type =''association'' ', ... % Assuming flow_type column exists
+                         'Group by Sf.flow_ID', ...
+                         'Order by Sf.flow_id'];
                 
                 data = exec(obj.Connection, query);
                 data = fetch(data);
                 
-                % Cache the result
-                cacheKey = ['associations_', processId];
+                % Cache The Result
+                cacheKey = ['Associations_', processId];
                 if height(data) < 1000
                     obj.QueryCache(cacheKey) = data;
                 end
             else
-                % Return empty table if schema doesn't have flow_type column
+                % Return Empty Table if scheme Doesn't Have Flow_Type Column
                 data = table();
             end
         end
@@ -613,78 +613,78 @@ classdef BPMNDatabaseConnector < handle
         end % End of getSetTempStore
 
         function insertedIDs = insertRows(tableName, rows)
-            % insertRows - Static method to insert data rows into a temporary store
-            % tableName: Name of the table (field name in the store)
-            % rows: Struct array of data to insert
-            % Returns: Array of dummy IDs for the inserted rows
+            % Insertrows - Static Method to insert data rows into a temporary store
+            % Tablename: Name of the Table (Field Name in the Store)
+            % Rows: Struct Array of Data to Insert
+            % Returns: Array of Dummy IDS for the Insert Rows
 
-            fprintf('--- Inserting %d rows into temporary store for table: %s ---\n', numel(rows), tableName);
+            fprintf('--- Insert %d rows into Temporary Store for Table: %s --- \ n', numel(rows), tableName);
 
             if isempty(rows)
                  insertedIDs = {};
-                 fprintf('--- No rows provided for table: %s. Skipping insertion. ---\n', tableName);
+                 fprintf('--- No Rows Provided for Table: %s.Skipping insertion.--- \ n', tableName);
                  return;
             end
 
-            % Ensure rows is a struct array
+            % Ensure Rows is a Struct Array
             if ~isstruct(rows)
-                 warning('BPMNDatabaseConnector:insertRows:InvalidInput', ...
-                         'Input "rows" for table %s is not a struct array. Skipping insertion.', tableName);
+                 warning('BpmndatabaseConnector: Insertrows: Invalidinput', ...
+                         'Input"rows"For Table %s is not a Struct array.Skipping insertion.', tableName);
                  insertedIDs = {};
                  return;
             end
 
             tempStore = BPMNDatabaseConnector.getSetTempStore(); % Get current store
 
-            % Generate dummy IDs
+            % Generates Dummy IDS
             numExisting = 0;
             if isfield(tempStore, tableName) && isstruct(tempStore.(tableName))
                 numExisting = numel(tempStore.(tableName));
             end
-            insertedIDs = arrayfun(@(x) sprintf('%s_ID_%d', upper(tableName), numExisting + x), 1:numel(rows), 'UniformOutput', false);
+            insertedIDs = arrayfun(@(x) sprintf('%s_id_%d', upper(tableName), numExisting + x), 1:numel(rows), 'Uniformoutput', false);
 
-            % Add dummy IDs to the rows if an 'id' field is expected (heuristic)
+            % Add Dummy Ids to the Rows IF an 'ID' Field is Expected (Heuristic)
             idField = '';
-            if endsWith(tableName, 's') % e.g., processes -> process_id
+            if endsWith(tableName, 'S') % e.g., processes -> process_id
                 idField = [tableName(1:end-1) '_id'];
             elseif strcmp(tableName, 'bpmn_elements')
                 idField = 'element_id';
-            % Add more specific cases if needed
+            % Add more specific cases if Needed
 
             if ~isempty(idField) && isfield(rows, idField)
                  for i = 1:numel(rows)
-                     % Only assign if the field is empty or non-existent,
-                     % assuming LLM might sometimes provide one.
+                     % Only the field is empty or non-existent,
+                     % Assuming LLM Might Sometimes Provide One.
                      if ~isfield(rows(i), idField) || isempty(rows(i).(idField))
                          rows(i).(idField) = insertedIDs{i};
                      else
-                         % If LLM provided an ID, use that instead of overwriting
+                         % If llm proved to id, use that iMstead of overwriting
                          insertedIDs{i} = rows(i).(idField);
                      end
                  end
             elseif ~isempty(idField) && ~isfield(rows, idField)
-                 % Add the ID field if it doesn't exist at all
+                 % Add the id field if it does not exist at all
                  for i = 1:numel(rows)
                      rows(i).(idField) = insertedIDs{i};
                  end
             end
 
 
-            % Append rows to the store
+            % Append Rows to the Store
             if isfield(tempStore, tableName) && ~isempty(tempStore.(tableName))
-                % Ensure consistent fields before concatenating
+                % Ensure Consistent Fields Before Concatening
                  existingFields = fieldnames(tempStore.(tableName));
                  newFields = fieldnames(rows);
                  allFields = union(existingFields, newFields);
 
-                 % Add missing fields to existing data
+                 % Add Missing Fields to Existing Data
                  for k = 1:numel(existingFields)
                      fld = existingFields{k};
                      if ~isfield(rows, fld)
                          [rows.(fld)] = deal([]); % Add missing field with default empty
                      end
                  end
-                 % Add missing fields to new data
+                 % Add Missing Fields to New Data
                  for k = 1:numel(newFields)
                      fld = newFields{k};
                      if ~isfield(tempStore.(tableName), fld)
@@ -692,7 +692,7 @@ classdef BPMNDatabaseConnector < handle
                      end
                  end
 
-                 % Reorder fields to match before concatenating
+                 % Reorder Fields to Match Before Concating
                  rows = orderfields(rows, tempStore.(tableName)(1)); % Match order of existing data
 
                 tempStore.(tableName) = [tempStore.(tableName); rows(:)];
@@ -702,15 +702,15 @@ classdef BPMNDatabaseConnector < handle
 
             BPMNDatabaseConnector.getSetTempStore(tempStore); % Save updated store
 
-            fprintf('--- Temp insertRows finished for table: %s. Total rows: %d ---\n', tableName, numel(tempStore.(tableName)));
+            fprintf('--- Temp insertrows finished for table: %s.Total rows: %d --- \ n', tableName, numel(tempStore.(tableName)));
         end % End of insertRows
 
         function allData = fetchAll(tableNames)
-             % fetchAll - Static method to fetch data from the temporary store
-             % tableNames: Cell array of table names to fetch from
-             % Returns: Struct where each field is a table name containing fetched data
+             % Fetchall - Static Method to fetch Data from the Temporary Store
+             % Tablename: Cell Array of Table Names to fetch from
+             % Returns: Struct Where Each Field is a Table Name Containing Fetched Data
 
-             fprintf('--- Fetching data from temporary store for tables: %s ---\n', strjoin(tableNames, ', '));
+             fprintf('--- fetching data from temporary store for tables: %s --- \ n', strjoin(tableNames, ',,'));
              allData = struct();
              tempStore = BPMNDatabaseConnector.getSetTempStore(); % Get current store
 
@@ -722,13 +722,13 @@ classdef BPMNDatabaseConnector < handle
                  tableName = tableNames{i};
                  if isfield(tempStore, tableName)
                      allData.(tableName) = tempStore.(tableName);
-                     fprintf('--- Fetched %d rows for table %s ---\n', numel(allData.(tableName)), tableName);
+                     fprintf('--- fetched %d rows for table %s --- \ n', numel(allData.(tableName)), tableName);
                  else
                      allData.(tableName) = struct([]); % Return empty struct array if table not found
-                     fprintf('--- Table %s not found in temporary store ---\n', tableName);
+                     fprintf('--- Table %s not found in temporary store --- \ n', tableName);
                  end
              end
-             fprintf('--- Temp fetchAll finished ---\n');
+             fprintf('--- Temp fetchall finished --- \ n');
         end % End of fetchAll
 
     end % End of static methods block

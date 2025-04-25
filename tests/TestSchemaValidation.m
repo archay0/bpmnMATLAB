@@ -1,111 +1,61 @@
-classdef TestSchemaValidation < matlab.unittest.TestCase
-    % TestSchemaValidation  Unit tests for SchemaLoader and ValidationLayer
-
-    methods(Test)
-        function testSchemaParsing(testCase)
-            % Verify SchemaLoader.load parses expected tables
-            schema = SchemaLoader.load();
-            % Schema should be a struct and contain key tables
+n    % Test chemavalidation unit tests for schemaloader and validationlayer
+nnn            % Verify schemaloader.load parses expected tables
+n            % Scheme Should be a Struct and Contain Key Tables
             testCase.verifyClass(schema, 'struct');
-            testCase.verifyTrue(isfield(schema, 'process_definitions'));
+            testCase.verifyTrue(isfield(schema, 'Process_definitions'));
             % Check columns for process_definitions
-            cols = schema.process_definitions.columns;
-            testCase.verifyNotEmpty(cols);
-            names = {cols.name};
-            testCase.verifyTrue(any(strcmp(names, 'process_id')));
-            testCase.verifyTrue(any(strcmp(names, 'process_name')));
-        end
-
-        function testValidationSuccess(testCase)
-            % Create a valid row for process_definitions
-            schema = SchemaLoader.load();
-            % Construct a row with minimal required fields
-            row = struct();
-            for c = schema.process_definitions.columns
-                switch c.name
-                    case 'process_id'
-                        row.process_id = 'TestProc';
-                    case 'process_name'
-                        row.process_name = 'Test Name';
+nnn            testCase.verifyTrue(any(strcmp(names, 'Process_id')));
+            testCase.verifyTrue(any(strcmp(names, 'Process_Name')));
+nnn            % Create A Valid Row for Process_Definitions
+n            % Construct a row with minimal request fields
+nnn                    case 'Process_id'
+                        row.process_id = 'Test';
+                    case 'Process_Name'
+                        row.process_name = 'Test name';
                     case 'description'
                         row.description = 'Desc';
                     case 'version'
                         row.version = '1.0';
                     case 'is_executable'
-                        row.is_executable = true;
-                    case 'created_date'
-                        row.created_date = datetime('now');
+n                    case 'created_date'
+                        row.created_date = datetime('snow');
                     case 'updated_date'
-                        row.updated_date = datetime('now');
+                        row.updated_date = datetime('snow');
                     case 'created_by'
                         row.created_by = 'tester';
                     case 'namespace'
-                        row.namespace = 'ns';
-                    otherwise
-                        % assign default values based on type
-                        if contains(c.type, 'VARCHAR') || contains(c.type, 'TEXT')
-                            row.(c.name) = '';
-                        elseif contains(c.type, 'BOOLEAN')
-                            row.(c.name) = false;
-                        elseif contains(c.type, 'INT') || contains(c.type, 'FLOAT')
-                            row.(c.name) = 0;
-                        elseif contains(c.type, 'TIMESTAMP') || contains(c.type, 'DATE')
-                            row.(c.name) = datetime('now');
-                        else
-                            row.(c.name) = '';
-                        end
-                end
-            end
-            % Validate should not error
-            testCase.verifyWarningFree(@() ValidationLayer.validate('process_definitions', row, schema, struct('process_definitions', {{'TestProc'}})));
-        end
-
-        function testValidationMissingColumn(testCase)
-            % Missing required column should error
-            schema = SchemaLoader.load();
-            row = struct('process_id', 'P1'); % missing others
-            fcn = @() ValidationLayer.validate('process_definitions', row, schema, struct());
-            testCase.verifyError(fcn, 'ValidationLayer:MissingColumn');
-        end
-
-        function testValidationTypeMismatch(testCase)
-            % Type mismatch in numeric field
-            schema = SchemaLoader.load();
-            % Create row with wrong type for is_executable (expects boolean)
-            row = struct();
-            for c = schema.process_definitions.columns
-                if strcmp(c.name, 'process_id')
+                        row.namespace = 'NS';
+n                        % Assign Default Values ​​Based on Type
+                        if contains(c.type, 'Varchar') || contains(c.type, 'TEXT')
+n                        elseif contains(c.type, 'Boolean')
+n                        elseif contains(c.type, 'Intimately') || contains(c.type, 'Float')
+n                        elseif contains(c.type, 'Timestamp') || contains(c.type, 'Date')
+                            row.(c.name) = datetime('snow');
+nnnnn            % Validate Should not error
+            testCase.verifyWarningFree(@() ValidationLayer.validate('Process_definitions', row, schema, struct('Process_definitions', {{'Test'}})));
+nnn            % Missing Required Column Should Error
+n            row = struct('Process_id', 'P1'); % missing others
+            fcn = @() ValidationLayer.validate('Process_definitions', row, schema, struct());
+            testCase.verifyError(fcn, 'Validation Layer: Missing Column');
+nnn            % Type Mismatch in Numeric Field
+n            % CREATE ROW WRONG Type for is_executable (Expects Boolean)
+nn                if strcmp(c.name, 'Process_id')
                     row.process_id = 'P1';
-                elseif strcmp(c.name, 'process_name')
-                    row.process_name = 'Name';
+                elseif strcmp(c.name, 'Process_Name')
+                    row.process_name = 'name';
                 elseif strcmp(c.name, 'is_executable')
-                    row.is_executable = 'notbool';
-                else
-                    % assign default
-                    if contains(c.type, 'VARCHAR') || contains(c.type, 'TEXT')
-                        row.(c.name) = '';
-                    elseif contains(c.type, 'BOOLEAN')
-                        row.(c.name) = false;
-                    elseif contains(c.type, 'TIMESTAMP') || contains(c.type, 'DATE')
-                        row.(c.name) = datetime('now');
-                    else
-                        row.(c.name) = 0;
-                    end
-                end
-            end
-            fcn = @() ValidationLayer.validate('process_definitions', row, schema, struct('process_definitions', {{'P1'}}));
-            testCase.verifyError(fcn, 'ValidationLayer:TypeMismatch');
-        end
-
-        function testValidationFKViolation(testCase)
-            % Foreign key violation
-            schema = SchemaLoader.load();
-            % message_flows has fk to element ids
-            rows = struct('flow_id', 'F1', 'source_ref', 'E999', 'target_ref', 'E1', 'message_id', 'M1');
-            % context has no element ids, so FK should warn or error
-            fcn = @() ValidationLayer.validate('message_flows', rows, schema, struct());
-            % Since context missing, warning expected rather than error
-            testCase.verifyWarningFree(fcn);
-        end
-    end
-end
+                    row.is_executable = 'notebook';
+n                    % Assign default
+                    if contains(c.type, 'Varchar') || contains(c.type, 'TEXT')
+n                    elseif contains(c.type, 'Boolean')
+n                    elseif contains(c.type, 'Timestamp') || contains(c.type, 'Date')
+                        row.(c.name) = datetime('snow');
+nnnnn            fcn = @() ValidationLayer.validate('Process_definitions', row, schema, struct('Process_definitions', {{'P1'}}));
+            testCase.verifyError(fcn, 'Validationlayer: Typemismatch');
+nnn            % Foreign key violation
+n            % Message_flows has FK to Element IDS
+            rows = struct('Flow_id', 'F1', 'Source_ref', 'E999', 'target_ref', 'E1', 'Message_id', 'M1');
+            % Context has no element IDS, according to FK Should Warn or Error
+            fcn = @() ValidationLayer.validate('Message_flows', rows, schema, struct());
+            % INCENCE Context Missing, Warning Expected Rather Than Error
+nnnn

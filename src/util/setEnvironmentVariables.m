@@ -1,58 +1,58 @@
 function setEnvironmentVariables()
-    % setEnvironmentVariables - Direktes Setzen der Umgebungsvariablen in MATLAB
+    % setEnvironmentVariables - direct setting of environment variables in Matlab
     %
-    % Diese Funktion setzt die erforderlichen Umgebungsvariablen direkt,
-    % anstatt sie aus einer Datei zu laden. Dieses Skript sollte nicht
-    % in Git commitet werden, da es sensible Informationen enthält.
+    % This function sets the necessary environmental variables directly,
+    % instead of loading them from a file. This script should not be
+    % included in Git commits because it contains sensitive information.
     %
-    % Verwendung:
-    %   setEnvironmentVariables();
+    % Usage:
+    % setEnvironmentVariables();
     %
-    % API-Konfiguration:
-    % - GitHub Models API: Benötigt GITHUB_TOKEN mit "models:read" Berechtigungen
-    % - OpenRouter API: Benötigt OPENROUTER_API_KEY
+    % API configuration:
+    % - Github Models API: Need github_token with "Models: Read" permissions
+    % - OpenRouter API: Needs OpenRouter_api_Key
     %
-    % Siehe auch: loadEnvironment, getenv
+    % See also: loadEnvironment, getenv
 
-    fprintf('Setze Umgebungsvariablen für API-Zugriff...\n');
+    fprintf('Setting environment variables for API access...\n');
     
-    % HIER DEINE TATSÄCHLICHEN API-SCHLÜSSEL UND ANDERE UMGEBUNGSVARIABLEN EINFÜGEN
-    % =============================================================================
+    % Insert your actual API key and other environmental variables here
+    % ====================================================================================================
     
-    % OpenRouter API Token - RICHTIGER NAME IST OPENROUTER_API_KEY
-    % Ersetze 'your_openrouter_api_key_here' durch deinen tatsächlichen OpenRouter-Token
-    setenv('OPENROUTER_API_KEY', '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');
+    % OpenRouter API token - real name is OpenRouter_api_Key
+    % Replace 'your_openrouter_api_key_here' with your actual OpenRouter token
+    setenv('OpenRouter_api_Key', 'SK-OR-OR-V1-7BF303C0C0B2B6EDB1FE953B2E859B4E339D03E896CC8B95205D');
     
-    % GitHub Models API Token (falls benötigt) - Ensure this line is correctly commented or valid
-    % setenv('GITHUB_TOKEN', 'your_github_pat_here'); % Example placeholder
-    % setenv('GITHUB_API_TOKEN', getenv('GITHUB_TOKEN'));
+    % Github Models API token (if required) - Ensure this line is correctly commented or valid
+    % setenv('github_token', 'your_github_pat_here'); % Example placeholder
+    % setenv('github_api_token', getenv('github_token'));
     
-    % OpenAI API Token (falls benötigt)
-    % setenv('OPENAI_API_KEY', 'your_openai_api_key_here');
+    % OpenAI API token (if needed)
+    % setenv('openai_api_key', 'your_openai_api_key_here');
     
-    % =============================================================================
+    % ====================================================================================================
     
-    % Bestätige erfolgreiches Setzen (ohne die tatsächlichen Werte anzuzeigen)
-    if ~isempty(getenv('OPENROUTER_API_KEY'))
-        fprintf('✓ OPENROUTER_API_KEY gesetzt\n');
+    % Confirm successful setting (without revealing the actual values)
+    if ~isempty(getenv('OpenRouter_api_Key'))
+        fprintf('✓ OpenRouter_api_Key set\n');
     else
-        fprintf('✗ OPENROUTER_API_KEY nicht gesetzt\n');
+        fprintf('✗ OpenRouter_api_Key not set\n');
     end
     
-    if ~isempty(getenv('GITHUB_TOKEN'))
-        fprintf('✓ GITHUB_TOKEN gesetzt\n');
+    if ~isempty(getenv('github_token'))
+        fprintf('✓ github_token set\n');
     else
-        fprintf('✗ GITHUB_TOKEN nicht gesetzt\n');
+        fprintf('✗ github_token not set\n');
     end
     
-    fprintf('Umgebungsvariablen wurden erfolgreich gesetzt.\n');
+    fprintf('Environment variables were successfully set.\n');
     
-    % Ausgabe eines Beispiels für OpenRouter API-Nutzung
-    fprintf('\n--------------------------------------------------------\n');
-    fprintf('Beispiel für OpenRouter API-Nutzung (Python):\n\n');
+    % Example of OpenRouter API usage
+    fprintf('\n----------------------------------------------------------\n');
+    fprintf('Example of OpenRouter API use (Python):\n\n');
     fprintf('import requests\n\n');
     fprintf('openrouter_url = "https://openrouter.ai/api/v1/chat/completions"\n');
-    fprintf('api_key = "%s"  # Dein OpenRouter API-Schlüssel\n', 'YOUR_OPENROUTER_API_KEY');
+    fprintf('api_key = "%s" # Your OpenRouter API key\n', 'your_openrouter_api_key');
     fprintf('model = "microsoft/mai-ds-r1:free"\n\n');
     fprintf('headers = {\n');
     fprintf('    "Content-Type": "application/json",\n');
@@ -62,13 +62,13 @@ function setEnvironmentVariables()
     fprintf('}\n\n');
     fprintf('data = {\n');
     fprintf('    "messages": [\n');
-    fprintf('        { "role": "system", "content": "You are a helpful assistant." },\n');
-    fprintf('        { "role": "user", "content": "What is the capital of France?" }\n');
+    fprintf('        {"role": "system", "content": "You are a helpful assistant."},\n');
+    fprintf('        {"role": "user", "content": "What is the capital of France?"}\n');
     fprintf('    ],\n');
     fprintf('    "temperature": 0.7,\n');
     fprintf('    "model": model\n');
     fprintf('}\n\n');
     fprintf('response = requests.post(openrouter_url, headers=headers, json=data)\n');
     fprintf('print(response.json()["choices"][0]["message"]["content"])\n');
-    fprintf('--------------------------------------------------------\n\n');
+    fprintf('----------------------------------------------------------\n');
 end

@@ -1,201 +1,111 @@
 %% Test Script for Generating BPMN Data for a Lidar Camera Production Process
-
-fprintf('Starting Enhanced Lidar Camera Data Generation Test...\n');
-
-% --- Setup ---
-try
-    % Add necessary paths (assuming script is run from workspace root or tests dir)
-    if exist('../src', 'dir')
+nfprintf('Starting Enhanced Lidar Camera Data Generation Test ... \n');
+n% --- Set up ---
+n    % Add Necessary Paths (Assuming Script is Run from Workspace Root or Tests Dir)
+    if exist('../src', 'you')
         addpath('../src');
         addpath('../src/api');
         addpath('../src/util');
-    elseif exist('src', 'dir')
-        addpath('src');
-        addpath('src/api');
-        addpath('src/util');
-    else
-        error('Could not find src directory. Run script from workspace root or tests directory.');
-    end
-
-    % Initialisiere die API-Umgebung (enthält loadEnvironment)
-    if exist('initAPIEnvironment', 'file') == 2
-        fprintf('Initializing API environment...\n');
-        initAPIEnvironment();
-    else
-        % Fallback zur alten Methode
+    elseif exist('SRC', 'you')
+        addpath('SRC');
+        addpath('SRC/API');
+        addpath('SRC/Util');
+n        error('Could not find SRC Directory.Run script from Workspace root or tests Directory.');
+nn    % Initialize the API environment (contains load vireonment)
+    if exist('initapien vironment', 'file') == 2
+        fprintf('Initializing Api Environment ... \n');
+nn        % Fallback on the old method
         if exist('../.env', 'file')
             loadEnvironment('../.env');
         elseif exist('.env', 'file')
             loadEnvironment('.env');
-        else
-            warning('TestLidarCameraGeneration:NoEnv', '.env file not found. API calls might fail if API key is not set.');
-        end
-    end
-
-    % --- Enhanced Configuration ---
-    opts = struct();
-    
-    % More detailed product description with manufacturing process information
-    opts.productDescription = ['A high-precision lidar camera system for autonomous vehicle applications, ' ...
-                             'including optical sensors, laser emitters, calibration components, and connection cables. ' ...
-                             'Manufactured by EDFCams at their Argentina facility. ' ...
-                             'The manufacturing process involves component assembly, calibration, testing, ' ...
-                             'quality control, and packaging stages. Multiple departments are involved: ' ...
-                             'parts receiving, component preparation, assembly line, testing department, ' ...
-                             'quality assurance, and packaging division.'];
-    
-    % Optimized generation order to ensure proper relationship establishment
-    % First define processes and pools, then core elements, then connections
-    opts.order = {
-        'process_definitions',    % Define top-level processes first
-        'pools_and_lanes',        % Define organizational structure
+n            warning('Test lidar cameragenization: NoenV', '.ENV file not found.Api Calls Might Fail IF Api Key is not set.');
+nnn    % --- Enhanced configuration ---
+nn    % More Detailed Product Description with Manufacturing Process Information
+    opts.productDescription = ['A high-precision LIDAR CAMERA SYSTEM for Autonomous Vehicle Applications,' ...
+                             'Including optical sensors, laser emitters, Calibration Components, and Connection Cables.' ...
+                             'Manufactured by Edfcams at their Argentina Facility.' ...
+                             'The Manufacturing Process Involves Component Assembly, Calibration, Testing,' ...
+                             'Quality Control, and Packaging Stages.Multiple departments are involved:' ...
+                             'Parts Receiving, Component Preparation, Assembly Line, Testing Department,' ...
+                             'Quality Assurance, and Packaging Division.'];
+n    % Optimized generation Order to Ensure Proper Relationship establishment
+    % First Define Processes and Pools, Then Core Elements, Then Connections
+n        'Process_definitions',    % Define top-level processes first
+        'Pools_and_lanes',        % Define organizational structure
         'bpmn_elements',          % Create basic elements 
         'tasks',                  % Define specific tasks
         'gateways',               % Define decision points
         'events',                 % Define events
         'data_objects',           % Define data objects
         'data_stores'             % Define data stores
-    };
-    
-    % Increase batch size for more coherent generation
-    opts.batchSize = 8;  
-    
-    % Keep the file in doc/temporary directory
+nn    % Increase Batch Size for more coherent generation
+nn    % Keep the File in Doc/Temporary Directory
     opts.outputFile = 'lidar_camera_production_process.bpmn';
-    
-    % Additional parameters to guide the generation
-    opts.additionalParams = struct();
-    opts.additionalParams.targetGranularity = 'detailed';    % Generate a detailed BPMN
+n    % Additional parameters to guide the generation
+n    opts.additionalParams.targetGranularity = 'detailed';    % Generate a detailed BPMN
     opts.additionalParams.companyDepartments = {'Manufacturing', 'Quality Control', 'Engineering', 'Packaging'};
-    opts.additionalParams.requireParallelProcessing = true;  % Ensure the use of parallel gateways
-    opts.additionalParams.includeProbabilisticPaths = true;  % Include exclusive gateways with conditions
-    
-    % API-spezifische Konfiguration für OpenRouter
-    if exist('APIConfig', 'class') == 8
-        % Load default API options from APIConfig
-        apiDefaults = APIConfig.getDefaultOptions();
-        opts.model = apiDefaults.model;        % microsoft/mai-ds-r1:free
-        opts.temperature = apiDefaults.temperature;
-        opts.debug = true;                     % Enable debugging for this test
-    else
-        % Manual defaults if APIConfig is not available
-        opts.model = 'microsoft/mai-ds-r1:free';
-        opts.temperature = 0.7;
-        opts.debug = true;
-    end
-    
-    % Override system message for better BPMN generation
-    opts.system_message = ['You are a BPMN (Business Process Model and Notation) expert. ', ...
-                          'Generate detailed, consistent BPMN processes with proper semantics. ', ...
-                          'Focus on creating structured JSON output that follows database schema requirements.'];
-
-    fprintf('Enhanced Configuration:\n');
-    disp(opts);
-
-    % --- Pre-Generation Checks ---
-    fprintf('Performing pre-generation validation checks...\n');
-    
-    % Verify API key exists (OpenRouter instead of GitHub)
-    if isempty(getenv('OPENROUTER_API_KEY'))
-        error('OPENROUTER_API_KEY is not set in the environment. Required for API calls.');
-    end
-    
-    % Ensure output directory exists
-    outputDir = 'doc/temporary';
-    if ~exist(outputDir, 'dir')
-        mkdir(outputDir);
-        fprintf('Created output directory: %s\n', outputDir);
-    end
-
-    % --- Run Generation ---
-    fprintf('Calling GeneratorController.generateIterative with model %s...\n', opts.model);
-    tic; % Start timing the generation
-    GeneratorController.generateIterative(opts);
-    generationTime = toc; % End timing
-    fprintf('Generation completed in %.2f seconds.\n', generationTime);
-
-    % --- Post-Generation Validation ---
-    fprintf('\nPerforming post-generation validation checks...\n');
-    
-    % Check if the temporary data file exists
-    tempDataPath = fullfile('doc/temporary', 'temp_generated_data.json');
+nnn    % API-specific configuration for open routers
+    if exist('Apiconfig', 'class') == 8
+        % Load Default API options from Apiconfig
+nnnnn        % Manual Defaults IF Apiconfig is not Available
+        opts.model = 'Microsoft/Mai-DS-R1: Free';
+nnnn    % Override System Message for Better BPMN Generation
+    opts.system_message = ['You are a bpmn (Business Process Model and Notation) Expert.', ...
+                          'Generates Detailed, Consistent BPMN Processes with Proper Semantics.', ...
+                          'FOCUS on Creating Structured JSON OUTPUT that follows database scheme requirements.'];
+n    fprintf('Enhanced configuration: \n');
+nn    % --- pre-generation checks ---
+    fprintf('Performing pre-generation validation checks ... \n');
+n    % Verify Api Key Exist (OpenRouter Instead of Github)
+    if isempty(getenv('OpenRouter_api_Key'))
+        error('OpenRouter_api_Key is not set in the environment.required for api calls.');
+nn    % Ensure Output Directory Exists
+    outputDir = 'Doc/Temporary';
+    if ~exist(outputDir, 'you')
+n        fprintf('Created output directory: %s \n', outputDir);
+nn    % --- Run generation ---
+    fprintf('Calling GeneratorController.', opts.model);
+nnn    fprintf('Generation Completed in %.2f Seconds. \n', generationTime);
+n    % --- Post generation validation ---
+    fprintf('\nperforming post-generation validation checks ... \n');
+n    % Check If the Temporary Data File Exists
+    tempDataPath = fullfile('Doc/Temporary', 'temp_generated_data.json');
     if ~exist(tempDataPath, 'file')
-        warning('Temporary data file not generated at %s', tempDataPath);
-    else
-        % Read the temporary JSON data to check its structure
-        try
-            fid = fopen(tempDataPath, 'r');
-            if fid == -1
-                warning('Could not open temporary data file for reading');
-            else
-                tempData = fread(fid, '*char')';
-                fclose(fid);
-                
-                % Parse the JSON to check structure (just validation, no need to store)
-                tempJson = jsondecode(tempData);
-                
-                % Check presence of key components
-                if isfield(tempJson, 'allElements')
-                    fprintf('✓ Generated elements: %d\n', numel(tempJson.allElements));
-                else
-                    warning('No elements found in generated data');
-                end
-                
-                if isfield(tempJson, 'allFlows')
-                    fprintf('✓ Generated flows: %d\n', numel(tempJson.allFlows));
-                else
-                    warning('No flows found in generated data');
-                end
-            end
-        catch ME
-            warning('Error validating temporary data: %s', ME.message);
-        end
-    end
-    
-    % Check if final BPMN file exists
-    finalBpmnPath = fullfile('doc/temporary', opts.outputFile);
+        warning('Temporary Data File Not Generated At %S', tempDataPath);
+n        % Read the Temporary Json Data to Check Its Structure
+n            fid = fopen(tempDataPath, 'r');
+n                warning('Could not Open Temporary Data File for Reading');
+n                tempData = fread(fid, '*Char')';
+nn                % Parse The Json to Check Structure (Just Validation, No Need To Store)
+nn                % Check Presence of Key Components
+                if isfield(tempJson, 'all -elements')
+                    fprintf('✓ Generated Elements: %d \n', numel(tempJson.allElements));
+n                    warning('No Elements Found in Generated Data');
+nn                if isfield(tempJson, 'allflows')
+                    fprintf('✓ Generated flows: %d \n', numel(tempJson.allFlows));
+n                    warning('No Flows Found in Generated Data');
+nnn            warning('Error validating temporary data: %s', ME.message);
+nnn    % Check If Final BPMN File Exists
+    finalBpmnPath = fullfile('Doc/Temporary', opts.outputFile);
     if ~exist(finalBpmnPath, 'file')
-        warning('Final BPMN file was not generated at %s', finalBpmnPath);
-    else
-        % Check file size
-        fileInfo = dir(finalBpmnPath);
-        fprintf('✓ Final BPMN file size: %.2f KB\n', fileInfo.bytes/1024);
-        
-        % Optional: Use BPMNValidator to validate the generated file
-        try
-            validator = BPMNValidator(finalBpmnPath);
-            validator.validate();
-            results = validator.getValidationResults();
-            
-            fprintf('BPMN Validation Results:\n');
-            fprintf('  Errors: %d\n', numel(results.errors));
-            fprintf('  Warnings: %d\n', numel(results.warnings));
-            
-            if numel(results.errors) > 0
-                fprintf('Top errors found:\n');
-                maxDisplay = min(3, numel(results.errors));
-                for i = 1:maxDisplay
-                    fprintf('  - %s\n', results.errors{i});
-                end
-            end
-        catch ME
-            warning('BPMNValidator error: %s', ME.message);
-        end
-    end
-
-    fprintf('\nData generation process completed.\n');
-    fprintf('✓ Temporary data: %s\n', tempDataPath);
-    fprintf('✓ Final BPMN: %s\n', finalBpmnPath);
-
-catch ME
-    fprintf('\n❌ ERROR during data generation test ❌\n');
-    fprintf('Error Identifier: %s\n', ME.identifier);
-    fprintf('Error Message: %s\n', ME.message);
-    fprintf('Stack Trace:\n');
-    for k = 1:length(ME.stack)
-        fprintf('  File: %s, Name: %s, Line: %d\n', ME.stack(k).file, ME.stack(k).name, ME.stack(k).line);
-    end
-    fprintf('-----------------------------------------\n');
-end
-
-fprintf('Lidar Camera Production Process Generation Test Finished.\n');
+        warning('Final BPMN File was not generated at %s', finalBpmnPath);
+n        % Check file size
+n        fprintf('✓ Final BPMN File Size: %.2F KB \n', fileInfo.bytes/1024);
+n        % Optional: Use BPMNValidator to validate the generated file
+nnnnn            fprintf('Bpmn validation results: \n');
+            fprintf('Errors: %d \n', numel(results.errors));
+            fprintf('Warning: %d \n', numel(results.warnings));
+nn                fprintf('Top Errors Found: \n');
+nn                    fprintf('- %S \n', results.errors{i});
+nnn            warning('Bpmnvalidator error: %s', ME.message);
+nnn    fprintf('\ndata generation Process Completed. \n');
+    fprintf('✓ Temporary data: %s \n', tempDataPath);
+    fprintf('✓ Final BPMN: %S \n', finalBpmnPath);
+nn    fprintf('\n❌ Error during data generation test ❌ \n');
+    fprintf('Error identifier: %s \n', ME.identifier);
+    fprintf('Error message: %s \n', ME.message);
+    fprintf('Stack trace: \n');
+n        fprintf('File: %S, name: %S, Line: %d \n', ME.stack(k).file, ME.stack(k).name, ME.stack(k).line);
+n    fprintf('-------------------------------------------');
+nnfprintf('Lidar Camera Production Process Generation Test Finished. \n');

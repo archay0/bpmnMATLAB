@@ -1,7 +1,7 @@
 classdef BPMNDiagramExporter < handle
-    % BPMNDiagramExporter Class for exporting BPMN diagrams as visual files
-    %   This class provides functionality for exporting BPMN models as
-    %   SVG, PNG, or PDF files directly from MATLAB
+    % Bpmndiagramexporter class for exporting bpmn diagrams as visual files
+    % This class provides functionality for exporting bpmn models as
+    % SVG, PNG, Or PDF Files Directly from Matlab
     
     properties
         XMLDoc         % XML document object
@@ -13,71 +13,71 @@ classdef BPMNDiagramExporter < handle
     
     methods
         function obj = BPMNDiagramExporter(bpmnFileOrObj)
-            % Constructor for BPMNDiagramExporter
-            % bpmnFileOrObj: Path to BPMN file or BPMNGenerator instance
+            % Constructor for bpmndiagramexporter
+            % bpmnfileorobj: Path to bpmn file or bpmngenerator instance
             
             obj.Width = 1200;  % Default width
             obj.Height = 800;  % Default height
             obj.BackgroundColor = [1 1 1];  % Default white background
             
             if ischar(bpmnFileOrObj) || isstring(bpmnFileOrObj)
-                % Load from file
+                % Load from File
                 obj.XMLDoc = xmlread(bpmnFileOrObj);
                 [filepath, name, ~] = fileparts(bpmnFileOrObj);
-                obj.OutputFilePath = fullfile(filepath, [name, '.svg']);
-            elseif isa(bpmnFileOrObj, 'BPMNGenerator')
-                % Use XMLDoc from BPMNGenerator instance
+                obj.OutputFilePath = fullfile(filepath, [name, '.SVG']);
+            elseif isa(bpmnFileOrObj, 'BPMN generator')
+                % Use xmldoc from bpmngenerator instance
                 obj.XMLDoc = bpmnFileOrObj.XMLDoc;
                 if ~isempty(bpmnFileOrObj.FilePath)
                     [filepath, name, ~] = fileparts(bpmnFileOrObj.FilePath);
-                    obj.OutputFilePath = fullfile(filepath, [name, '.svg']);
+                    obj.OutputFilePath = fullfile(filepath, [name, '.SVG']);
                 else
                     obj.OutputFilePath = 'bpmn_diagram.svg';
                 end
             else
-                error('Input must be either a file path or a BPMNGenerator instance');
+                error('Input must be Either a file path or a bpmngenerator instance');
             end
         end
         
         function setOutputPath(obj, outputPath)
             % Sets the output file path
-            % outputPath: Full path to the output file with extension
+            % Outputpath: Full Path to the output file with extension
             obj.OutputFilePath = outputPath;
         end
         
         function setDimensions(obj, width, height)
             % Sets the dimensions of the output image
-            % width, height: Dimensions in pixels
+            % Width, Height: Dimensions in Pixels
             obj.Width = width;
             obj.Height = height;
         end
         
         function setBackgroundColor(obj, color)
             % Sets the background color
-            % color: RGB triplet [r,g,b] with values between 0 and 1
+            % Color: RGB Triplet [R, G, B] with value between and 1
             obj.BackgroundColor = color;
         end
         
         function success = exportToSVG(obj, outputPath)
-            % Export the BPMN diagram to SVG format
-            % outputPath: Optional parameter to override OutputFilePath
+            % Export the BPMN Diagram to SVG format
+            % Outputpath: Optional parameter to Override Output Filepath
             
             if nargin > 1
                 obj.OutputFilePath = outputPath;
             end
             
-            % Ensure the output path has .svg extension
+            % Ensure the output path has .SVG extension
             [filepath, name, ext] = fileparts(obj.OutputFilePath);
-            if ~strcmpi(ext, '.svg')
-                obj.OutputFilePath = fullfile(filepath, [name, '.svg']);
+            if ~strcmpi(ext, '.SVG')
+                obj.OutputFilePath = fullfile(filepath, [name, '.SVG']);
             end
             
             success = obj.generateSVG();
         end
         
         function success = exportToPNG(obj, outputPath)
-            % Export the BPMN diagram to PNG format
-            % outputPath: Optional parameter to override OutputFilePath
+            % Export the bpmn diagram to png format
+            % Outputpath: Optional parameter to Override Output Filepath
             
             if nargin > 1
                 obj.OutputFilePath = outputPath;
@@ -89,8 +89,8 @@ classdef BPMNDiagramExporter < handle
                 obj.OutputFilePath = fullfile(filepath, [name, '.png']);
             end
             
-            % First generate SVG, then convert to PNG
-            tempSvgPath = fullfile(filepath, [name, '_temp.svg']);
+            % First Generates SVG, then Convert to PNG
+            tempSvgPath = fullfile(filepath, [name, '_Temp.svg']);
             obj.OutputFilePath = tempSvgPath;
             svgSuccess = obj.generateSVG();
             
@@ -99,18 +99,18 @@ classdef BPMNDiagramExporter < handle
                 return;
             end
             
-            % Convert SVG to PNG using MATLAB's built-in capabilities
+            % Convert SVG to PNG Using Matlab's Built-in Capabilities
             success = obj.convertSVGToPNG(tempSvgPath, fullfile(filepath, [name, '.png']));
             
-            % Clean up temporary file
+            % Clean up Temory File
             if exist(tempSvgPath, 'file')
                 delete(tempSvgPath);
             end
         end
         
         function success = exportToPDF(obj, outputPath)
-            % Export the BPMN diagram to PDF format
-            % outputPath: Optional parameter to override OutputFilePath
+            % Export the bpmn diagram to pdf format
+            % Outputpath: Optional parameter to Override Output Filepath
             
             if nargin > 1
                 obj.OutputFilePath = outputPath;
@@ -122,8 +122,8 @@ classdef BPMNDiagramExporter < handle
                 obj.OutputFilePath = fullfile(filepath, [name, '.pdf']);
             end
             
-            % First generate SVG, then convert to PDF
-            tempSvgPath = fullfile(filepath, [name, '_temp.svg']);
+            % First generates SVG, then convert to pdf
+            tempSvgPath = fullfile(filepath, [name, '_Temp.svg']);
             obj.OutputFilePath = tempSvgPath;
             svgSuccess = obj.generateSVG();
             
@@ -132,10 +132,10 @@ classdef BPMNDiagramExporter < handle
                 return;
             end
             
-            % Convert SVG to PDF using MATLAB's built-in capabilities
+            % Convert SVG to PDF Using Matlab's Built-in Capabilities
             success = obj.convertSVGToPDF(tempSvgPath, fullfile(filepath, [name, '.pdf']));
             
-            % Clean up temporary file
+            % Clean up Temory File
             if exist(tempSvgPath, 'file')
                 delete(tempSvgPath);
             end
@@ -145,85 +145,85 @@ classdef BPMNDiagramExporter < handle
     % Private methods for implementation
     methods (Access = private)
         function success = generateSVG(obj)
-            % Generate the SVG file from BPMN XML
+            % Generates the SVG File from BPMN XML
             try
-                % Extract diagram information from BPMN XML
+                % Extract Diagram Information from BPMN XML
                 diagramElements = obj.extractDiagramElements();
                 
-                % Create SVG document
+                % Create SVG Document
                 svgDoc = obj.createSVGDocument(diagramElements);
                 
-                % Save SVG to file
+                % Save SVG to File
                 xmlwrite(obj.OutputFilePath, svgDoc);
                 success = true;
                 
             catch e
-                warning('Error generating SVG: %s', e.message);
+                warning('Error Generating SVG: %S', e.message);
                 success = false;
             end
         end
         
         function elements = extractDiagramElements(obj)
-            % Extract diagram elements from BPMN XML
-            elements = struct('shapes', {{}}, 'edges', {{}});
+            % Extract Diagram Elements from BPMN XML
+            elements = struct('shapes', {{}}, 'Edges', {{}});
             
-            % Extract BPMN shapes
+            % Extract bpmn shapes
             rootNode = obj.XMLDoc.getDocumentElement();
-            bpmnDiNodes = rootNode.getElementsByTagName('bpmndi:BPMNDiagram');
+            bpmnDiNodes = rootNode.getElementsByTagName('bpmndi: bpmndiagram');
             
             if bpmnDiNodes.getLength() == 0
-                warning('No BPMNDiagram element found in BPMN file');
+                warning('No bpmndiagram element found in bpmn file');
                 return;
             end
             
             bpmnDiNode = bpmnDiNodes.item(0);
-            planeNodes = bpmnDiNode.getElementsByTagName('bpmndi:BPMNPlane');
+            planeNodes = bpmnDiNode.getElementsByTagName('bpmndi: bpmnplane');
             
             if planeNodes.getLength() == 0
-                warning('No BPMNPlane element found in BPMN file');
+                warning('No bpmnplane element found in bpmn file');
                 return;
             end
             
             planeNode = planeNodes.item(0);
             
             % Extract shapes
-            shapeNodes = planeNode.getElementsByTagName('bpmndi:BPMNShape');
+            shapeNodes = planeNode.getElementsByTagName('bpmndi: bpmnshape');
             for i = 0:shapeNodes.getLength()-1
                 shapeNode = shapeNodes.item(i);
                 
                 % Get element ID
-                elementId = char(shapeNode.getAttribute('bpmnElement'));
+                elementId = char(shapeNode.getAttribute('bpmnelement'));
                 
                 % Get bounds
-                boundsNode = shapeNode.getElementsByTagName('dc:Bounds').item(0);
-                x = str2double(char(boundsNode.getAttribute('x')));
+                boundsNode = shapeNode.getElementsByTagName('DC: Bounds').item(0);
+                x = str2double(char(boundsNode.getAttribute('X')));
                 y = str2double(char(boundsNode.getAttribute('y')));
-                width = str2double(char(boundsNode.getAttribute('width')));
-                height = str2double(char(boundsNode.getAttribute('height')));
+                width = str2double(char(boundsNode.getAttribute('Width')));
+                height = str2double(char(boundsNode.getAttribute('Height')));
                 
                 % Get element type
                 elementType = obj.getElementType(elementId);
                 
-                % Store shape data
-                shape = struct('id', elementId, 'type', elementType, 'x', x, 'y', y, 'width', width, 'height', height);
+                % Store Shape Data
+                shape = struct('ID', elementId, 'type', elementType, 'X', x, 'y', y, 'Width', width, 'Height', height);
                 elements.shapes{end+1} = shape;
             end
             
-            % Extract edges
-            edgeNodes = planeNode.getElementsByTagName('bpmndi:BPMNEdge');
+            % Extract Edges
+            edgeNodes = planeNode.getElementsByTagName('bpmndi: bpmnedge');
             for i = 0:edgeNodes.getLength()-1
                 edgeNode = edgeNodes.item(i);
                 
                 % Get element ID
-                elementId = char(edgeNode.getAttribute('bpmnElement'));
+                elementId = char(edgeNode.getAttribute('bpmnelement'));
                 
                 % Get waypoints
-                waypointNodes = edgeNode.getElementsByTagName('di:waypoint');
+                waypointNodes = edgeNode.getElementsByTagName('Di: Waypoint');
                 waypoints = [];
                 
                 for j = 0:waypointNodes.getLength()-1
                     waypointNode = waypointNodes.item(j);
-                    x = str2double(char(waypointNode.getAttribute('x')));
+                    x = str2double(char(waypointNode.getAttribute('X')));
                     y = str2double(char(waypointNode.getAttribute('y')));
                     waypoints(end+1, :) = [x, y];
                 end
@@ -231,21 +231,21 @@ classdef BPMNDiagramExporter < handle
                 % Get flow type
                 flowType = obj.getFlowType(elementId);
                 
-                % Store edge data
-                edge = struct('id', elementId, 'type', flowType, 'waypoints', waypoints);
+                % Store Edge Data
+                edge = struct('ID', elementId, 'type', flowType, 'Waypoints', waypoints);
                 elements.edges{end+1} = edge;
             end
         end
         
         function elementType = getElementType(obj, elementId)
-            % Get the element type from its ID
+            % Get the element type from Its ID
             elements = obj.XMLDoc.getElementsByTagName('*');
             elementType = 'unknown';
             
             for i = 0:elements.getLength()-1
                 element = elements.item(i);
-                if element.getNodeType() == 1 && element.hasAttribute('id')
-                    id = char(element.getAttribute('id'));
+                if element.getNodeType() == 1 && element.hasAttribute('ID')
+                    id = char(element.getAttribute('ID'));
                     if strcmp(id, elementId)
                         elementType = char(element.getNodeName());
                         break;
@@ -255,26 +255,26 @@ classdef BPMNDiagramExporter < handle
         end
         
         function flowType = getFlowType(obj, flowId)
-            % Get the flow type from its ID
-            flowNodes = obj.XMLDoc.getElementsByTagName('sequenceFlow');
-            flowType = 'sequenceFlow';
+            % Get the Flow Type from Its ID
+            flowNodes = obj.XMLDoc.getElementsByTagName('sequenceflow');
+            flowType = 'sequenceflow';
             
             for i = 0:flowNodes.getLength()-1
                 flowNode = flowNodes.item(i);
-                id = char(flowNode.getAttribute('id'));
+                id = char(flowNode.getAttribute('ID'));
                 if strcmp(id, flowId)
-                    flowType = 'sequenceFlow';
+                    flowType = 'sequenceflow';
                     return;
                 end
             end
             
             % Check if it's a message flow
-            flowNodes = obj.XMLDoc.getElementsByTagName('messageFlow');
+            flowNodes = obj.XMLDoc.getElementsByTagName('MessageFlow');
             for i = 0:flowNodes.getLength()-1
                 flowNode = flowNodes.item(i);
-                id = char(flowNode.getAttribute('id'));
+                id = char(flowNode.getAttribute('ID'));
                 if strcmp(id, flowId)
-                    flowType = 'messageFlow';
+                    flowType = 'MessageFlow';
                     return;
                 end
             end
@@ -283,7 +283,7 @@ classdef BPMNDiagramExporter < handle
             flowNodes = obj.XMLDoc.getElementsByTagName('association');
             for i = 0:flowNodes.getLength()-1
                 flowNode = flowNodes.item(i);
-                id = char(flowNode.getAttribute('id'));
+                id = char(flowNode.getAttribute('ID'));
                 if strcmp(id, flowId)
                     flowType = 'association';
                     return;
@@ -292,42 +292,42 @@ classdef BPMNDiagramExporter < handle
         end
         
         function svgDoc = createSVGDocument(obj, elements)
-            % Create an SVG document from diagram elements
+            % Create to SVG Document from Diagram Elements
             
-            % Create DOM document
-            docNode = com.mathworks.xml.XMLUtils.createDocument('svg');
+            % Create Dom Document
+            docNode = com.mathworks.xml.XMLUtils.createDocument('SVG');
             svgDoc = docNode.getDocumentElement();
             
             % Set SVG attributes
-            svgDoc.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            svgDoc.setAttribute('width', num2str(obj.Width));
-            svgDoc.setAttribute('height', num2str(obj.Height));
-            svgDoc.setAttribute('viewBox', ['0 0 ', num2str(obj.Width), ' ', num2str(obj.Height)]);
+            svgDoc.setAttribute('XMLNS', 'http://www.w3.org/2000/svg');
+            svgDoc.setAttribute('Width', num2str(obj.Width));
+            svgDoc.setAttribute('Height', num2str(obj.Height));
+            svgDoc.setAttribute('viewbox', ['0 0 0', num2str(obj.Width), ' ', num2str(obj.Height)]);
             
-            % Add background rectangle
+            % Add Background Rectangle
             bgRect = docNode.createElement('rect');
-            bgRect.setAttribute('width', '100%');
-            bgRect.setAttribute('height', '100%');
+            bgRect.setAttribute('Width', '100%');
+            bgRect.setAttribute('Height', '100%');
             bgRect.setAttribute('fill', obj.rgbToHex(obj.BackgroundColor));
             svgDoc.appendChild(bgRect);
             
-            % Add diagram title
+            % Add Diagram Title
             title = docNode.createElement('title');
             title.appendChild(docNode.createTextNode('BPMN Diagram'));
             svgDoc.appendChild(title);
             
             % Add description
             desc = docNode.createElement('desc');
-            desc.appendChild(docNode.createTextNode('Generated by BPMNDiagramExporter for MATLAB'));
+            desc.appendChild(docNode.createTextNode('Generated by BPMndiagramexporter for Matlab'));
             svgDoc.appendChild(desc);
             
-            % Create a group for all elements
-            mainGroup = docNode.createElement('g');
+            % Create A Group for All Elements
+            mainGroup = docNode.createElement('G');
             svgDoc.appendChild(mainGroup);
             
-            % Add edges (connections)
-            edgesGroup = docNode.createElement('g');
-            edgesGroup.setAttribute('id', 'connections');
+            % Add Edges (Connections)
+            edgesGroup = docNode.createElement('G');
+            edgesGroup.setAttribute('ID', 'connections');
             for i = 1:length(elements.edges)
                 edge = elements.edges{i};
                 pathElem = obj.createPathElement(docNode, edge);
@@ -336,8 +336,8 @@ classdef BPMNDiagramExporter < handle
             mainGroup.appendChild(edgesGroup);
             
             % Add shapes (nodes)
-            shapesGroup = docNode.createElement('g');
-            shapesGroup.setAttribute('id', 'nodes');
+            shapesGroup = docNode.createElement('G');
+            shapesGroup.setAttribute('ID', 'nodes');
             for i = 1:length(elements.shapes)
                 shape = elements.shapes{i};
                 shapeElem = obj.createShapeElement(docNode, shape);
@@ -345,45 +345,45 @@ classdef BPMNDiagramExporter < handle
             end
             mainGroup.appendChild(shapesGroup);
             
-            % Return the SVG document
+            % Return the SVG Document
             svgDoc = docNode;
         end
         
         function pathElem = createPathElement(obj, docNode, edge)
-            % Create an SVG path element for an edge
+            % Create to SVG Path Element for an edge
             pathElem = docNode.createElement('path');
-            pathElem.setAttribute('id', edge.id);
+            pathElem.setAttribute('ID', edge.id);
             
-            % Create path data
+            % Create Path Data
             pathData = 'M';
             for i = 1:size(edge.waypoints, 1)
                 x = edge.waypoints(i, 1);
                 y = edge.waypoints(i, 2);
                 if i == 1
-                    pathData = [pathData, ' ', num2str(x), ',', num2str(y)];
+                    pathData = [pathData, ' ', num2str(x), ',,', num2str(y)];
                 else
-                    pathData = [pathData, ' L', num2str(x), ',', num2str(y)];
+                    pathData = [pathData, 'L', num2str(x), ',,', num2str(y)];
                 end
             end
             
-            pathElem.setAttribute('d', pathData);
+            pathElem.setAttribute('D', pathData);
             
-            % Set style based on flow type
-            if strcmp(edge.type, 'sequenceFlow')
+            % Set Style Based on Flow Type
+            if strcmp(edge.type, 'sequenceflow')
                 pathElem.setAttribute('stroke', '#000000');
-                pathElem.setAttribute('stroke-width', '1.5');
+                pathElem.setAttribute('Stroke-Width', '1.5');
                 pathElem.setAttribute('fill', 'none');
-                pathElem.setAttribute('marker-end', 'url(#sequenceFlowEndMarker)');
-            elseif strcmp(edge.type, 'messageFlow')
+                pathElem.setAttribute('marker-end', 'URL (#squenceflawendmarker)');
+            elseif strcmp(edge.type, 'MessageFlow')
                 pathElem.setAttribute('stroke', '#000000');
-                pathElem.setAttribute('stroke-width', '1.5');
-                pathElem.setAttribute('stroke-dasharray', '5,5');
+                pathElem.setAttribute('Stroke-Width', '1.5');
+                pathElem.setAttribute('Stroke-dasharray', '5.5');
                 pathElem.setAttribute('fill', 'none');
-                pathElem.setAttribute('marker-end', 'url(#messageFlowEndMarker)');
+                pathElem.setAttribute('marker-end', 'URL (#MessageFlowendmarker)');
             elseif strcmp(edge.type, 'association')
                 pathElem.setAttribute('stroke', '#000000');
-                pathElem.setAttribute('stroke-width', '1');
-                pathElem.setAttribute('stroke-dasharray', '3,3');
+                pathElem.setAttribute('Stroke-Width', '1');
+                pathElem.setAttribute('Stroke-dasharray', '3.3');
                 pathElem.setAttribute('fill', 'none');
             end
             
@@ -391,30 +391,30 @@ classdef BPMNDiagramExporter < handle
         end
         
         function shapeElem = createShapeElement(obj, docNode, shape)
-            % Create an SVG element for a shape
-            group = docNode.createElement('g');
-            group.setAttribute('id', shape.id);
+            % Create to SVG element for a shape
+            group = docNode.createElement('G');
+            group.setAttribute('ID', shape.id);
             
-            % Create shape element based on type
+            % Create Shape element Based on Type
             if contains(shape.type, 'task') || contains(shape.type, 'Task')
-                % Tasks are rectangles with rounded corners
+                % Tasks are Rectangles with Rounded Corners
                 rect = docNode.createElement('rect');
-                rect.setAttribute('x', num2str(shape.x));
+                rect.setAttribute('X', num2str(shape.x));
                 rect.setAttribute('y', num2str(shape.y));
-                rect.setAttribute('width', num2str(shape.width));
-                rect.setAttribute('height', num2str(shape.height));
-                rect.setAttribute('rx', '10');
+                rect.setAttribute('Width', num2str(shape.width));
+                rect.setAttribute('Height', num2str(shape.height));
+                rect.setAttribute('RX', '10');
                 rect.setAttribute('ry', '10');
                 rect.setAttribute('fill', '#FFFFFF');
                 rect.setAttribute('stroke', '#000000');
-                rect.setAttribute('stroke-width', '2');
+                rect.setAttribute('Stroke-Width', '2');
                 group.appendChild(rect);
                 
-                % Add task icon based on type if needed
+                % Add Task icon Based on Type If Needed
                 % ...
                 
             elseif contains(shape.type, 'gateway') || contains(shape.type, 'Gateway')
-                % Gateways are diamonds
+                % Gateways Are Diamonds
                 centerX = shape.x + shape.width/2;
                 centerY = shape.y + shape.height/2;
                 halfWidth = shape.width/2;
@@ -430,77 +430,77 @@ classdef BPMNDiagramExporter < handle
                 polygon = docNode.createElement('polygon');
                 pointsStr = '';
                 for i = 1:2:length(points)
-                    pointsStr = [pointsStr, num2str(points(i)), ',', num2str(points(i+1)), ' '];
+                    pointsStr = [pointsStr, num2str(points(i)), ',,', num2str(points(i+1)), ' '];
                 end
-                polygon.setAttribute('points', pointsStr);
+                polygon.setAttribute('point', pointsStr);
                 polygon.setAttribute('fill', '#FFFFFF');
                 polygon.setAttribute('stroke', '#000000');
-                polygon.setAttribute('stroke-width', '2');
+                polygon.setAttribute('Stroke-Width', '2');
                 group.appendChild(polygon);
                 
-                % Add gateway icon based on type if needed
+                % Add Gateway Icon Based on Type If Needed
                 % ...
                 
             elseif contains(shape.type, 'event') || contains(shape.type, 'Event')
                 % Events are circles
                 circle = docNode.createElement('circle');
-                circle.setAttribute('cx', num2str(shape.x + shape.width/2));
-                circle.setAttribute('cy', num2str(shape.y + shape.height/2));
+                circle.setAttribute('CX', num2str(shape.x + shape.width/2));
+                circle.setAttribute('cycling', num2str(shape.y + shape.height/2));
                 circle.setAttribute('r', num2str(shape.width/2));
                 circle.setAttribute('fill', '#FFFFFF');
                 circle.setAttribute('stroke', '#000000');
-                circle.setAttribute('stroke-width', '2');
+                circle.setAttribute('Stroke-Width', '2');
                 
-                % Set different stroke styles based on event type
+                % Set Different Stroke Styles Based on Event Type
                 if contains(shape.type, 'start')
-                    circle.setAttribute('stroke-width', '1');
+                    circle.setAttribute('Stroke-Width', '1');
                 elseif contains(shape.type, 'end')
-                    circle.setAttribute('stroke-width', '3');
+                    circle.setAttribute('Stroke-Width', '3');
                 elseif contains(shape.type, 'intermediate')
-                    circle.setAttribute('stroke-width', '2');
+                    circle.setAttribute('Stroke-Width', '2');
                     
-                    % Add second circle for intermediate events
+                    % Add Second Circle for Intermediate Events
                     innerCircle = docNode.createElement('circle');
-                    innerCircle.setAttribute('cx', num2str(shape.x + shape.width/2));
-                    innerCircle.setAttribute('cy', num2str(shape.y + shape.height/2));
+                    innerCircle.setAttribute('CX', num2str(shape.x + shape.width/2));
+                    innerCircle.setAttribute('cycling', num2str(shape.y + shape.height/2));
                     innerCircle.setAttribute('r', num2str(shape.width/2 - 4));
                     innerCircle.setAttribute('fill', 'none');
                     innerCircle.setAttribute('stroke', '#000000');
-                    innerCircle.setAttribute('stroke-width', '1');
+                    innerCircle.setAttribute('Stroke-Width', '1');
                     group.appendChild(innerCircle);
                 end
                 
                 group.appendChild(circle);
                 
-                % Add event icon based on type if needed
+                % Add Event Icon Based on Type If Needed
                 % ...
                 
             elseif contains(shape.type, 'pool') || contains(shape.type, 'participant')
-                % Pools are rectangles
+                % Pools Are Rectangles
                 rect = docNode.createElement('rect');
-                rect.setAttribute('x', num2str(shape.x));
+                rect.setAttribute('X', num2str(shape.x));
                 rect.setAttribute('y', num2str(shape.y));
-                rect.setAttribute('width', num2str(shape.width));
-                rect.setAttribute('height', num2str(shape.height));
+                rect.setAttribute('Width', num2str(shape.width));
+                rect.setAttribute('Height', num2str(shape.height));
                 rect.setAttribute('fill', '#FFFFFF');
                 rect.setAttribute('stroke', '#000000');
-                rect.setAttribute('stroke-width', '2');
+                rect.setAttribute('Stroke-Width', '2');
                 group.appendChild(rect);
                 
             elseif contains(shape.type, 'lane')
-                % Lanes are rectangles
+                % LANES ARE Rectangles
                 rect = docNode.createElement('rect');
-                rect.setAttribute('x', num2str(shape.x));
+                rect.setAttribute('X', num2str(shape.x));
                 rect.setAttribute('y', num2str(shape.y));
-                rect.setAttribute('width', num2str(shape.width));
-                rect.setAttribute('height', num2str(shape.height));
+                rect.setAttribute('Width', num2str(shape.width));
+                rect.setAttribute('Height', num2str(shape.height));
                 rect.setAttribute('fill', '#FFFFFF');
                 rect.setAttribute('stroke', '#000000');
-                rect.setAttribute('stroke-width', '1');
-                rect.setAttribute('stroke-dasharray', '3,3');
+                rect.setAttribute('Stroke-Width', '1');
+                rect.setAttribute('Stroke-dasharray', '3.3');
                 group.appendChild(rect);
                 
-            elseif contains(shape.type, 'dataObject') || contains(shape.type, 'dataObjectReference')
+            elseif contains(shape.type, 'dataobject') || contains(shape.type, 'Dataobject reference')
                 % Data objects are document symbols
                 rect = docNode.createElement('path');
                 x = shape.x;
@@ -511,25 +511,25 @@ classdef BPMNDiagramExporter < handle
                 foldHeight = h * 0.2;
                 
                 pathData = [
-                    'M', num2str(x), ',', num2str(y), 
-                    ' L', num2str(x + w - foldWidth), ',', num2str(y), 
-                    ' L', num2str(x + w), ',', num2str(y + foldHeight), 
-                    ' L', num2str(x + w), ',', num2str(y + h), 
-                    ' L', num2str(x), ',', num2str(y + h), 
-                    ' Z', 
-                    ' M', num2str(x + w - foldWidth), ',', num2str(y), 
-                    ' L', num2str(x + w - foldWidth), ',', num2str(y + foldHeight), 
-                    ' L', num2str(x + w), ',', num2str(y + foldHeight)
+                    'M', num2str(x), ',,', num2str(y), 
+                    'L', num2str(x + w - foldWidth), ',,', num2str(y), 
+                    'L', num2str(x + w), ',,', num2str(y + foldHeight), 
+                    'L', num2str(x + w), ',,', num2str(y + h), 
+                    'L', num2str(x), ',,', num2str(y + h), 
+                    'Z', 
+                    'M', num2str(x + w - foldWidth), ',,', num2str(y), 
+                    'L', num2str(x + w - foldWidth), ',,', num2str(y + foldHeight), 
+                    'L', num2str(x + w), ',,', num2str(y + foldHeight)
                 ];
                 
-                rect.setAttribute('d', pathData);
+                rect.setAttribute('D', pathData);
                 rect.setAttribute('fill', '#FFFFFF');
                 rect.setAttribute('stroke', '#000000');
-                rect.setAttribute('stroke-width', '1');
+                rect.setAttribute('Stroke-Width', '1');
                 group.appendChild(rect);
                 
-            elseif contains(shape.type, 'dataStore')
-                % Data stores are database cylinders
+            elseif contains(shape.type, 'datastore')
+                % Data stores are database of Cylinder
                 cylPath = docNode.createElement('path');
                 x = shape.x;
                 y = shape.y;
@@ -538,24 +538,24 @@ classdef BPMNDiagramExporter < handle
                 ellipseHeight = h * 0.15;
                 
                 pathData = [
-                    'M', num2str(x), ',', num2str(y + ellipseHeight), 
-                    ' a', num2str(w/2), ',', num2str(ellipseHeight), ' 0 1,0 ', num2str(w), ',0', 
-                    ' a', num2str(w/2), ',', num2str(ellipseHeight), ' 0 1,0 ', num2str(-w), ',0', 
-                    ' M', num2str(x), ',', num2str(y + ellipseHeight), 
-                    ' L', num2str(x), ',', num2str(y + h - ellipseHeight), 
-                    ' a', num2str(w/2), ',', num2str(ellipseHeight), ' 0 1,0 ', num2str(w), ',0', 
-                    ' L', num2str(x + w), ',', num2str(y + ellipseHeight), 
-                    ' M', num2str(x), ',', num2str(y + h - ellipseHeight), 
-                    ' a', num2str(w/2), ',', num2str(ellipseHeight), ' 0 1,0 ', num2str(w), ',0'
+                    'M', num2str(x), ',,', num2str(y + ellipseHeight), 
+                    'A', num2str(w/2), ',,', num2str(ellipseHeight), '0 1.0', num2str(w), ', 0', 
+                    'A', num2str(w/2), ',,', num2str(ellipseHeight), '0 1.0', num2str(-w), ', 0', 
+                    'M', num2str(x), ',,', num2str(y + ellipseHeight), 
+                    'L', num2str(x), ',,', num2str(y + h - ellipseHeight), 
+                    'A', num2str(w/2), ',,', num2str(ellipseHeight), '0 1.0', num2str(w), ', 0', 
+                    'L', num2str(x + w), ',,', num2str(y + ellipseHeight), 
+                    'M', num2str(x), ',,', num2str(y + h - ellipseHeight), 
+                    'A', num2str(w/2), ',,', num2str(ellipseHeight), '0 1.0', num2str(w), ', 0'
                 ];
                 
-                cylPath.setAttribute('d', pathData);
+                cylPath.setAttribute('D', pathData);
                 cylPath.setAttribute('fill', '#FFFFFF');
                 cylPath.setAttribute('stroke', '#000000');
-                cylPath.setAttribute('stroke-width', '1');
+                cylPath.setAttribute('Stroke-Width', '1');
                 group.appendChild(cylPath);
                 
-            elseif contains(shape.type, 'textAnnotation')
+            elseif contains(shape.type, 'text notation')
                 % Text annotations are folded corner notes
                 rect = docNode.createElement('path');
                 x = shape.x;
@@ -565,34 +565,34 @@ classdef BPMNDiagramExporter < handle
                 foldWidth = w * 0.1;
                 
                 pathData = [
-                    'M', num2str(x + foldWidth), ',', num2str(y), 
-                    ' L', num2str(x), ',', num2str(y), 
-                    ' L', num2str(x), ',', num2str(y + h), 
-                    ' L', num2str(x + w), ',', num2str(y + h), 
-                    ' L', num2str(x + w), ',', num2str(y + foldWidth), 
-                    ' L', num2str(x + w - foldWidth), ',', num2str(y), 
-                    ' Z', 
-                    ' M', num2str(x + w - foldWidth), ',', num2str(y), 
-                    ' L', num2str(x + w - foldWidth), ',', num2str(y + foldWidth), 
-                    ' L', num2str(x + w), ',', num2str(y + foldWidth)
+                    'M', num2str(x + foldWidth), ',,', num2str(y), 
+                    'L', num2str(x), ',,', num2str(y), 
+                    'L', num2str(x), ',,', num2str(y + h), 
+                    'L', num2str(x + w), ',,', num2str(y + h), 
+                    'L', num2str(x + w), ',,', num2str(y + foldWidth), 
+                    'L', num2str(x + w - foldWidth), ',,', num2str(y), 
+                    'Z', 
+                    'M', num2str(x + w - foldWidth), ',,', num2str(y), 
+                    'L', num2str(x + w - foldWidth), ',,', num2str(y + foldWidth), 
+                    'L', num2str(x + w), ',,', num2str(y + foldWidth)
                 ];
                 
-                rect.setAttribute('d', pathData);
-                rect.setAttribute('fill', '#FFFFCC');
+                rect.setAttribute('D', pathData);
+                rect.setAttribute('fill', '#FFFCC');
                 rect.setAttribute('stroke', '#000000');
-                rect.setAttribute('stroke-width', '1');
+                rect.setAttribute('Stroke-Width', '1');
                 group.appendChild(rect);
                 
             else
-                % Default shape is a rectangle
+                % Default Shape is a Rectangle
                 rect = docNode.createElement('rect');
-                rect.setAttribute('x', num2str(shape.x));
+                rect.setAttribute('X', num2str(shape.x));
                 rect.setAttribute('y', num2str(shape.y));
-                rect.setAttribute('width', num2str(shape.width));
-                rect.setAttribute('height', num2str(shape.height));
+                rect.setAttribute('Width', num2str(shape.width));
+                rect.setAttribute('Height', num2str(shape.height));
                 rect.setAttribute('fill', '#FFFFFF');
                 rect.setAttribute('stroke', '#000000');
-                rect.setAttribute('stroke-width', '1');
+                rect.setAttribute('Stroke-Width', '1');
                 group.appendChild(rect);
             end
             
@@ -601,19 +601,19 @@ classdef BPMNDiagramExporter < handle
         end
         
         function hexColor = rgbToHex(obj, rgb)
-            % Convert RGB triplet to hex color string
+            % Convert RGB Triplet to Hex Color String
             r = round(rgb(1) * 255);
             g = round(rgb(2) * 255);
             b = round(rgb(3) * 255);
-            hexColor = sprintf('#%02X%02X%02X', r, g, b);
+            hexColor = sprintf('#%02x%02x%02x', r, g, b);
         end
         
         function success = convertSVGToPNG(obj, svgPath, pngPath)
-            % Convert SVG to PNG using MATLAB's saveas
+            % Convert SVG to PNG Using Matlab's Saveas
             try
-                % Check if we have the Image Processing Toolbox
-                if ~license('test', 'Image_Toolbox')
-                    warning('Image Processing Toolbox is required for PNG export.');
+                % Check if we have the image processing toolbox
+                if ~license('test', 'Image_toolbox')
+                    warning('Image Processing Toolbox is request for png export.');
                     success = false;
                     return;
                 end
@@ -634,21 +634,21 @@ classdef BPMNDiagramExporter < handle
                     export_fig(pngPath, '-png', '-r300', '-transparent');
                     success = true;
                 catch e
-                    warning('Error converting to PNG: %s', e.message);
-                    % Fallback method - requires Image Processing Toolbox
+                    warning('Error Converting to PNG: %S', e.message);
+                    % Fallback Method - Requires Image Processing Toolbox
                     try
                         img = imread(svgPath);
                         imwrite(img, pngPath);
                         success = true;
                     catch e2
-                        warning('Fallback PNG conversion failed: %s', e2.message);
+                        warning('Fallback PNG Conversion Failed: %S', e2.message);
                         success = false;
                     end
                 end
                 close;
                 
             catch e
-                warning('Error converting SVG to PNG: %s', e.message);
+                warning('Error Converting SVG to PNG: %S', e.message);
                 success = false;
             end
         end
@@ -674,7 +674,7 @@ classdef BPMNDiagramExporter < handle
                 close;
                 
             catch e
-                warning('Error converting SVG to PDF: %s', e.message);
+                warning('Error Converting SVG to PDF: %S', e.message);
                 success = false;
             end
         end

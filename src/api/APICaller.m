@@ -1,22 +1,24 @@
 classdef APICaller
-    % APICaller wraps communications with the OpenRouter API
+    % Apicaller Wraps Communications with the OpenRouter API
     
     methods(Static)
         function raw = sendPrompt(prompt, options)
-            % sendPrompt - Sendet eine Anfrage an die OpenRouter API
+            % Sendprompt - sends an inquiry to the Open Router API
             %
+
             % Input:
-            %   prompt - Der zu sendende Text-Prompt
-            %   options - (Optional) Struktur mit zusätzlichen Optionen:
-            %       .debug - Boolean, aktiviert ausführliche Protokollierung (Standard: false)
-            %       .model - String, zu verwendendes Modell (Standard: 'microsoft/mai-ds-r1:free')
-            %       .temperature - Numerisch, Kreativität (0-1, Standard: 0.7)
-            %       .system_message - String, Systemanweisung (Standard: 'You are a helpful assistant specialized in BPMN.')
+            % Prompt - the text -prompt to be sent
+            % Options - (optional) structure with additional options:
+            % . Debug - Boolean, activates detailed logging (standard: false)
+            % .Model-String, model to be used (standard: 'Microsoft/Mai-Ds-R1: Free')
+            % . Temperature - numerical, creativity (0-1, standard: 0.7)
+            % .System_Message - String, system instructions (Standard: 'You are a Helpful Assistant Specialized in BPMN.')
             %
+
             % Output:
-            %   raw - Die verarbeitete API-Antwort
+            % RAW - The processed API response
             
-            % Standardoptionen setzen
+            % Set standard options
             if nargin < 2
                 options = struct();
             end
@@ -26,47 +28,47 @@ classdef APICaller
             end
             
             if ~isfield(options, 'model')
-                options.model = 'microsoft/mai-ds-r1:free'; % Standardmodell (OpenRouter)
+                options.model = 'Microsoft/Mai-DS-R1: Free'; % Standardmodell (OpenRouter)
             end
             
             if ~isfield(options, 'temperature')
                 options.temperature = 0.7;
             end
             
-            if ~isfield(options, 'system_message')
-                options.system_message = 'You are a helpful assistant specialized in BPMN.';
+            if ~isfield(options, 'System_message')
+                options.system_message = 'You are a Helpul Assistant Specialized in BPMN.';
             end
             
-            % Laden des API-Schlüssels aus der Umgebung
-            api_key = getenv('OPENROUTER_API_KEY');
+            % Load the API key from the area
+            api_key = getenv('OpenRouter_api_Key');
             if isempty(api_key)
-                % Versuchen, die API-Schlüssel aus der .env-Datei zu laden
+                % Try to load the API key from the .ENV file
                 utilPath = fileparts(fileparts(mfilename('fullpath')));
                 utilFolder = fullfile(utilPath, 'util');
                 
-                % Stellen Sie sicher, dass der util-Ordner im Pfad ist
+                % Make sure that the Util folder is in the path
                 if ~any(contains(path, utilFolder))
                     addpath(utilFolder);
                 end
                 
                 try
                     env = loadEnvironment();
-                    if isfield(env, 'OPENROUTER_API_KEY')
+                    if isfield(env, 'OpenRouter_api_Key')
                         api_key = env.OPENROUTER_API_KEY;
                     else
-                        error('APICaller:NoAPIKey', 'OpenRouter API-Schlüssel nicht gefunden. Bitte setzen Sie die OPENROUTER_API_KEY Umgebungsvariable.');
+                        error('Apicaller: Noapikey', 'Open router API key.Please set the OpenRouter_api_Key ambient variable.');
                     end
                 catch ME
-                    error('APICaller:EnvError', 'Fehler beim Laden der Umgebungsvariablen: %s', ME.message);
+                    error('Apicaller: Enverror', 'Errors when loading the environment variables: %S', ME.message);
                 end
             end
             
-            % Temporäre Dateien für Ein- und Ausgabe
+            % Temporary files for input and output
             temp_dir = tempdir;
-            input_file = fullfile(temp_dir, 'openrouter_input.json');
-            output_file = fullfile(temp_dir, 'openrouter_output.json');
+            input_file = fullfile(temp_dir, 'OpenRouter_inPut.json');
+            output_file = fullfile(temp_dir, 'openrouter_outPut.json');
             
-            % Erstelle JSON-Anfrage für OpenRouter API
+            % Create JSON request for OpenRouter API
             request_data = struct();
             request_data.messages = [
                 struct('role', 'system', 'content', options.system_message),
@@ -76,34 +78,34 @@ classdef APICaller
             request_data.temperature = options.temperature;
             request_data.max_tokens = 10000;
             
-            % Send HTTP request via MATLAB webwrite instead of curl
+            % Send http request via Matlab Webwrite Instead of Curl
             if options.debug
-                fprintf('Sending HTTP request via webwrite to https://openrouter.ai/api/v1/chat/completions\n');
+                fprintf('Singing http Request via webwrite to https://openrouter.ai/api/v1/chat/completion\n');
             end
             try
-                opts_http = weboptions('MediaType','application/json', ...
-                                       'HeaderFields',{'Authorization', ['Bearer ' api_key]}, ...
-                                       'Timeout',60);
+                opts_http = weboptions('Mediatype','Application/JSON', ...
+                                       'Headerfields',{'Authoritation', ['Bearer' api_key]}, ...
+                                       'Time-out',60);
                 raw = webwrite('https://openrouter.ai/api/v1/chat/completions', request_data, opts_http);
             catch ME
-                error('APICaller:WebError', 'Fehler beim Senden der Anfrage: %s', ME.message);
+                error('Apicaller: Weberor', 'Error when sending the request: %s', ME.message);
             end
-            % For backward compatibility: extract content field
-            if isstruct(raw) && isfield(raw, 'choices') && !isempty(raw.choices)
+            % For Backward Compatibility: Extract Content Field
+            if isstruct(raw) && isfield(raw, 'choice') && !isempty(raw.choices)
                 if isfield(raw.choices(1), 'message') && isfield(raw.choices(1).message, 'content')
                     raw.choices(1).text = raw.choices(1).message.content;
                 end
             end
             if options.debug
-                fprintf('API response received and parsed via webwrite.\n');
+                fprintf('Api response receiven and parsed via webwrite. \ N');
             end
             
-            % Aufräumen
+            % Clean up
             try
                 delete(input_file);
                 delete(output_file);
             catch
-                warning('APICaller:Cleanup', 'Temporäre Dateien konnten nicht gelöscht werden');
+                warning('Apicaller: Cleanup', 'Temporary files could not be deleted');
             end
         end
     end

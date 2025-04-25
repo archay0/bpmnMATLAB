@@ -1,44 +1,45 @@
 function generate_bpmn_main(dbType, dbName, dbUser, dbPass, dbServer, dbPort, outputFile, processId)
-    % Main entry point for compiled BPMN generation
+    % Main Entry Point for Compiled BPMN Generation
     % Inputs are expected as strings.
-    % processId is optional.
+    % Processid is optional.
     %
+
     % Parameters:
-    %   dbType - Database type ('mysql', 'postgresql', etc.)
-    %   dbName - Database name
-    %   dbUser - Database username
-    %   dbPass - Database password
-    %   dbServer - Database server address
-    %   dbPort - Database port (as string or number)
-    %   outputFile - Full path to save the generated BPMN file
-    %   processId - (Optional) ID of the process to import
+    % DBType - Database Type ('MySQL', 'Postgresql', etc.)
+    % dbname - database name
+    % DBuser - Database username
+    % DB Pass - Database Password
+    % DBServer - Database Server Address
+    % DBPORT - DATABASE Port (as String or Number)
+    % Outputfile - Full Path to Save the Generated BPMN File
+    % Processid - (optional) ID of the Process to Import
     
-    %#function BPMNGenerator BPMNDatabaseConnector BPMNElements BPMNDiagramExporter BPMNValidator BPMNToSimulink
+    %#Function BPMNGENERATER BPMNDATABSECONNECTOR BPMNelements BPMndiagramexporter BPMnvalidator BPMNTOSIMULINK
     
-    disp('Starting BPMN generation...');
+    disp('Starting BPMN Generation ...');
     startTime = tic;
 
     try
-        % --- Input Validation and Conversion ---
+        % --- Input validation and conversion ---
         if nargin < 7
-            error('Usage: generate_bpmn_main(dbType, dbName, dbUser, dbPass, dbServer, dbPort, outputFile, [processId])');
+            error('Usage: Generates_bpmn_Main (DBType, DBName, DBuser, DBPass, DBServer, DBPORT, OUTPUTFILE, [Processid])');
         end
         if nargin < 8
             processId = ''; % Default to importing the first process found
         end
 
-        % Convert port string to number if necessary
+        % Convert Port String to Number IF Necessary
         if ischar(dbPort) || isstring(dbPort)
             dbPortNum = str2double(dbPort);
             if isnan(dbPortNum)
-                error('Invalid port number provided: %s', dbPort);
+                error('Invalid Port Number Provided: %S', dbPort);
             end
         else
             dbPortNum = dbPort; % Assume it's already numeric if not char/string
         end
 
         connectionParams = struct(...
-            'dbName', dbName, ...
+            'dbname', dbName, ...
             'username', dbUser, ...
             'password', dbPass, ...
             'server', dbServer, ...
@@ -46,34 +47,34 @@ function generate_bpmn_main(dbType, dbName, dbUser, dbPass, dbServer, dbPort, ou
         );
 
         % --- Database Connection ---
-        disp(['Connecting to ', dbType, ' database...']);
+        disp(['Connecting to', dbType, 'Database ...']);
         dbConn = BPMNDatabaseConnector(dbType);
         success = dbConn.connect(connectionParams);
         if ~success
-            % Error is thrown by connect method if it fails
+            % Error is thrown by Connect Method IF IT FAILS
             return;
         end
 
-        % --- BPMN Generation ---
-        disp('Initializing BPMN Generator...');
+        % --- bpmn generation ---
+        disp('Initializing BPMN generator ...');
         bpmnGen = BPMNGenerator(outputFile); % Pass output file directly
 
-        disp('Importing from database...');
+        disp('Importing from Database ...');
         if isempty(processId)
             bpmnGen.importFromDatabase(dbConn); % Import default process
         else
             bpmnGen.importFromDatabase(dbConn, processId); % Import specific process
         end
 
-        % --- Save Output ---
-        disp(['Saving BPMN to file: ', outputFile]);
+        % --- Save output ---
+        disp(['Saving bpmn to file:', outputFile]);
         bpmnGen.saveToBPMNFile();
 
         % --- Cleanup ---
         dbConn.disconnect();
 
         elapsedTime = toc(startTime);
-        fprintf('BPMN generation completed successfully in %.2f seconds.\n', elapsedTime);
+        fprintf('BPMN Generation Completed Successfully in %.2f Seconds. \ N', elapsedTime);
         
         % Success exit code when running as compiled
         if isdeployed
@@ -81,17 +82,17 @@ function generate_bpmn_main(dbType, dbName, dbUser, dbPass, dbServer, dbPort, ou
         end
 
     catch ME
-        disp('-----------------------------------------');
-        disp('ERROR during BPMN generation:');
+        disp('-----------------------------------');
+        disp('Error During BPMN Generation:');
         disp(ME.identifier);
         disp(ME.message);
         for k=1:length(ME.stack)
-           disp(['  at ', ME.stack(k).name, ' (line ', num2str(ME.stack(k).line), ')']);
+           disp(['at', ME.stack(k).name, '(line', num2str(ME.stack(k).line), ')))']);
         end
-        disp('-----------------------------------------');
+        disp('-----------------------------------');
 
-        % Attempt to disconnect if connection exists
-        if exist('dbConn', 'var') && isvalid(dbConn) && dbConn.Connected
+        % Attempt to Disconnect IF Connection Exists
+        if exist('dbconn', 'var') && isvalid(dbConn) && dbConn.Connected
             try
                 dbConn.disconnect();
             catch % Ignore errors during cleanup disconnect
@@ -102,7 +103,7 @@ function generate_bpmn_main(dbType, dbName, dbUser, dbPass, dbServer, dbPort, ou
         if isdeployed
             exit(1);
         else
-            % Rethrow for regular MATLAB execution
+            % Rethrow for Regular Matlab Execution
             rethrow(ME);
         end
     end

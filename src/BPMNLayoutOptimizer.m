@@ -1,9 +1,10 @@
 classdef BPMNLayoutOptimizer < handle
-    % BPMNLayoutOptimizer - Klasse zur Optimierung des Layouts von BPMN-Diagrammen
+    % BPMNLAYOUTOPTIMIZER - class to optimize the layout of BPMN diagrams
     %
-    % Diese Klasse implementiert verschiedene Algorithmen zur Optimierung des Layouts
-    % von BPMN-Diagrammen, einschließlich Kreuzungsminimierung, Abstandsoptimierung
-    % und Ausrichtungsfunktionen.
+
+    % This class implements various algorithms to optimize the layout
+    % From BPMN diagrams, including intersection minimization, distance optimization
+    % and alignment functions.
     
     properties
         diagram         % Referenz zum BPMN-Diagramm
@@ -12,26 +13,27 @@ classdef BPMNLayoutOptimizer < handle
     
     methods
         function obj = BPMNLayoutOptimizer(diagram, options)
-            % Konstruktor für den BPMNLayoutOptimizer
+            % Constructor for the BPMnlayoutoptimizer
             %
-            % Eingabe:
-            %   diagram - BPMN-Diagramm Objekt
-            %   options - Struct mit Optimierungsoptionen (optional)
+
+            % Input:
+            % Diagram - BPMN diagram object
+            % Options - Struct with optimization options (optional)
             
             obj.diagram = diagram;
             
-            % Standardoptionen setzen
+            % Set standard options
             defaultOptions = struct(...
-                'minNodeDistance', 50, ...
-                'layerSpacing', 100, ...
-                'optimizeCrossings', true, ...
-                'alignGateways', true, ...
-                'centerActivities', true, ...
-                'smartEdgeRouting', true, ...
-                'avoidElementOverlap', true, ...  % Neue Option
-                'optimizeFlowPaths', true);       % Neue Option
+                'Minnodedistance', 50, ...
+                'layerspacing', 100, ...
+                'Optimizecrossings', true, ...
+                'Aligngateways', true, ...
+                'center', true, ...
+                'Smartedgerouting', true, ...
+                'avoid element overlap', true, ...  % Neue Option
+                'OptimizeFlowpaths', true);       % Neue Option
             
-            % Wenn Optionen bereitgestellt wurden, überschreiben Sie die Standardwerte
+            % If options have been provided, overwrite the standard values
             if nargin > 1 && ~isempty(options)
                 optFields = fieldnames(options);
                 for i = 1:length(optFields)
@@ -43,43 +45,44 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function optimizedDiagram = optimizeAll(obj)
-            % Optimiert das gesamte Diagramm-Layout
+            % Optimizes the entire diagram layout
             %
-            % Rückgabe:
-            %   optimizedDiagram - Das optimierte Diagramm
+
+            % Return:
+            % Optimized diagram - the optimized diagram
             
-            % Layers erstellen und Elemente zuweisen
+            % Create layers and assign elements
             layers = obj.assignElementsToLayers();
             
-            % Minimiere Kreuzungen zwischen den Schichten
+            % Minimize crossings between the layers
             if obj.optimizeOptions.optimizeCrossings
                 layers = obj.minimizeCrossings(layers);
             end
             
-            % Positioniere Elemente basierend auf den optimierten Schichten
+            % Position elements based on the optimized layers
             obj.positionElements(layers);
             
-            % Richte Gateways aus
+            % Align gateways
             if obj.optimizeOptions.alignGateways
                 obj.alignGateways();
             end
             
-            % Zentriere Aktivitäten
+            % Center activities
             if obj.optimizeOptions.centerActivities
                 obj.centerActivities();
             end
             
-            % Vermeide Elementüberlappungen - neue Funktion
+            % Avoid element overlaps - new function
             if obj.optimizeOptions.avoidElementOverlap
                 obj.resolveElementOverlaps();
             end
             
-            % Optimiere Edge-Routing
+            % Optimize Edge routing
             if obj.optimizeOptions.smartEdgeRouting
                 obj.routeEdges();
             end
             
-            % Optimiere Flusswege - neue Funktion
+            % Optimize river paths - new function
             if obj.optimizeOptions.optimizeFlowPaths
                 obj.optimizeFlowPaths();
             end
@@ -88,37 +91,38 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function layers = assignElementsToLayers(obj)
-            % Weist Elemente zu Schichten basierend auf der Prozessflussrichtung zu
+            % Points out elements based on the process flow direction
             %
-            % Rückgabe:
-            %   layers - Cell-Array mit Elementgruppen pro Schicht
+
+            % Return:
+            % Layers - Cell Array with element groups per shift
             
-            % Implementierung eines einfachen Layering-Algorithmus
+            % Implementation of a simple layering algorithm
             elements = obj.diagram.elements;
             flows = obj.diagram.flows;
             
-            % Finde Start-Events als Ausgangspunkt
+            % Find start events as a starting point
             startElements = {};
             for i = 1:length(elements)
-                if strcmpi(elements{i}.type, 'startEvent')
+                if strcmpi(elements{i}.type, 'start event')
                     startElements{end+1} = elements{i}; %#ok<AGROW>
                 end
             end
             
-            % Wenn keine Start-Events gefunden, nehmen wir beliebige Elemente ohne eingehende Flows
+            % If no start events found, we take any elements without incoming flows
             if isempty(startElements)
                 nodesWithoutIncoming = obj.findNodesWithoutIncomingFlows();
                 startElements = nodesWithoutIncoming;
             end
             
-            % Initialisiere layers
+            % Initialist Layers
             layers = {};
             currentLayer = 1;
             layers{currentLayer} = startElements;
             
             processedElements = {};
             
-            % Iterative Zuweisung von Elementen zu Schichten
+            % To lay iterative assignment of elements
             while ~isempty(layers{currentLayer})
                 nextLayer = {};
                 
@@ -126,17 +130,17 @@ classdef BPMNLayoutOptimizer < handle
                     currentElement = layers{currentLayer}{i};
                     processedElements{end+1} = currentElement.id; %#ok<AGROW>
                     
-                    % Finde alle ausgehenden Flows und deren Ziele
+                    % Find all outgoing flows and their goals
                     for j = 1:length(flows)
                         if strcmp(flows{j}.sourceRef, currentElement.id)
                             targetId = flows{j}.targetRef;
                             
-                            % Finde das Zielelement
+                            % Find the target element
                             targetElement = obj.findElementById(targetId);
                             
-                            % Prüfe ob das Zielelement bereits verarbeitet wurde
+                            % Check whether the target element has already been processed
                             if ~isempty(targetElement) && ~ismember(targetId, processedElements)
-                                % Prüfe ob alle Quellen bereits verarbeitet wurden
+                                % Check whether all sources have already been processed
                                 allSourcesProcessed = true;
                                 
                                 for k = 1:length(flows)
@@ -148,7 +152,7 @@ classdef BPMNLayoutOptimizer < handle
                                     end
                                 end
                                 
-                                % Füge das Element nur hinzu, wenn alle Quellen verarbeitet wurden
+                                % Only add the element when all sources have been processed
                                 if allSourcesProcessed && ~obj.isElementInAnyLayer(nextLayer, targetElement)
                                     nextLayer{end+1} = targetElement; %#ok<AGROW>
                                 end
@@ -167,7 +171,7 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function nodesWithoutIncoming = findNodesWithoutIncomingFlows(obj)
-            % Findet Elemente ohne eingehende Flows
+            % Find elements without incoming flows
             elements = obj.diagram.elements;
             flows = obj.diagram.flows;
             
@@ -190,7 +194,7 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function element = findElementById(obj, id)
-            % Findet ein Element durch seine ID
+            % Finds an element through its ID
             elements = obj.diagram.elements;
             element = [];
             
@@ -203,7 +207,7 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function result = isElementInAnyLayer(~, layer, element)
-            % Prüft, ob ein Element bereits in einer Schicht enthalten ist
+            % Check whether an element is already included in a layer
             result = false;
             
             if isempty(layer)
@@ -219,23 +223,24 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function layers = minimizeCrossings(obj, layers)
-            % Minimiert Kreuzungen zwischen den Schichten
+            % Minimizes crossings between the layers
             %
-            % Eingabe/Rückgabe:
-            %   layers - Cell-Array mit Elementgruppen pro Schicht
+
+            % Entry/return:
+            % Layers - Cell Array with element groups per shift
             
-            % Einfacher Algorithmus zur Kreuzungsminimierung
-            % Für jede Schicht werden Elemente basierend auf Verbindungen umsortiert
+            % Simple algorithm for crossing minimization
+            % For each layer, elements are sorted based on connections
             
             for i = 2:length(layers)
                 if length(layers{i}) > 1
-                    % Bestimme die optimale Reihenfolge basierend auf Verbindungen
-                    % zur vorherigen Schicht
+                    % Determine the optimal order based on connections
+                    % To the previous layer
                     
-                    % Ein einfacher Ansatz: Ordne die Elemente nach der Position ihrer
-                    % Quellen in der vorherigen Schicht
+                    % A simple approach: arrange the elements according to the position of their
+                    % Sources in the previous layer
                     
-                    % Erstelle eine Liste von [Element, gewichtete Position]
+                    % Create a list of [element, weighted position]
                     elementPositions = cell(1, length(layers{i}));
                     flows = obj.diagram.flows;
                     
@@ -244,10 +249,10 @@ classdef BPMNLayoutOptimizer < handle
                         incomingPositionSum = 0;
                         incomingCount = 0;
                         
-                        % Finde alle eingehenden Flüsse von der vorherigen Schicht
+                        % Find all incoming rivers from the previous layer
                         for k = 1:length(flows)
                             if strcmp(flows{k}.targetRef, currentElement.id)
-                                % Finde die Position der Quelle in der vorherigen Schicht
+                                % Find the position of the source in the previous layer
                                 sourceElement = obj.findElementById(flows{k}.sourceRef);
                                 if ~isempty(sourceElement)
                                     for l = 1:length(layers{i-1})
@@ -261,16 +266,16 @@ classdef BPMNLayoutOptimizer < handle
                             end
                         end
                         
-                        % Berechne den durchschnittlichen Positionswert
+                        % Calculate the average position value
                         avgPosition = incomingCount > 0 ? incomingPositionSum / incomingCount : j;
                         elementPositions{j} = {currentElement, avgPosition};
                     end
                     
-                    % Sortiere die Elemente nach ihrer durchschnittlichen Position
+                    % Sort the elements according to their average position
                     positionValues = cellfun(@(x) x{2}, elementPositions);
                     [~, sortIdx] = sort(positionValues);
                     
-                    % Sortiere die Schicht neu
+                    % Sort the layer new
                     sortedLayer = cell(1, length(layers{i}));
                     for j = 1:length(sortIdx)
                         sortedLayer{j} = elementPositions{sortIdx(j)}{1};
@@ -282,9 +287,9 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function positionElements(obj, layers)
-            % Positioniert Elemente basierend auf den optimierten Schichten
+            % Positioned elements based on the optimized layers
             
-            % Grundlegende Konfiguration
+            % Basic configuration
             layerHeight = obj.optimizeOptions.layerSpacing;
             elementWidth = 100;  % Standard Elementbreite
             elementHeight = 80;  % Standard Elementhöhe
@@ -292,7 +297,7 @@ classdef BPMNLayoutOptimizer < handle
             startX = 50;
             startY = 50;
             
-            % Positioniere jedes Element basierend auf seiner Schicht
+            % Position every element based on its layer
             for i = 1:length(layers)
                 currentY = startY + (i-1) * layerHeight;
                 layerWidth = (length(layers{i}) - 1) * (elementWidth + marginX);
@@ -301,14 +306,14 @@ classdef BPMNLayoutOptimizer < handle
                 for j = 1:length(layers{i})
                     element = layers{i}{j};
                     
-                    % Anpassen der Elementgröße je nach Typ
+                    % Adjust the element size depending on the type
                     if strcmpi(element.type, 'task')
                         w = 100;
                         h = 80;
                     elseif strcmpi(element.type, 'gateway')
                         w = 50;
                         h = 50;
-                    elseif any(strcmpi(element.type, {'startEvent', 'endEvent', 'intermediateEvent'}))
+                    elseif any(strcmpi(element.type, {'start event', 'end event', 'intermediate event'}))
                         w = 40;
                         h = 40;
                     else
@@ -316,18 +321,18 @@ classdef BPMNLayoutOptimizer < handle
                         h = elementHeight;
                     end
                     
-                    % Element positionieren
+                    % Position
                     element.x = currentX;
                     element.y = currentY;
                     element.width = w;
                     element.height = h;
                     
-                    % Aktualisiere die X-Position für das nächste Element
+                    % Update the X position for the next element
                     currentX = currentX + w + marginX;
                 end
             end
             
-            % Nachbearbeitung: Zentriere Elemente in jeder Schicht
+            % Post -processing: Center elements in every layer
             for i = 1:length(layers)
                 if ~isempty(layers{i})
                     totalWidth = layers{i}{end}.x + layers{i}{end}.width - layers{i}{1}.x;
@@ -343,33 +348,33 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function alignGateways(obj)
-            % Richtet Gateways vertikal aus
+            % Aligns gateways vertically
             
             elements = obj.diagram.elements;
             
-            % Gruppieren Sie Gateways nach Typ
+            % Group gateways according to type
             gateways = {};
             for i = 1:length(elements)
-                if strcmpi(elements{i}.type, 'exclusiveGateway') || ...
-                   strcmpi(elements{i}.type, 'parallelGateway') || ...
-                   strcmpi(elements{i}.type, 'inclusiveGateway')
+                if strcmpi(elements{i}.type, 'Exclusivegateway') || ...
+                   strcmpi(elements{i}.type, 'parallel gateway') || ...
+                   strcmpi(elements{i}.type, 'Inclusiveegateway')
                     gateways{end+1} = elements{i}; %#ok<AGROW>
                 end
             end
             
-            % Finde ähnliche Gateway-Gruppen (z.B. Split/Join-Paare)
+            % Find similar gateway groups (e.g. split/join pairs)
             if length(gateways) > 1
                 for i = 1:length(gateways)-1
                     for j = i+1:length(gateways)
-                        % Wenn Gateways auf unterschiedlichen Ebenen sind (unterschiedliche Y-Werte)
-                        % aber vom gleichen Typ, versuchen Sie, sie vertikal auszurichten
+                        % When gateways are on different levels (different y-values)
+                        % But of the same type, try to align them vertically
                         if abs(gateways{i}.y - gateways{j}.y) > gateways{i}.height && ...
                            strcmpi(gateways{i}.type, gateways{j}.type)
                             
-                            % Berechnen Sie die mittlere X-Position
+                            % Calculate the middle X position
                             avgX = (gateways{i}.x + gateways{j}.x) / 2;
                             
-                            % Alinieren beide zu dieser Position
+                            % Alinate both to this position
                             gateways{i}.x = avgX;
                             gateways{j}.x = avgX;
                         end
@@ -379,14 +384,14 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function centerActivities(obj)
-            % Zentriert Aktivitäten innerhalb ihrer Verbindungen
+            % Centered activities within your connections
             
             elements = obj.diagram.elements;
             flows = obj.diagram.flows;
             
             for i = 1:length(elements)
                 if strcmpi(elements{i}.type, 'task')
-                    % Finde alle ein- und ausgehenden Flows für diese Aktivität
+                    % Find all input and outgoing flows for this activity
                     incomingFlows = {};
                     outgoingFlows = {};
                     
@@ -398,7 +403,7 @@ classdef BPMNLayoutOptimizer < handle
                         end
                     end
                     
-                    % Berechne durchschnittliche X-Position der verbundenen Elemente
+                    % Calculate average X position of the connected elements
                     sumX = 0;
                     count = 0;
                     
@@ -418,7 +423,7 @@ classdef BPMNLayoutOptimizer < handle
                         end
                     end
                     
-                    % Wenn es verbundene Elemente gibt, zentriere die Aktivität
+                    % If there are connected elements, center the activity
                     if count > 0
                         avgX = sumX / count;
                         elements{i}.x = avgX - elements{i}.width/2;
@@ -428,7 +433,7 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function routeEdges(obj)
-            % Implementiert intelligentes Edge-Routing für Sequenzflüsse
+            % Implements intelligent edge routing for sequence flows
             
             flows = obj.diagram.flows;
             
@@ -437,7 +442,7 @@ classdef BPMNLayoutOptimizer < handle
                 targetElement = obj.findElementById(flows{i}.targetRef);
                 
                 if ~isempty(sourceElement) && ~isempty(targetElement)
-                    % Berechne Wegpunkte für den Flow
+                    % Calculate waypoints for the flow
                     waypoints = obj.calculateWaypoints(sourceElement, targetElement);
                     flows{i}.waypoints = waypoints;
                 end
@@ -445,38 +450,38 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function waypoints = calculateWaypoints(obj, source, target)
-            % Berechnet Wegpunkte für einen Flow zwischen zwei Elementen
+            % Calculates waypoints for a flow between two elements
             
-            % Einfacher Algorithmus für gerade Linien mit zwei Punkten
-            % Ausgangspunkt (vom Quell-Element)
+            % Simple algorithm for straight lines with two points
+            % The starting point (from the source element)
             sourceX = source.x + source.width/2;
             sourceY = source.y + source.height/2;
             
-            % Zielpunkt (zum Ziel-Element)
+            % Target point (for the target element)
             targetX = target.x + target.width/2;
             targetY = target.y + target.height/2;
             
-            % Für komplexere Routen könnten hier zusätzliche Wegpunkte eingefügt werden
+            % Additional waypoints could be inserted here for more complex routes
             
-            % Einfacher Fall: direkte Verbindung (für nähere Elemente)
+            % Simple case: direct connection (for more details)
             if abs(targetY - sourceY) < obj.optimizeOptions.layerSpacing * 1.5
                 waypoints = [sourceX, sourceY; targetX, targetY];
                 return;
             end
             
-            % Komplexerer Fall: 3-Punkt-Verbindung (für weiter entfernte Elemente)
-            % Mittelpunkt zur Vermeidung von Überschneidungen
+            % More complex case: 3-point connection (for further distant elements)
+            % Center to avoid overlapping
             midY = (sourceY + targetY) / 2;
             waypoints = [sourceX, sourceY; sourceX, midY; targetX, midY; targetX, targetY];
         end
         
         function resolveElementOverlaps(obj)
-            % Erkennt und löst überlappende Elemente im Diagramm
+            % Recognizes and solves overlapping elements in the diagram
             
             elements = obj.diagram.elements;
             modified = true;
             
-            % Iterationen fortsetzen, bis keine Überlappungen mehr gelöst werden
+            % Continue until no more overlaps are solved
             iterationCount = 0;
             maxIterations = 10; % Begrenzung der Iterationen zur Vermeidung von Endlosschleifen
             
@@ -484,10 +489,10 @@ classdef BPMNLayoutOptimizer < handle
                 modified = false;
                 iterationCount = iterationCount + 1;
                 
-                % Überprüfen Sie jedes Elementpaar auf Überlappung
+                % Check each element pair for overlap
                 for i = 1:length(elements)
                     for j = i+1:length(elements)
-                        % Berechne Begrenzungsrahmen
+                        % Calculate limitation framework
                         box1 = [elements{i}.x, elements{i}.y, ...
                                elements{i}.x + elements{i}.width, ...
                                elements{i}.y + elements{i}.height];
@@ -496,23 +501,23 @@ classdef BPMNLayoutOptimizer < handle
                                elements{j}.x + elements{j}.width, ...
                                elements{j}.y + elements{j}.height];
                         
-                        % Überprüfen Sie auf Überlappung
+                        % Check for overlap
                         if obj.boxesOverlap(box1, box2)
-                            % Berechne Überlappungsmenge
+                            % Calculate the amount of overlap
                             overlapX = min(box1(3), box2(3)) - max(box1(1), box2(1));
                             overlapY = min(box1(4), box2(4)) - max(box1(2), box2(2));
                             
-                            % Bestimmen Sie die Schubrichtung basierend auf der kleinsten Überlappung
+                            % Determine the direction of push based on the smallest overlap
                             if overlapX < overlapY
-                                % Horizontal schieben
+                                % Horizontally
                                 if box1(1) < box2(1)
                                     elements{j}.x = elements{j}.x + overlapX + obj.optimizeOptions.minNodeDistance/4;
                                 else
                                     elements{i}.x = elements{i}.x + overlapX + obj.optimizeOptions.minNodeDistance/4;
                                 end
                             else
-                                % Vertikal schieben, nur wenn Elemente nicht auf derselben Schicht sind
-                                % um die Flussstruktur beizubehalten
+                                % Push vertically, only when elements are not on the same layer
+                                % To maintain the river structure
                                 if abs(elements{i}.y - elements{j}.y) > obj.optimizeOptions.minNodeDistance
                                     if box1(2) < box2(2)
                                         elements{j}.y = elements{j}.y + overlapY + obj.optimizeOptions.minNodeDistance/4;
@@ -520,7 +525,7 @@ classdef BPMNLayoutOptimizer < handle
                                         elements{i}.y = elements{i}.y + overlapY + obj.optimizeOptions.minNodeDistance/4;
                                     end
                                 else
-                                    % Für Elemente auf derselben Schicht horizontal schieben
+                                    % Push horizontally for elements on the same layer
                                     separation = obj.optimizeOptions.minNodeDistance + max(elements{i}.width, elements{j}.width)/2;
                                     if box1(1) < box2(1)
                                         elements{j}.x = elements{i}.x + separation;
@@ -536,14 +541,14 @@ classdef BPMNLayoutOptimizer < handle
                 end
             end
             
-            % Nach dem Lösen von Überlappungen sicherstellen, dass Elemente den Mindestabstand einhalten
+            % After loosening overlaps, make sure that elements adhere to the minimum distance
             for i = 1:length(elements)
                 for j = i+1:length(elements)
-                    % Überprüfen Sie nur Elemente in derselben ungefähren vertikalen Position (gleiche Schicht)
+                    % Check only elements in the same approximate vertical position (same layer)
                     if abs(elements{i}.y - elements{j}.y) < obj.optimizeOptions.minNodeDistance
-                        % Überprüfen Sie den horizontalen Abstand
+                        % Check the horizontal distance
                         if abs(elements{i}.x - elements{j}.x) < obj.optimizeOptions.minNodeDistance
-                            % Positionen anpassen, um den Mindestabstand einzuhalten
+                            % Adjust positions to adhere to the minimum distance
                             if elements{i}.x < elements{j}.x
                                 elements{j}.x = elements{i}.x + elements{i}.width + obj.optimizeOptions.minNodeDistance;
                             else
@@ -556,10 +561,10 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function overlap = boxesOverlap(~, box1, box2)
-            % Bestimmt, ob sich zwei Begrenzungsrahmen überlappen
-            % Box-Format: [x1, y1, x2, y2] (obere linke und untere rechte Ecken)
+            % Determined whether two boundary frames overlap
+            % Box format: [X1, Y1, X2, Y2] (upper left and lower right corners)
             
-            % Überprüfen Sie, ob eine Box vollständig links/rechts/oben/unten der anderen liegt
+            % Check whether a box is completely left/right/top/bottom of the other
             if box1(3) < box2(1) || box2(3) < box1(1) || ...
                box1(4) < box2(2) || box2(4) < box1(2)
                 overlap = false;
@@ -569,7 +574,7 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function optimizeFlowPaths(obj)
-            % Optimiert Flusswege zur Verbesserung der Diagrammlesbarkeit
+            % Optimized river paths to improve diagram reading
             
             flows = obj.diagram.flows;
             
@@ -578,78 +583,78 @@ classdef BPMNLayoutOptimizer < handle
                 targetElement = obj.findElementById(flows{i}.targetRef);
                 
                 if ~isempty(sourceElement) && ~isempty(targetElement)
-                    % Berechne den optimalen Pfad zwischen den Elementen mit A* oder ähnlichem Algorithmus
+                    % Calculate the optimal path between the elements with A* or similar algorithm
                     flows{i}.waypoints = obj.calculateOptimalPath(sourceElement, targetElement);
                 end
             end
             
-            % Erkennen und Lösen von Flusskreuzungen, wo möglich
+            % Recognizing and loosening of river crossings where possible
             obj.reduceFlowCrossings();
         end
         
         function waypoints = calculateOptimalPath(obj, source, target)
-            % Berechnet einen optimalen Pfad zwischen zwei Elementen mit verbesserter Wegpunktberechnung
+            % Calculate an optimal path between two elements with improved waypoint calculation
             
-            % Ausgangsposition (Mitte des Quell-Elements)
+            % Starting position (middle of the source element)
             sourceX = source.x + source.width/2;
             sourceY = source.y + source.height/2;
             
-            % Zielposition (Mitte des Ziel-Elements)
+            % Target position (center of the target element)
             targetX = target.x + target.width/2;
             targetY = target.y + target.height/2;
             
-            % Überprüfen, ob Quelle und Ziel nahe beieinander liegen
+            % Check whether the source and goal are close together
             if abs(sourceY - targetY) < obj.optimizeOptions.layerSpacing/2 && ...
                abs(sourceX - targetX) < obj.optimizeOptions.minNodeDistance*3
-                % Direkte Verbindung für eng positionierte Elemente
+                % Direct connection for closely positioned elements
                 waypoints = [sourceX, sourceY; targetX, targetY];
                 return;
             end
             
-            % Verbesserter Mehrpunktpfad für komplexe Routing-Szenarien
+            % Improved multi-point path for complex routing scenarios
             
-            % Berechnen, ob eine vertikale oder horizontale Beziehung besteht
+            % Calculate whether there is a vertical or horizontal relationship
             isVerticalFlow = abs(sourceY - targetY) > abs(sourceX - targetX);
             
             if isVerticalFlow
-                % Primär vertikaler Flusspfad
+                % Primarily vertical river path
                 midY = (sourceY + targetY) / 2;
                 
-                % Überprüfen auf potenzielle Routing-Interferenzen mit anderen Elementen
+                % Check for potential routing interferences with other elements
                 if obj.pathIntersectsElements(sourceX, sourceY, sourceX, midY) || ...
                    obj.pathIntersectsElements(sourceX, midY, targetX, midY) || ...
                    obj.pathIntersectsElements(targetX, midY, targetX, targetY)
                    
-                    % Pfad anpassen zur Vermeidung von Interferenzen
+                    % Adjust the path to avoid interference
                     alternativeMidX = (sourceX + targetX) / 2;
                     waypoints = [sourceX, sourceY; 
                                 alternativeMidX, sourceY;
                                 alternativeMidX, targetY; 
                                 targetX, targetY];
                 else
-                    % Standard vertikaler Routing-Pfad
+                    % Standard vertical routing path
                     waypoints = [sourceX, sourceY; 
                                 sourceX, midY; 
                                 targetX, midY; 
                                 targetX, targetY];
                 end
             else
-                % Primär horizontaler Flusspfad
+                % Primarily horizontal river path
                 midX = (sourceX + targetX) / 2;
                 
-                % Überprüfen auf potenzielle Routing-Interferenzen
+                % Check for potential routing interferences
                 if obj.pathIntersectsElements(sourceX, sourceY, midX, sourceY) || ...
                    obj.pathIntersectsElements(midX, sourceY, midX, targetY) || ...
                    obj.pathIntersectsElements(midX, targetY, targetX, targetY)
                    
-                    % Pfad anpassen zur Vermeidung von Interferenzen
+                    % Adjust the path to avoid interference
                     alternativeMidY = (sourceY + targetY) / 2;
                     waypoints = [sourceX, sourceY; 
                                 sourceX, alternativeMidY;
                                 targetX, alternativeMidY; 
                                 targetX, targetY];
                 else
-                    % Standard horizontaler Routing-Pfad
+                    % Standard horizontal routing path
                     waypoints = [sourceX, sourceY; 
                                 midX, sourceY; 
                                 midX, targetY; 
@@ -659,21 +664,21 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function intersects = pathIntersectsElements(obj, x1, y1, x2, y2)
-            % Überprüft, ob ein Pfadsegment mit einem Element kollidiert
+            % Checks whether a path segment collides with an element
             
             elements = obj.diagram.elements;
             intersects = false;
             
-            % Pfadsegment als Linie
+            % Path segment as a line
             linePath = [x1, y1, x2, y2];
             
-            % Pufferabstand, um zu verhindern, dass zu nahe an Elementen geroutet wird
+            % Buffer distance to prevent too close to elements
             buffer = 5;
             
             for i = 1:length(elements)
                 element = elements{i};
                 
-                % Überspringen von Quell- und Zielelementen oder sehr kleinen Elementen
+                % Skip of source and target elements or very small elements
                 if (abs(element.x + element.width/2 - x1) < 1e-6 && 
                     abs(element.y + element.height/2 - y1) < 1e-6) || ...
                    (abs(element.x + element.width/2 - x2) < 1e-6 && 
@@ -681,11 +686,11 @@ classdef BPMNLayoutOptimizer < handle
                     continue;
                 end
                 
-                % Begrenzungsrahmen des Elements mit Puffer
+                % Limitation framework of the element with buffer
                 bbox = [element.x - buffer, element.y - buffer, 
                         element.x + element.width + buffer, element.y + element.height + buffer];
                 
-                % Überprüfen, ob die Linie den Begrenzungsrahmen des Elements schneidet
+                % Check whether the line cuts the boundary framework of the element
                 if obj.lineIntersectsBox(linePath, bbox)
                     intersects = true;
                     return;
@@ -694,26 +699,26 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function intersects = lineIntersectsBox(~, line, box)
-            % Bestimmt, ob ein Liniensegment mit einer Box kollidiert
-            % Linienformat: [x1, y1, x2, y2]
-            % Box-Format: [x1, y1, x2, y2] (obere linke und untere rechte Ecken)
+            % Determined whether a line segment collides with a box
+            % Line format: [X1, Y1, X2, Y2]
+            % Box format: [X1, Y1, X2, Y2] (upper left and lower right corners)
             
-            % Liniensegmentparameter
+            % Line segment parameter
             x1 = line(1); y1 = line(2);
             x2 = line(3); y2 = line(4);
             
-            % Box-Grenzen
+            % Box boundaries
             left = box(1); top = box(2);
             right = box(3); bottom = box(4);
             
-            % Cohen-Sutherland-Algorithmus zur Linien-Rechteck-Kollision
+            % Cohen-Sutherland-Algorithm for line-right-hand collision
             INSIDE = 0; % 0000
             LEFT = 1;   % 0001
             RIGHT = 2;  % 0010
             BOTTOM = 4; % 0100
             TOP = 8;    % 1000
             
-            % Berechnen der Outcodes
+            % Calculate the outcodes
             function code = computeOutCode(x, y)
                 code = INSIDE;
                 if x < left
@@ -732,23 +737,23 @@ classdef BPMNLayoutOptimizer < handle
             outcode2 = computeOutCode(x2, y2);
             
             while true
-                % Beide Endpunkte sind innerhalb der Box - triviale Akzeptanz
+                % Both end points are within the box - trivial acceptance
                 if outcode1 == 0 && outcode2 == 0
                     intersects = true;
                     return;
                 end
                 
-                % Linie ist vollständig außerhalb der Box - triviale Ablehnung
+                % Line is completely outside the box - trivial rejection
                 if bitand(outcode1, outcode2) ~= 0
                     intersects = false;
                     return;
                 end
                 
-                % Ein Teil der Linie könnte innerhalb sein - Schnittpunkt berechnen
+                % Part of the line could be within - Calculate intersection
                 x = 0; y = 0;
                 outcodeOut = max(outcode1, outcode2);
                 
-                % Schnittpunkt finden
+                % Find intersection
                 if bitand(outcodeOut, TOP) ~= 0
                     x = x1 + (x2 - x1) * (top - y1) / (y2 - y1);
                     y = top;
@@ -763,7 +768,7 @@ classdef BPMNLayoutOptimizer < handle
                     x = left;
                 end
                 
-                % Endpunkte aktualisieren
+                % Update endpoints
                 if outcodeOut == outcode1
                     x1 = x; y1 = y;
                     outcode1 = computeOutCode(x1, y1);
@@ -775,19 +780,19 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function reduceFlowCrossings(obj)
-            % Versucht, Flusskreuzungen durch Anpassen der Wegpunkte zu reduzieren
+            % Tries to reduce river crossings by adapting the waypoints
             
             flows = obj.diagram.flows;
             
-            % Flusskreuzungen identifizieren
+            % Identify river crossings
             for i = 1:length(flows)-1
                 for j = i+1:length(flows)
-                    if isfield(flows{i}, 'waypoints') && isfield(flows{j}, 'waypoints')
-                        % Überprüfen, ob diese Flüsse sich kreuzen
+                    if isfield(flows{i}, 'Waypoints') && isfield(flows{j}, 'Waypoints')
+                        % Check whether these rivers cross
                         crossingPoints = obj.findFlowCrossings(flows{i}, flows{j});
                         
                         if ~isempty(crossingPoints)
-                            % Versuchen, die Kreuzung durch Anpassen der Wegpunkte zu lösen
+                            % Try to solve the intersection by adapting the waypoints
                             [flows{i}, flows{j}] = obj.resolveCrossing(flows{i}, flows{j}, crossingPoints);
                         end
                     end
@@ -796,23 +801,23 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function crossingPoints = findFlowCrossings(~, flow1, flow2)
-            % Identifiziert Kreuzungspunkte zwischen zwei Flüssen
+            % Identified crossing points between two rivers
             
             crossingPoints = [];
             
-            if ~isfield(flow1, 'waypoints') || ~isfield(flow2, 'waypoints') || ...
+            if ~isfield(flow1, 'Waypoints') || ~isfield(flow2, 'Waypoints') || ...
                size(flow1.waypoints, 1) < 2 || size(flow2.waypoints, 1) < 2
                 return;
             end
             
-            % Überprüfen Sie jedes Segment von flow1 gegen jedes Segment von flow2
+            % Check each segment of Flow1 against each segment of Flow2
             for i = 1:size(flow1.waypoints, 1)-1
                 seg1 = [flow1.waypoints(i,:), flow1.waypoints(i+1,:)];
                 
                 for j = 1:size(flow2.waypoints, 1)-1
                     seg2 = [flow2.waypoints(j,:), flow2.waypoints(j+1,:)];
                     
-                    % Überprüfen, ob Segmente sich schneiden
+                    % Check whether segments are cutting
                     [intersect, x, y] = obj.lineSegmentIntersection(seg1, seg2);
                     
                     if intersect
@@ -823,7 +828,7 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function [intersect, x, y] = lineSegmentIntersection(~, seg1, seg2)
-            % Bestimmt, ob sich zwei Liniensegmente schneiden
+            % Determined whether two line segments are cutting
             
             x1 = seg1(1); y1 = seg1(2);
             x2 = seg1(3); y2 = seg1(4);
@@ -831,27 +836,27 @@ classdef BPMNLayoutOptimizer < handle
             x3 = seg2(1); y3 = seg2(2);
             x4 = seg2(3); y4 = seg2(4);
             
-            % Berechnen des Nenners
+            % Calculate the denominator
             den = (y4-y3)*(x2-x1) - (x4-x3)*(y2-y1);
             
-            % Überprüfen, ob Linien parallel sind
+            % Check whether lines are parallel
             if abs(den) < 1e-10
                 intersect = false;
                 x = 0; y = 0;
                 return;
             end
             
-            % Berechnen der Zähler
+            % Calculate the counters
             numa = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3));
             numb = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3));
             
-            % Berechnen der Parameter
+            % Calculate the parameters
             ua = numa / den;
             ub = numb / den;
             
-            % Wenn Parameter in [0,1] liegen, schneiden sich die Segmente
+            % When parameters are in [0.1], the segments cut themselves
             if ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1
-                % Berechnen des Schnittpunkts
+                % Calculate the intersection point
                 x = x1 + ua * (x2 - x1);
                 y = y1 + ua * (y2 - y1);
                 intersect = true;
@@ -862,22 +867,22 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function [flow1, flow2] = resolveCrossing(obj, flow1, flow2, crossingPoints)
-            % Versucht, die Kreuzung zwischen zwei Flüssen durch Ändern der Wegpunkte zu lösen
+            % Tries to solve the intersection between two rivers by changing the waypoints
             
             if isempty(crossingPoints)
                 return;
             end
             
-            % Erhalten Sie den Kreuzungspunkt und die Segmentindizes
+            % Get the crossing point and the segment indices
             crossingX = crossingPoints(1,1);
             crossingY = crossingPoints(1,2);
             seg1Idx = crossingPoints(1,3);
             seg2Idx = crossingPoints(1,4);
             
-            % Berechnen des Versatzabstands
+            % Calculate the offset distance
             offset = obj.optimizeOptions.minNodeDistance / 2;
             
-            % Bestimmen, welcher Fluss basierend auf ihren Typen und ihrer Wichtigkeit angepasst werden soll
+            % Determine which river should be adapted based on their types and their importance
             source1 = obj.findElementById(flow1.sourceRef);
             source2 = obj.findElementById(flow2.sourceRef);
             
@@ -885,18 +890,18 @@ classdef BPMNLayoutOptimizer < handle
                 return;
             end
             
-            % Priorisieren Sie die Anpassung normaler Sequenzflüsse gegenüber Nachrichtenflüssen oder Assoziationen
-            isFlow1SequenceFlow = strcmp(flow1.type, 'sequenceFlow');
-            isFlow2SequenceFlow = strcmp(flow2.type, 'sequenceFlow');
+            % Prioritize the adaptation of normal sequence flows compared to news flows or associations
+            isFlow1SequenceFlow = strcmp(flow1.type, 'sequenceflow');
+            isFlow2SequenceFlow = strcmp(flow2.type, 'sequenceflow');
             
             if isFlow1SequenceFlow && ~isFlow2SequenceFlow
-                % Fluss2 anpassen
+                % Adjust river2
                 flow2.waypoints = obj.insertWaypointOffset(flow2.waypoints, seg2Idx, offset);
             elseif ~isFlow1SequenceFlow && isFlow2SequenceFlow
-                % Fluss1 anpassen
+                % Adjust river1
                 flow1.waypoints = obj.insertWaypointOffset(flow1.waypoints, seg1Idx, offset);
             else
-                % Beide sind vom gleichen Typ, den kürzeren anpassen
+                % Both are of the same type, adapt the shorter one
                 length1 = size(flow1.waypoints, 1);
                 length2 = size(flow2.waypoints, 1);
                 
@@ -909,31 +914,31 @@ classdef BPMNLayoutOptimizer < handle
         end
         
         function waypoints = insertWaypointOffset(~, waypoints, segmentIdx, offset)
-            % Fügt einen Versatz in einen Flusspfad ein, um eine Kreuzung zu vermeiden
+            % Insert a verse into a river path to avoid a crossroad
             
             if segmentIdx < 1 || segmentIdx >= size(waypoints, 1)
                 return;
             end
             
-            % Ursprüngliche Segmentpunkte
+            % Original segment points
             p1 = waypoints(segmentIdx, :);
             p2 = waypoints(segmentIdx+1, :);
             
-            % Berechnen der Segmentrichtung
+            % Calculate the direction of segment
             dx = p2(1) - p1(1);
             dy = p2(2) - p1(2);
             
-            % Wenn das Segment mehr horizontal ist, vertikalen Versatz erstellen
+            % If the segment is more horizontal, create vertical offset
             if abs(dx) >= abs(dy)
                 midX = (p1(1) + p2(1)) / 2;
                 newPoints = [midX, p1(2)+offset; midX, p1(2)-offset];
             else
-                % Wenn das Segment mehr vertikal ist, horizontalen Versatz erstellen
+                % If the segment is more vertical, create horizontal offset
                 midY = (p1(2) + p2(2)) / 2;
                 newPoints = [p1(1)+offset, midY; p1(1)-offset, midY];
             end
             
-            % Neue Punkte einfügen
+            % Insert new points
             waypoints = [waypoints(1:segmentIdx,:); newPoints; waypoints(segmentIdx+1:end,:)];
         end
     end

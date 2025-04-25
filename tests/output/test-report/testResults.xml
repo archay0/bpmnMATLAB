@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<testsuites>
+  <testsuite errors="0" failures="0" name="SimpleOpenRouterTest" skipped="0" tests="1" time="9.2793">
+    <testcase classname="SimpleOpenRouterTest" name="SimpleOpenRouterTest_m" time="9.2793"/>
+  </testsuite>
+  <testsuite errors="0" failures="0" name="TestAPIConnection" skipped="0" tests="1" time="0.95918">
+    <testcase classname="TestAPIConnection" name="TestScriptForGitHubModelsAPIConnection" time="0.95918"/>
+  </testsuite>
+  <testsuite errors="0" failures="0" name="TestBPMNGeneration" skipped="0" tests="1" time="56.1639">
+    <testcase classname="TestBPMNGeneration" name="TestBPMNGeneration_m" time="56.1639"/>
+  </testsuite>
+  <testsuite errors="3" failures="0" name="TestBPMNGenerator" skipped="0" tests="6" time="0.55216">
+    <testcase classname="TestBPMNGenerator" name="TestBPMNGenerator_m" time="0.23626"/>
+    <testcase classname="TestBPMNGenerator" name="AddRepositoryToPath" time="0.20833"/>
+    <testcase classname="TestBPMNGenerator" name="TestCase1_CreateEmptyBPMN" time="0.027675">
+      <error>Error occurred in TestBPMNGenerator/TestCase1_CreateEmptyBPMN and it did not run to completion.
+    ---------
+    Error ID:
+    ---------
+    'MATLAB:UndefinedFunction'
+    --------------
+    Error Details:
+    --------------
+    Unrecognized function or variable 'repoPath'.
+    
+    Error in TestBPMNGenerator (line 16)
+    tempOutputDir = fullfile(repoPath, 'doc', 'temporary');</error>
+    </testcase>
+    <testcase classname="TestBPMNGenerator" name="TestCase2_AddElementsToBPMN" time="0.053788">
+      <error>Error occurred in TestBPMNGenerator/TestCase2_AddElementsToBPMN and it did not run to completion.
+    ---------
+    Error ID:
+    ---------
+    'MATLAB:UndefinedFunction'
+    --------------
+    Error Details:
+    --------------
+    Unrecognized function or variable 'repoPath'.
+    
+    Error in TestBPMNGenerator (line 41)
+    tempOutputDir = fullfile(repoPath, 'doc', 'temporary');</error>
+    </testcase>
+    <testcase classname="TestBPMNGenerator" name="TestCase3_DatabaseConnector" time="0.018604">
+      <error>Error occurred in TestBPMNGenerator/TestCase3_DatabaseConnector and it did not run to completion.
+    ---------
+    Error ID:
+    ---------
+    'MATLAB:m_missing_end'
+    --------------
+    Error Details:
+    --------------
+    Error using BPMNDatabaseConnector
+    Error: &lt;a href="matlab: opentoline('C:\Users\Archay wakodikar\Documents\MATLAB\src\BPMNDatabaseConnector.m',1,1)"&gt;File: BPMNDatabaseConnector.m Line: 1 Column: 1&lt;/a&gt;
+    At least one END is missing. The statement beginning here does not have a matching end.
+    
+    Error in TestBPMNGenerator (line 95)
+    dbConn = BPMNDatabaseConnector('mock');</error>
+    </testcase>
+    <testcase classname="TestBPMNGenerator" name="DisplayTestSummary" time="0.0075105"/>
+  </testsuite>
+  <testsuite errors="0" failures="6" name="TestBPMNSuite" skipped="0" tests="9" time="1.3197">
+    <testcase classname="TestBPMNSuite" name="testBPMNGeneratorCreation" time="0.071431"/>
+    <testcase classname="TestBPMNSuite" name="testCreateEmptyBPMN" time="0.26185"/>
+    <testcase classname="TestBPMNSuite" name="testAddProcess" time="0.013699"/>
+    <testcase classname="TestBPMNSuite" name="testAddTaskWithElements" time="0.41401">
+      <failure type="VerificationFailure">Verification failed in TestBPMNSuite/testAddTaskWithElements.
+    ----------------
+    Test Diagnostic:
+    ----------------
+    Adding elements failed: Unrecognized method, property, or field 'addStartEvent' for class 'BPMNGenerator'.
+    ------------------
+    Stack Information:
+    ------------------
+    In C:\Users\Archay wakodikar\Documents\MATLAB\tests\TestBPMNSuite.m (TestBPMNSuite.testAddTaskWithElements) at 97</failure>
+    </testcase>
+    <testcase classname="TestBPMNSuite" name="testGatewayCreation" time="0.156">
+      <failure type="VerificationFailure">Verification failed in TestBPMNSuite/testGatewayCreation.
+    ----------------
+    Test Diagnostic:
+    ----------------
+    Adding gateway failed: Unrecognized method, property, or field 'addExclusiveGateway' for class 'BPMNGenerator'.
+    ------------------
+    Stack Information:
+    ------------------
+    In C:\Users\Archay wakodikar\Documents\MATLAB\tests\TestBPMNSuite.m (TestBPMNSuite.testGatewayCreation) at 114</failure>
+    </testcase>
+    <testcase classname="TestBPMNSuite" name="testBoundaryEvents" time="0.15968">
+      <failure type="VerificationFailure">Verification failed in TestBPMNSuite/testBoundaryEvents.
+    ----------------
+    Test Diagnostic:
+    ----------------
+    Adding boundary event failed: No method 'setAttribute' with matching signature found for class 'org.apache.xerces.dom.ElementImpl'.
+    ------------------
+    Stack Information:
+    ------------------
+    In C:\Users\Archay wakodikar\Documents\MATLAB\tests\TestBPMNSuite.m (TestBPMNSuite.testBoundaryEvents) at 136</failure>
+    </testcase>
+    <testcase classname="TestBPMNSuite" name="testCollaborationAndPools" time="0.061649">
+      <failure type="VerificationFailure">Verification failed in TestBPMNSuite/testCollaborationAndPools.
+    ----------------
+    Test Diagnostic:
+    ----------------
+    Adding collaboration elements failed: Unrecognized method, property, or field 'addParticipant' for class 'BPMNGenerator'.
+    ------------------
+    Stack Information:
+    ------------------
+    In C:\Users\Archay wakodikar\Documents\MATLAB\tests\TestBPMNSuite.m (TestBPMNSuite.testCollaborationAndPools) at 164</failure>
+    </testcase>
+    <testcase classname="TestBPMNSuite" name="testDataObjectsAndAssociations" time="0.13736">
+      <failure type="VerificationFailure">Verification failed in TestBPMNSuite/testDataObjectsAndAssociations.
+    ----------------
+    Test Diagnostic:
+    ----------------
+    Adding data elements failed: Not enough input arguments.
+    ------------------
+    Stack Information:
+    ------------------
+    In C:\Users\Archay wakodikar\Documents\MATLAB\tests\TestBPMNSuite.m (TestBPMNSuite.testDataObjectsAndAssociations) at 188</failure>
+    </testcase>
+    <testcase classname="TestBPMNSuite" name="testValidatorWithInvalidBPMN" time="0.043979">
+      <failure type="VerificationFailure">Verification failed in TestBPMNSuite/testValidatorWithInvalidBPMN.
+    ----------------
+    Test Diagnostic:
+    ----------------
+    Validation test failed: Unrecognized method, property, or field 'addStartEvent' for class 'BPMNGenerator'.
+    ------------------
+    Stack Information:
+    ------------------
+    In C:\Users\Archay wakodikar\Documents\MATLAB\tests\TestBPMNSuite.m (TestBPMNSuite.testValidatorWithInvalidBPMN) at 221</failure>
+    </testcase>
+  </testsuite>
+  <testsuite errors="0" failures="0" name="TestLidarCameraGeneration" skipped="0" tests="1" time="64.4659">
+    <testcase classname="TestLidarCameraGeneration" name="TestScriptForGeneratingBPMNDataForALidarCameraProductionProcess" time="64.4659"/>
+  </testsuite>
+  <testsuite errors="0" failures="0" name="TestOpenRouterAPI" skipped="0" tests="1" time="13.2219">
+    <testcase classname="TestOpenRouterAPI" name="TestOpenRouterAPI" time="13.2219"/>
+  </testsuite>
+  <testsuite errors="0" failures="0" name="TestProductDataGeneration" skipped="0" tests="1" time="45.022">
+    <testcase classname="TestProductDataGeneration" name="TestProductDataGeneration_m" time="45.022"/>
+  </testsuite>
+  <testsuite errors="0" failures="0" name="TestSchemaValidation" skipped="0" tests="5" time="0.94136">
+    <testcase classname="TestSchemaValidation" name="testSchemaParsing" time="0.13081"/>
+    <testcase classname="TestSchemaValidation" name="testValidationSuccess" time="0.30857"/>
+    <testcase classname="TestSchemaValidation" name="testValidationMissingColumn" time="0.40921"/>
+    <testcase classname="TestSchemaValidation" name="testValidationTypeMismatch" time="0.059653"/>
+    <testcase classname="TestSchemaValidation" name="testValidationFKViolation" time="0.033104"/>
+  </testsuite>
+</testsuites>

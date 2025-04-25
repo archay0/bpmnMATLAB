@@ -1,24 +1,26 @@
 function env = loadEnvironment(envFilePath)
-    % LOADENVIRONMENT Loads environment variables from a .env file
+    % Loadenvirte Loads Environment Variables from A .ENV File
     %
-    % env = loadEnvironment() loads from default .env file in project root
-    % env = loadEnvironment(envFilePath) loads from specified path
+
+    % ENV = load vireonment () loads from default .env file in Project root
+    % ENV = Ladenvirste (Envfilepath) Loads from Specified Path
     %
-    % Returns a struct containing all the environment variables as fields
+
+    % Returns a Struct Containing All the Environment Variables as fields
     
     if nargin < 1
-        % Try to determine the project root and default to .env file there
+        % Try to Determine the Project Root and Default to .ENV File There
         currentFilePath = mfilename('fullpath');
         [projectRoot, ~, ~] = fileparts(fileparts(fileparts(currentFilePath)));
         envFilePath = fullfile(projectRoot, '.env');
     end
     
-    % Check if the file exists
+    % Check If the File Exists
     if ~exist(envFilePath, 'file')
-        error('Environment file not found: %s', envFilePath);
+        error('Environment File Not Found: %S', envFilePath);
     end
     
-    % Initialize the environment struct
+    % Initialize the Environment Struct
     env = struct();
     
     % Read the file line by line
@@ -26,19 +28,19 @@ function env = loadEnvironment(envFilePath)
         fid = fopen(envFilePath, 'r');
         
         if fid == -1
-            error('Could not open environment file: %s', envFilePath);
+            error('Could not Open Environment File: %S', envFilePath);
         end
         
         line = fgetl(fid);
         lineNumber = 1;
         
         while ischar(line)
-            % Remove leading/trailing whitespace
+            % Remove Leading/Trailing Whitespace
             line = strtrim(line);
             
-            % Skip empty lines and comments
+            % Skip Empty Lines and Comments
             if ~isempty(line) && line(1) ~= '#'
-                % Parse variable assignment (KEY=VALUE)
+                % Parse variable assignment (key = value)
                 eqPos = find(line == '=', 1);
                 
                 if ~isempty(eqPos)
@@ -47,24 +49,24 @@ function env = loadEnvironment(envFilePath)
                     
                     % Remove quotes if present
                     if (length(value) >= 2) && ...
-                            ((value(1) == '"' && value(end) == '"') || ...
-                             (value(1) == '''' && value(end) == ''''))
+                            ((value(1) == '"'&& Value (end) =='"') || ...
+                             (value(1) == ''''&& Value (end) ==''''))
                         value = value(2:end-1);
                     end
                     
-                    % Convert to appropriate type if possible
+                    % Convert to Appropriates Type If Possible
                     if strcmpi(value, 'true') || strcmpi(value, 'false')
-                        % Boolean conversion
+                        % Boolean Conversion
                         value = strcmpi(value, 'true');
                     elseif ~isnan(str2double(value)) && ~isempty(value)
                         % Numeric conversion
                         value = str2double(value);
                     end
                     
-                    % Store in environment struct
+                    % Store in Environment Struct
                     env.(key) = value;
                 else
-                    warning('Ignoring invalid line %d in environment file: %s', ...
+                    warning('Ignoring Invalid Line %D in Environment File: %S', ...
                             lineNumber, line);
                 end
             end
@@ -76,7 +78,7 @@ function env = loadEnvironment(envFilePath)
         fclose(fid);
         
     catch ex
-        if exist('fid', 'var') && fid ~= -1
+        if exist('FID', 'var') && fid ~= -1
             fclose(fid);
         end
         rethrow(ex);

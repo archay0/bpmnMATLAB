@@ -1,367 +1,145 @@
-classdef DatabaseManager < handle
-    % DatabaseManager handles organization and access to stored BPMN project data
-    % This class provides methods for working with project data in a structured way,
-    % regardless of the underlying storage mechanism (memory or file-based)
-    
-    properties
-        ProjectName     % Name of the current project
-        StorageMode     % Storage mode - 'memory' or 'file'
-        Connector       % Database connector instance
-        DataStructure   % Current project's data structure specification
-    end
-    
-    methods
-        function obj = DatabaseManager(projectName, storageMode, options)
-            % Constructor initializes the database manager
-            % projectName: Name of the project 
-            % storageMode: Storage mode ('memory' or 'file')
-            % options: Optional configuration parameters
-            
-            if nargin < 1 || isempty(projectName)
-                projectName = 'default_project';
-            end
-            
-            if nargin < 2 || isempty(storageMode)
-                storageMode = DatabaseConnectorFactory.MODE_FILE;
-            end
-            
-            if nargin < 3
-                options = struct();
-            end
-            
-            % Set properties
-            obj.ProjectName = projectName;
-            obj.StorageMode = storageMode;
-            
-            % Add project name to options
-            options.projectName = projectName;
-            
-            % Get connector from factory
-            obj.Connector = DatabaseConnectorFactory.getConnector(storageMode, options);
-            
-            % Initialize data structure specification
-            obj.initDataStructure();
-            
-            fprintf('DatabaseManager initialized for project "%s" using %s storage\n', ...
-                projectName, storageMode);
-        end
-        
-        function initDataStructure(obj)
-            % Initialize or load data structure specification for the project
-            % This defines the expected structure of tables and columns
-            
-            % Try to load existing schema
-            schema = SchemaLoader.load();
-            obj.DataStructure = schema;
-            
-            % Default table specifications to ensure required fields are present
-            ensureProcessDefinitionFields(obj);
-            ensureElementFields(obj);
-            ensureFlowFields(obj);
-        end
-        
-        function ensureProcessDefinitionFields(obj)
-            % Ensure process_definitions has required fields
-            
-            % Required fields for process_definitions table
-            requiredFields = {'process_id', 'process_name', 'description', 'version'};
-            
-            % Add default specification for process_definitions if not in schema
-            if ~isfield(obj.DataStructure, 'process_definitions')
-                fprintf('Adding default specification for process_definitions table\n');
-                obj.DataStructure.process_definitions = struct();
-                obj.DataStructure.process_definitions.columns = struct();
-                
-                % Add required columns
-                for i = 1:numel(requiredFields)
-                    fieldName = requiredFields{i};
-                    obj.DataStructure.process_definitions.columns(i) = struct(...
-                        'name', fieldName, ...
-                        'type', 'VARCHAR', ...
-                        'description', sprintf('Required field: %s', fieldName));
-                end
-            end
-        end
-        
-        function ensureElementFields(obj)
-            % Ensure bpmn_elements has required fields
-            
-            % Required fields for bpmn_elements table
-            requiredFields = {'element_id', 'process_id', 'element_type', 'element_name'};
-            
-            % Add default specification for bpmn_elements if not in schema
+n    % Databasemanager Handles Organization and Access to Stored BPMN Project Data
+    % This Class Provides Methods for Working with Project Data in A Structured Way,
+    % Regardless of the Underlying Storage Mechanism (Memory or File-Based)
+nnn        StorageMode     % Storage mode - 'memory' or 'file'
+nnnnnn            % Constructor Initializes The Database Manager
+            % Project name: Name of the Project
+            % Storagemode: Storage Mode ('memory' or 'file')
+            % Options: Optional Configuration Parameters
+nn                projectName = 'default_project';
+nnnnnnnnnn            % Set property
+nnn            % Add Project Name to Options
+nn            % Get connector from factory
+nn            % Initialize Data Structure Specification
+nn            fprintf('Databasemanager Initialized for Project"%s"Using %s storage \n', ...
+nnnn            % Initialize or Load Data Structure Specification for the Project
+            % This defines the expected Structure of Tables and Columns
+n            % Try to load existing scheme
+nnn            % Default Table Specifications to Ensure Required Fields Are Present
+nnnnnn            % Ensure Process_Definitions Has Required Fields
+n            % Required Fields for Process_Definitions Table
+            requiredFields = {'Process_id', 'Process_Name', 'description', 'version'};
+n            % Add default specification for process_definitions if not in schema
+            if ~isfield(obj.DataStructure, 'Process_definitions')
+                fprintf('Adding Default Specification for Process_Definitions Table \n');
+nnn                % Add Required Columns
+nnn                        'name', fieldName, ...
+                        'type', 'Varchar', ...
+                        'description', sprintf('Required Field: %S', fieldName));
+nnnnn            % Ensure BPMN_ELEMTS Has Required Fields
+n            % Required Fields for BPMN_ELEMTS TABLE
+            requiredFields = {'element_id', 'Process_id', 'element_type', 'element_name'};
+n            % Add default specification for bpmn_elements if not in scheme
             if ~isfield(obj.DataStructure, 'bpmn_elements')
-                fprintf('Adding default specification for bpmn_elements table\n');
-                obj.DataStructure.bpmn_elements = struct();
-                obj.DataStructure.bpmn_elements.columns = struct();
-                
-                % Add required columns
-                for i = 1:numel(requiredFields)
-                    fieldName = requiredFields{i};
-                    obj.DataStructure.bpmn_elements.columns(i) = struct(...
-                        'name', fieldName, ...
-                        'type', 'VARCHAR', ...
-                        'description', sprintf('Required field: %s', fieldName));
-                end
-            end
-        end
-        
-        function ensureFlowFields(obj)
-            % Ensure sequence_flows has required fields
-            
-            % Required fields for sequence_flows table
-            requiredFields = {'flow_id', 'source_ref', 'target_ref', 'process_id'};
-            
-            % Add default specification for sequence_flows if not in schema
+                fprintf('Adding default specification for bpmn_elements table \n');
+nnn                % Add Required Columns
+nnn                        'name', fieldName, ...
+                        'type', 'Varchar', ...
+                        'description', sprintf('Required Field: %S', fieldName));
+nnnnn            % Ensure sequence_flows has request fields
+n            % Required Fields for Sequence_flows Table
+            requiredFields = {'Flow_id', 'Source_ref', 'target_ref', 'Process_id'};
+n            % Add default specification for sequence_flows if not in scheme
             if ~isfield(obj.DataStructure, 'sequence_flows')
-                fprintf('Adding default specification for sequence_flows table\n');
-                obj.DataStructure.sequence_flows = struct();
-                obj.DataStructure.sequence_flows.columns = struct();
-                
-                % Add required columns
-                for i = 1:numel(requiredFields)
-                    fieldName = requiredFields{i};
-                    obj.DataStructure.sequence_flows.columns(i) = struct(...
-                        'name', fieldName, ...
-                        'type', 'VARCHAR', ...
-                        'description', sprintf('Required field: %s', fieldName));
-                end
-            end
-        end
-        
-        function data = createNewProject(obj, projectDescription)
-            % Create a new project with initial process definition
-            % projectDescription: Text description of the project/process
-            % Returns: Initial data structure for the project
-            
-            % Create process definition
-            processId = sprintf('PROC_%s_%s', ...
-                                obj.ProjectName, ...
-                                datestr(now, 'yyyymmddHHMMSS'));
-            
-            processData = struct(...
-                'process_id', processId, ...
-                'process_name', obj.ProjectName, ...
+                fprintf('Adding Default Specification for Sequence_flows Table \n');
+nnn                % Add Required Columns
+nnn                        'name', fieldName, ...
+                        'type', 'Varchar', ...
+                        'description', sprintf('Required Field: %S', fieldName));
+nnnnn            % Create a new project with initial process definition
+            % Projectdescription: Text Description of the Project/Process
+            % Returns: Initial Data Structure for the Project
+n            % Create Process definition
+            processId = sprintf('Proc_%s_%s', ...
+n                                datestr(now, 'yyyymmddhhmmss'));
+nn                'Process_id', processId, ...
+                'Process_Name', obj.ProjectName, ...
                 'description', projectDescription, ...
                 'version', '1.0', ...
                 'is_executable', true, ...
                 'created_date', datestr(now), ...
                 'updated_date', datestr(now));
-            
-            % Insert into storage
-            insertedIds = obj.Connector.insertRows('process_definitions', processData);
-            
-            % Return the created data
-            data = struct('processId', insertedIds{1}, ...
-                          'projectName', obj.ProjectName, ...
-                          'projectDescription', projectDescription);
-            
-            fprintf('Created new project "%s" with process ID: %s\n', ...
-                obj.ProjectName, insertedIds{1});
-        end
-        
-        function insertedIds = insertData(obj, tableName, data)
-            % Insert data into a table, ensuring required fields are present
-            % tableName: Name of the table to insert into
-            % data: Structure array of data to insert
-            % Returns: Array of inserted IDs
-            
-            % Ensure data has required fields
-            validatedData = obj.validateAndPrepareData(tableName, data);
-            
-            % Insert into storage
-            insertedIds = obj.Connector.insertRows(tableName, validatedData);
-        end
-        
-        function data = fetchData(obj, tableName)
-            % Fetch data from a specific table
-            % tableName: Name of the table to fetch from
-            % Returns: Structure array with data from the table
-            
-            result = obj.Connector.fetchAll({tableName});
-            
-            if isfield(result, tableName)
-                data = result.(tableName);
-            else
-                data = [];
-            end
-        end
-        
-        function allData = fetchAllData(obj)
-            % Fetch all data from all tables
-            % Returns: Structure where each field is a table
-            
-            % Get schema table names
-            schemaFields = fieldnames(obj.DataStructure);
-            
-            % Filter out non-table fields
-            tableNames = {};
-            for i = 1:numel(schemaFields)
-                field = schemaFields{i};
-                if isfield(obj.DataStructure, field) && ...
-                   isstruct(obj.DataStructure.(field)) && ...
-                   isfield(obj.DataStructure.(field), 'columns')
-                    tableNames{end+1} = field;
-                end
-            end
-            
-            % Fetch data
-            allData = obj.Connector.fetchAll(tableNames);
-        end
-        
-        function result = validateAndPrepareData(obj, tableName, data)
-            % Validate data against schema and add missing required fields
-            % tableName: Name of the table
-            % data: Structure array of data to validate
-            % Returns: Updated data with required fields
-            
-            % Check if we have schema for this table
-            if ~isfield(obj.DataStructure, tableName)
-                fprintf('Warning: No schema found for table %s. Using data as-is.\n', tableName);
-                result = data;
-                return;
-            end
-            
-            % Ensure the table has columns defined
+n            % Insert into storage
+            insertedIds = obj.Connector.insertRows('Process_definitions', processData);
+n            % Return the Created Data
+            data = struct('processide', insertedIds{1}, ...
+                          'project name', obj.ProjectName, ...
+                          'Project description', projectDescription);
+n            fprintf('Created New Project"%s"with process id: %s \n', ...
+nnnn            % Insert data into a table, Ensuring Required Fields are present
+            % Tablename: Name of the table to insert into
+            % Data: Structure Array of Data to Insert
+            % Returns: Array of inserted IDS
+n            % Ensure Data Has Required Fields
+nn            % Insert into storage
+nnnn            % Fetch Data from a Specific Table
+            % Tablename: Name of the Table to fetch from
+            % Returns: Structure Array with Data from the Table
+nnnnnnnnnnn            % Fetch all data from all tables
+            % Returns: Structure Where Each Field is a Table
+n            % Get scheme table name
+nn            % Filter Out non-table fields
+nnnnn                   isfield(obj.DataStructure.(field), 'columns')
+nnnn            % Fetch data
+nnnn            % Validate Data Against Scheme and Add Missing Required Fields
+            % Tablename: Name of the Table
+            % Data: Structure Array of Data to Validate
+            % Returns: Updated Data With Required Fields
+n            % Check if we have scheme for this table
+n                fprintf('Warning: no scheme found for table %s.Using data as. \n', tableName);
+nnnn            % Ensure the Table Has Columns Defined
             if ~isfield(obj.DataStructure.(tableName), 'columns')
-                fprintf('Warning: No columns defined for table %s. Using data as-is.\n', tableName);
-                result = data;
-                return;
-            end
-            
-            % Get required fields (all schema fields are considered required)
-            schemaColumns = obj.DataStructure.(tableName).columns;
-            requiredFields = cell(1, numel(schemaColumns));
-            for i = 1:numel(schemaColumns)
-                requiredFields{i} = schemaColumns(i).name;
-            end
-            
-            % Create a deep copy of data to modify
-            result = data;
-            
-            % Check for process_id special case
-            if strcmp(tableName, 'process_definitions')
-                idField = 'process_id';
+                fprintf('Warning: No columns Defined for Table %s.Using data as. \n', tableName);
+nnnn            % Get Required Fields (All Scheme Fields Are Considered Required)
+nnnnnn            % Create a deep copy of data to modify
+nn            % Check for Process_ID Special Case
+            if strcmp(tableName, 'Process_definitions')
+                idField = 'Process_id';
             elseif strcmp(tableName, 'bpmn_elements')
                 idField = 'element_id';
             elseif strcmp(tableName, 'sequence_flows')
-                idField = 'flow_id';
-            else
-                idField = ''; % No special case for other tables
-            end
-            
-            % Ensure each required field exists
-            for i = 1:numel(requiredFields)
-                fieldName = requiredFields{i};
-                
-                if ~isfield(result, fieldName) || isempty(result(1).(fieldName))
-                    % If it's an ID field, we'll let the storage system assign it
-                    if strcmp(fieldName, idField)
-                        continue;
-                    end
-                    
-                    % For non-ID fields, generate placeholder values
-                    for j = 1:numel(result)
-                        if strcmp(fieldName, 'process_id')
+                idField = 'Flow_id';
+nnnn            % Ensure Each Required Field Exist
+nnnn                    % If it's an id field, we'll Let the Storage System Assign IT
+nnnn                    % For non-ID Fields, Generate Placeholder Values
+n                        if strcmp(fieldName, 'Process_id')
                             % Try to get the most recent process_id
-                            processes = obj.fetchData('process_definitions');
-                            if ~isempty(processes)
-                                result(j).process_id = processes(1).process_id;
-                            else
-                                result(j).process_id = sprintf('PROC_DEFAULT_%s', datestr(now, 'yyyymmddHHMMSS'));
-                            end
-                            
-                        elseif endsWith(fieldName, 'name')
-                            % For name fields, use descriptive placeholder
+                            processes = obj.fetchData('Process_definitions');
+nnn                                result(j).process_id = sprintf('Proc_default_%S', datestr(now, 'yyyymmddhhmmss'));
+nn                        elseif endsWith(fieldName, 'name')
+                            % For name Fields, use descriptive placeholder
                             result(j).(fieldName) = sprintf('%s_%d', tableName, j);
-                            
-                        elseif strcmp(fieldName, 'element_type')
-                            % For element_type, use 'task' as default
+n                        elseif strcmp(fieldName, 'element_type')
+                            % For element_type, use 'Task' as default
                             result(j).(fieldName) = 'task';
-                            
-                        elseif strcmp(fieldName, 'description')
-                            % For description fields, use generic description
+n                        elseif strcmp(fieldName, 'description')
+                            % For description field, use generic description
                             result(j).(fieldName) = sprintf('Auto-generated %s item %d', tableName, j);
-                            
-                        elseif strcmp(fieldName, 'version')
-                            % For version fields, use 1.0
+n                        elseif strcmp(fieldName, 'version')
+                            % For version Fields, Use 1.0
                             result(j).(fieldName) = '1.0';
-                            
-                        elseif endsWith(fieldName, 'date')
-                            % For date fields, use current date
-                            result(j).(fieldName) = datestr(now);
-                            
-                        elseif startsWith(fieldName, 'is_')
-                            % For boolean fields, default to false
-                            result(j).(fieldName) = false;
-                            
-                        else
-                            % For other fields, use empty string
-                            result(j).(fieldName) = '';
-                        }
-                    end
-                    
-                    fprintf('Added missing required field "%s" to table "%s"\n', ...
-                        fieldName, tableName);
-                end
-            end
-        end
-        
-        function export(obj, outputPath)
-            % Export all data to a consolidated file
-            % outputPath: Path where to save the file
-            
-            if obj.StorageMode == DatabaseConnectorFactory.MODE_FILE && ...
-               isfield(obj.Connector, 'exportToFile')
+n                        elseif endsWith(fieldName, 'date')
+                            % For Date Fields, Use Current Date
+nn                        elseif startsWith(fieldName, 'IS_')
+                            % For Boolean Fields, Default to False
+nnn                            % For other Fields, Use Empty String
+nnnn                    fprintf('Added Missing Required Field"%s"to table"%s"\n', ...
+nnnnnn            % Export all data to a consolidated file
+            % Outputpath: Path Where to Save the File
+nn               isfield(obj.Connector, 'exporter')
                 % Use dedicated export method for file-based storage
-                obj.Connector.exportToFile(outputPath);
-            else
-                % Generic export for any storage mode
-                allData = obj.fetchAllData();
-                
-                % Add metadata
-                allData.metadata = struct(...
-                    'projectName', obj.ProjectName, ...
-                    'exportDate', datestr(now), ...
-                    'storageMode', obj.StorageMode);
-                
-                % Write to file
-                dataJson = jsonencode(allData, 'PrettyPrint', true);
-                fid = fopen(outputPath, 'w');
-                if fid == -1
-                    error('DatabaseManager:ExportError', 'Cannot open file for writing: %s', outputPath);
-                end
-                fprintf(fid, '%s', dataJson);
-                fclose(fid);
-            end
-            
-            fprintf('Exported project data to: %s\n', outputPath);
-        end
-    end
-    
-    methods(Static)
-        function instance = getInstance(projectName, storageMode, options)
-            % Get (or create) a singleton instance of DatabaseManager
-            % This provides a singleton-like access pattern
-            
-            persistent dbManager;
-            
-            if isempty(dbManager) || ~isvalid(dbManager) || ...
-                    (nargin > 0 && ~strcmp(dbManager.ProjectName, projectName))
-                if nargin < 1
-                    projectName = 'default_project';
-                end
-                if nargin < 2
-                    storageMode = DatabaseConnectorFactory.MODE_FILE;
-                end
-                if nargin < 3
-                    options = struct();
-                end
-                
-                dbManager = DatabaseManager(projectName, storageMode, options);
-            end
-            
-            instance = dbManager;
-        end
-    end
-end
+nn                % Generic Export for Ay Storage Mode
+nn                % Add Metadata
+n                    'project name', obj.ProjectName, ...
+                    'export date', datestr(now), ...
+                    'storage fashion', obj.StorageMode);
+n                % Write to file
+                dataJson = jsonencode(allData, 'Prettyprint', true);
+                fid = fopen(outputPath, 'W');
+n                    error('Databasemanager: Exporterror', 'Cannot Open File for Writing: %S', outputPath);
+n                fprintf(fid, '%s', dataJson);
+nnn            fprintf('Exported Project Data to: %S \n', outputPath);
+nnnnn            % Get (or Create) a Singleton Instance of Databasemanager
+            % This provides a singleton-like access patterns
+nnnnnn                    projectName = 'default_project';
+nnnnnnnnnnnnnnn

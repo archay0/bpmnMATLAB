@@ -1,74 +1,75 @@
-% OptimizedLayoutExample.m
-% Demonstrates the advanced layout optimization features for BPMN diagrams
+% Optimizedlayoutexample.M
+% Demonstrates the Advanced Layout Optimization Features for BPMN Diagrams
 %
-% This example creates a complex BPMN process with multiple parallel paths,
-% subprocesses and gateways, then applies the layout optimization to improve
-% diagram readability.
 
-% Add src directory to path
+% This example creates a complex bpmn process with multiple Paths,
+% Subprocesses and gateways, then Applies the Layout Optimization to Improve
+% Diagram Readability.
+
+% Add SRC Directory to Path
 addpath('../src');
 
-% Initialize BPMN Generator
+% Initialize BPMN generator
 bpmnGen = BPMNGenerator();
 
-% Define the process (Placeholder - Method might not exist)
-% fprintf('Defining process...\n');
+% Define the Process (Placeholder - Method Might Not Exist)
+% fprintf ('Defing Process ... \ n');
 % try
-%     bpmnGen.createDefinitions('OptimizedLayoutProcess', 'urn:sample:optimizedlayout:1.0');
-% catch ME
-%     warning('Could not create definitions (method might be missing): %s', ME.message);
+% bpmngen.Createdefinitions ('Optimized LayoutProcess', 'Urn: Sample: Optimizedlayout: 1.0');
+% Catch me
+% Warning ('Could not Create Definitions (Method Might Be Missing): %S', Me.Message);
 % end
 
-% Create a business process with multiple paths
-bpmnGen.createProcess('process1', 'Optimized Layout Process');
+% Create a Business Process with Multiple Paths
+bpmnGen.createProcess('Process1', 'Optimized Layout Process');
 
-% Create start event
+% CREATE START Event
 startId = bpmnGen.createStartEvent('start', 'Start Process');
 bpmnGen.setElementPosition(startId, 100, 200, 36, 36);
 
-% Create initial task
+% Create Initial Task
 task1Id = bpmnGen.createTask('task1', 'Analyze Request');
 bpmnGen.setElementPosition(task1Id, 200, 180, 100, 80);
 
 % Create parallel gateway
-gatewayId = bpmnGen.createParallelGateway('gateway1', 'Split Flow');
+gatewayId = bpmnGen.createParallelGateway('Gateway1', 'Split flow');
 bpmnGen.setElementPosition(gatewayId, 350, 200, 50, 50);
 
-% Create multiple tasks after the gateway (deliberately positioned to create overlap)
+% Create multiple tasks after the gateway (Deliberately positioned to createl overlap)
 task2Id = bpmnGen.createTask('task2', 'Process Documents');
 bpmnGen.setElementPosition(task2Id, 450, 100, 100, 80);
 
-task3Id = bpmnGen.createTask('task3', 'Verify Information');
+task3Id = bpmnGen.createTask('task3', 'Verify information');
 bpmnGen.setElementPosition(task3Id, 450, 200, 100, 80);
 
-task4Id = bpmnGen.createTask('task4', 'Check Compliance');
+task4Id = bpmnGen.createTask('task4', 'Check compliance');
 bpmnGen.setElementPosition(task4Id, 450, 300, 100, 80);
 
 % Create converging gateway
-gateway2Id = bpmnGen.createParallelGateway('gateway2', 'Merge Flow');
+gateway2Id = bpmnGen.createParallelGateway('gateway2', 'Merge flow');
 bpmnGen.setElementPosition(gateway2Id, 600, 200, 50, 50);
 
-% Create final task
-task5Id = bpmnGen.createTask('task5', 'Complete Processing');
+% Create Final Task
+task5Id = bpmnGen.createTask('task5', 'Complete processing');
 bpmnGen.setElementPosition(task5Id, 700, 180, 100, 80);
 
-% Create end event
-endId = bpmnGen.createEndEvent('end', 'End Process');
+% Create End event
+endId = bpmnGen.createEndEvent('end', 'End process');
 bpmnGen.setElementPosition(endId, 850, 200, 36, 36);
 
-% Create subprocess with internal activities (deliberately misaligned)
+% CREATE SUBPROCESS with internal activities (Deliberately Misaligned)
 subProcessId = bpmnGen.createSubProcess('subprocess1', 'Document Processing');
 bpmnGen.setElementPosition(subProcessId, 450, 400, 250, 150);
 
-% Add elements to the subprocess
-subStart = bpmnGen.createStartEvent('subStart', 'Start Subprocess');
+% Add Elements to the subprocess
+subStart = bpmnGen.createStartEvent('substrate', 'Start Subprocess');
 bpmnGen.setElementPosition(subStart, 470, 440, 30, 30);
-subTask = bpmnGen.createTask('subTask', 'Process Document');
+subTask = bpmnGen.createTask('subtask', 'Process Document');
 bpmnGen.setElementPosition(subTask, 530, 430, 80, 60);
-subEnd = bpmnGen.createEndEvent('subEnd', 'End Subprocess');
+subEnd = bpmnGen.createEndEvent('subend', 'End subprocess');
 bpmnGen.setElementPosition(subEnd, 650, 450, 30, 30);
 
-% Connect all elements with sequence flows
+% Connect All Elements with Sequence Flows
 bpmnGen.createSequenceFlow('flow1', startId, task1Id);
 bpmnGen.createSequenceFlow('flow2', task1Id, gatewayId);
 bpmnGen.createSequenceFlow('flow3', gatewayId, task2Id);
@@ -78,18 +79,18 @@ bpmnGen.createSequenceFlow('flow6', task2Id, gateway2Id);
 bpmnGen.createSequenceFlow('flow7', task3Id, gateway2Id);
 bpmnGen.createSequenceFlow('flow8', task4Id, gateway2Id);
 bpmnGen.createSequenceFlow('flow9', gateway2Id, task5Id);
-bpmnGen.createSequenceFlow('flow10', task5Id, endId);
-bpmnGen.createSequenceFlow('flow11', gatewayId, subProcessId);
-bpmnGen.createSequenceFlow('flow12', subProcessId, gateway2Id);
+bpmnGen.createSequenceFlow('Flow10', task5Id, endId);
+bpmnGen.createSequenceFlow('Flow11', gatewayId, subProcessId);
+bpmnGen.createSequenceFlow('Flow12', subProcessId, gateway2Id);
 
 % Connect subprocess elements
-bpmnGen.createSequenceFlow('subflow1', subStart, subTask);
-bpmnGen.createSequenceFlow('subflow2', subTask, subEnd);
+bpmnGen.createSequenceFlow('Subflow1', subStart, subTask);
+bpmnGen.createSequenceFlow('Subflow2', subTask, subEnd);
 
 % Save the initial diagram before optimization
 initialFilePath = 'output/before_optimization.bpmn';
 bpmnGen.saveToFile(initialFilePath);
-fprintf('Initial diagram saved to %s\n', initialFilePath);
+fprintf('Initial diagram saved to %s \ n', initialFilePath);
 
 % Apply layout optimization with custom parameters
 optimizationParams = struct();
@@ -99,12 +100,12 @@ optimizationParams.gridAlignment = true;
 optimizationParams.gridSize = 20;
 optimizationParams.horizontalPreference = 1.5; % Prefer horizontal flows
 
-% Save the optimized diagram
+% Save the Optimized Diagram
 optimizedFilePath = 'output/after_optimization.bpmn';
 bpmnGen.saveToFile(optimizedFilePath);
 
 % Apply layout optimization
 bpmnGen.optimizeLayout(optimizationParams);
 
-fprintf('Optimized diagram saved to %s\n', optimizedFilePath);
-disp('Run this example and compare the before and after BPMN files to see the effect of layout optimization.');
+fprintf('Optimized Diagram saved to %s \ n', optimizedFilePath);
+disp('Run this example and compare the Before and after bpmn files to see the effect of layout optimization.');
