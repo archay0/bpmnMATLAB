@@ -1,0 +1,13 @@
+requests>=2.28.0
+python-dotenv>=1.0.0
+
+# For data processing and validation
+jsonschema>=4.17.0
+
+# For tests
+pytest>=7.0.0
+pytest-mock>=3.10.0
+
+# For database connections (for later phases)
+# mysql-connector-python>=8.0.31
+# pymysql>=1.0.2

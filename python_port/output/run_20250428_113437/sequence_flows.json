@@ -1,0 +1,72 @@
+[
+  {
+    "flow_id": "FLOW_001",
+    "source_ref": "START_001",
+    "target_ref": "TASK_001",
+    "process_id": "PROC_001"
+  },
+  {
+    "flow_id": "FLOW_002",
+    "source_ref": "TASK_001",
+    "target_ref": "TASK_002",
+    "process_id": "PROC_001"
+  },
+  {
+    "flow_id": "FLOW_003",
+    "source_ref": "TASK_002",
+    "target_ref": "GATE_001",
+    "process_id": "PROC_001"
+  },
+  {
+    "flow_id": "FLOW_004",
+    "source_ref": "GATE_001",
+    "target_ref": "TASK_003",
+    "process_id": "PROC_001",
+    "condition_expr": "materials.quality == 'pass'"
+  },
+  {
+    "flow_id": "FLOW_005",
+    "source_ref": "GATE_001",
+    "target_ref": "TASK_002",
+    "process_id": "PROC_001",
+    "condition_expr": "materials.quality == 'fail'"
+  },
+  {
+    "flow_id": "FLOW_006",
+    "source_ref": "TASK_003",
+    "target_ref": "TASK_004",
+    "process_id": "PROC_001"
+  },
+  {
+    "flow_id": "FLOW_007",
+    "source_ref": "TASK_004",
+    "target_ref": "GATE_002",
+    "process_id": "PROC_001"
+  },
+  {
+    "flow_id": "FLOW_008",
+    "source_ref": "GATE_002",
+    "target_ref": "TASK_005",
+    "process_id": "PROC_001",
+    "condition_expr": "product.quality == 'pass'"
+  },
+  {
+    "flow_id": "FLOW_009",
+    "source_ref": "GATE_002",
+    "target_ref": "TASK_003",
+    "process_id": "PROC_001",
+    "condition_expr": "product.quality == 'fail'"
+  },
+  {
+    "flow_id": "FLOW_010",
+    "source_ref": "TASK_005",
+    "target_ref": "TASK_006",
+    "process_id": "PROC_001"
+  },
+  {
+    "flow_id": "FLOW_011",
+    "source_ref": "TASK_006",
+    "target_ref": "END_001",
+    "process_id": "PROC_001"
+  }
+]

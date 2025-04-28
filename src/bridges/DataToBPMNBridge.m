@@ -1,15 +1,41 @@
-n    % DATATOBPMNBRIDGE Mediates Between Datagenerator and BPMngenerator
-    % Consumes RAW Table Data and Uses BPMN generator to Build a BPMN Model.
-nnnnnnnn            % Constructor: Assign the Datagenerator and BPMN generator instance
-nnnnn            % Run Execute the Full Data-to-BPMN Bridging Process
-            % 1) Generates or fetch raw data tables
-            % 2) Iterate over Each Table and Map Rows to BPMN Elements
-            % 3) Save or Return The Final Bpmn Output
-n            % Step 1: Produce Raw Data Struct
-nn            % Step 2: Iterate and Map Tables
-nnnn                % Todo: Dispatch Table Specific Mapping, e.g.:
-                % IF StrcMP (TBLName, 'tasks'), use Addtask () calls
-                % Elseif StrcMP (TBLName, 'sequence_flows'), use add -sequenceFlow ()
-                % Implement Custom Mapping Logic here
-nn            % Step 3: Finalize and Save BPMN
-nnnn
+classdef DataToBPMNBridge < handle
+    % DataToBPMNBridge Mediates between DataGenerator and BPMNGenerator
+    %   Consumes raw table data and uses BPMNGenerator to build a BPMN model.
+
+    properties
+        DataGenerator    % Instance of DataGenerator
+        BPMNGenerator    % Instance of BPMNGenerator
+    end
+
+    methods
+        function obj = DataToBPMNBridge(dataGen, bpmnGen)
+            % Constructor: assign the DataGenerator and BPMNGenerator instances
+            obj.DataGenerator = dataGen;
+            obj.BPMNGenerator = bpmnGen;
+        end
+
+        function run(obj)
+            % RUN Execute the full data-to-BPMN bridging process
+            %   1) Generate or fetch raw data tables
+            %   2) Iterate over each table and map rows to BPMN elements
+            %   3) Save or return the final BPMN output
+
+            % Step 1: produce raw data struct
+            rawData = obj.DataGenerator.generateAll();  % e.g., struct of table arrays
+
+            % Step 2: iterate and map tables
+            tableNames = fieldnames(rawData);
+            for i = 1:numel(tableNames)
+                tblName = tableNames{i};
+                rows = rawData.(tblName);
+                % TODO: dispatch table-specific mapping, e.g.:
+                % if strcmp(tblName, 'tasks'), use addTask() calls
+                % elseif strcmp(tblName, 'sequence_flows'), use addSequenceFlow()
+                % Implement custom mapping logic here
+            end
+
+            % Step 3: finalize and save BPMN
+            obj.BPMNGenerator.saveToBPMNFile();
+        end
+    end
+end

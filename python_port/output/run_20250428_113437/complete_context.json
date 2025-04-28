@@ -1,0 +1,374 @@
+{
+  "process_phases": [
+    {
+      "phase_id": "PH_001",
+      "phase_name": "Requirements & Design",
+      "description": "Gathering requirements and designing the Smart"
+    },
+    {
+      "phase_id": "PH_002",
+      "phase_name": "Procurement",
+      "description": "Sourcing materials and components for the Smart"
+    },
+    {
+      "phase_id": "PH_003",
+      "phase_name": "Manufacturing",
+      "description": "Producing the Smart"
+    },
+    {
+      "phase_id": "PH_004",
+      "phase_name": "Quality Control",
+      "description": "Testing and validating the Smart"
+    },
+    {
+      "phase_id": "PH_005",
+      "phase_name": "Packaging & Distribution",
+      "description": "Packaging and distributing the Smart"
+    }
+  ],
+  "process_definitions": [
+    {
+      "process_id": "PROC_001",
+      "process_name": "Smart Manufacturing",
+      "description": "End-to-end process for manufacturing Smart Coffee Maker with programmable brewing schedules, temperature control, and mobile app connectivity",
+      "version": "1.0",
+      "author": "System",
+      "creation_date": "2025-04-28T11:34:37.341278",
+      "status": "Active"
+    }
+  ],
+  "bpmn_elements": [
+    {
+      "element_id": "START_001",
+      "element_name": "Start Process",
+      "element_type": "event",
+      "element_subtype": "startEvent",
+      "process_id": "PROC_001",
+      "description": "Start of Smart manufacturing process"
+    },
+    {
+      "element_id": "TASK_001",
+      "element_name": "Design Product",
+      "element_type": "task",
+      "element_subtype": "userTask",
+      "process_id": "PROC_001",
+      "description": "Design the Smart"
+    },
+    {
+      "element_id": "TASK_002",
+      "element_name": "Source Materials",
+      "element_type": "task",
+      "element_subtype": "serviceTask",
+      "process_id": "PROC_001",
+      "description": "Source materials for Smart"
+    },
+    {
+      "element_id": "GATE_001",
+      "element_name": "Materials Verification",
+      "element_type": "gateway",
+      "element_subtype": "exclusiveGateway",
+      "process_id": "PROC_001",
+      "description": "Verify materials quality"
+    },
+    {
+      "element_id": "TASK_003",
+      "element_name": "Manufacture Smart",
+      "element_type": "task",
+      "element_subtype": "manualTask",
+      "process_id": "PROC_001",
+      "description": "Manufacturing process for Smart"
+    },
+    {
+      "element_id": "TASK_004",
+      "element_name": "Quality Control",
+      "element_type": "task",
+      "element_subtype": "userTask",
+      "process_id": "PROC_001",
+      "description": "Quality control for Smart"
+    },
+    {
+      "element_id": "GATE_002",
+      "element_name": "Quality Decision",
+      "element_type": "gateway",
+      "element_subtype": "exclusiveGateway",
+      "process_id": "PROC_001",
+      "description": "Decision point for product quality"
+    },
+    {
+      "element_id": "TASK_005",
+      "element_name": "Package Product",
+      "element_type": "task",
+      "element_subtype": "manualTask",
+      "process_id": "PROC_001",
+      "description": "Packaging of Smart"
+    },
+    {
+      "element_id": "TASK_006",
+      "element_name": "Ship Product",
+      "element_type": "task",
+      "element_subtype": "serviceTask",
+      "process_id": "PROC_001",
+      "description": "Shipping of Smart"
+    },
+    {
+      "element_id": "END_001",
+      "element_name": "Process Complete",
+      "element_type": "event",
+      "element_subtype": "endEvent",
+      "process_id": "PROC_001",
+      "description": "End of Smart manufacturing process"
+    }
+  ],
+  "allElementRows": [
+    {
+      "element_id": "START_001",
+      "element_name": "Start Process",
+      "element_type": "event",
+      "element_subtype": "startEvent",
+      "process_id": "PROC_001",
+      "description": "Start of Smart manufacturing process"
+    },
+    {
+      "element_id": "TASK_001",
+      "element_name": "Design Product",
+      "element_type": "task",
+      "element_subtype": "userTask",
+      "process_id": "PROC_001",
+      "description": "Design the Smart"
+    },
+    {
+      "element_id": "TASK_002",
+      "element_name": "Source Materials",
+      "element_type": "task",
+      "element_subtype": "serviceTask",
+      "process_id": "PROC_001",
+      "description": "Source materials for Smart"
+    },
+    {
+      "element_id": "GATE_001",
+      "element_name": "Materials Verification",
+      "element_type": "gateway",
+      "element_subtype": "exclusiveGateway",
+      "process_id": "PROC_001",
+      "description": "Verify materials quality"
+    },
+    {
+      "element_id": "TASK_003",
+      "element_name": "Manufacture Smart",
+      "element_type": "task",
+      "element_subtype": "manualTask",
+      "process_id": "PROC_001",
+      "description": "Manufacturing process for Smart"
+    },
+    {
+      "element_id": "TASK_004",
+      "element_name": "Quality Control",
+      "element_type": "task",
+      "element_subtype": "userTask",
+      "process_id": "PROC_001",
+      "description": "Quality control for Smart"
+    },
+    {
+      "element_id": "GATE_002",
+      "element_name": "Quality Decision",
+      "element_type": "gateway",
+      "element_subtype": "exclusiveGateway",
+      "process_id": "PROC_001",
+      "description": "Decision point for product quality"
+    },
+    {
+      "element_id": "TASK_005",
+      "element_name": "Package Product",
+      "element_type": "task",
+      "element_subtype": "manualTask",
+      "process_id": "PROC_001",
+      "description": "Packaging of Smart"
+    },
+    {
+      "element_id": "TASK_006",
+      "element_name": "Ship Product",
+      "element_type": "task",
+      "element_subtype": "serviceTask",
+      "process_id": "PROC_001",
+      "description": "Shipping of Smart"
+    },
+    {
+      "element_id": "END_001",
+      "element_name": "Process Complete",
+      "element_type": "event",
+      "element_subtype": "endEvent",
+      "process_id": "PROC_001",
+      "description": "End of Smart manufacturing process"
+    }
+  ],
+  "sequence_flows": [
+    {
+      "flow_id": "FLOW_001",
+      "source_ref": "START_001",
+      "target_ref": "TASK_001",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_002",
+      "source_ref": "TASK_001",
+      "target_ref": "TASK_002",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_003",
+      "source_ref": "TASK_002",
+      "target_ref": "GATE_001",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_004",
+      "source_ref": "GATE_001",
+      "target_ref": "TASK_003",
+      "process_id": "PROC_001",
+      "condition_expr": "materials.quality == 'pass'"
+    },
+    {
+      "flow_id": "FLOW_005",
+      "source_ref": "GATE_001",
+      "target_ref": "TASK_002",
+      "process_id": "PROC_001",
+      "condition_expr": "materials.quality == 'fail'"
+    },
+    {
+      "flow_id": "FLOW_006",
+      "source_ref": "TASK_003",
+      "target_ref": "TASK_004",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_007",
+      "source_ref": "TASK_004",
+      "target_ref": "GATE_002",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_008",
+      "source_ref": "GATE_002",
+      "target_ref": "TASK_005",
+      "process_id": "PROC_001",
+      "condition_expr": "product.quality == 'pass'"
+    },
+    {
+      "flow_id": "FLOW_009",
+      "source_ref": "GATE_002",
+      "target_ref": "TASK_003",
+      "process_id": "PROC_001",
+      "condition_expr": "product.quality == 'fail'"
+    },
+    {
+      "flow_id": "FLOW_010",
+      "source_ref": "TASK_005",
+      "target_ref": "TASK_006",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_011",
+      "source_ref": "TASK_006",
+      "target_ref": "END_001",
+      "process_id": "PROC_001"
+    }
+  ],
+  "allFlowRows": [
+    {
+      "flow_id": "FLOW_001",
+      "source_ref": "START_001",
+      "target_ref": "TASK_001",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_002",
+      "source_ref": "TASK_001",
+      "target_ref": "TASK_002",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_003",
+      "source_ref": "TASK_002",
+      "target_ref": "GATE_001",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_004",
+      "source_ref": "GATE_001",
+      "target_ref": "TASK_003",
+      "process_id": "PROC_001",
+      "condition_expr": "materials.quality == 'pass'"
+    },
+    {
+      "flow_id": "FLOW_005",
+      "source_ref": "GATE_001",
+      "target_ref": "TASK_002",
+      "process_id": "PROC_001",
+      "condition_expr": "materials.quality == 'fail'"
+    },
+    {
+      "flow_id": "FLOW_006",
+      "source_ref": "TASK_003",
+      "target_ref": "TASK_004",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_007",
+      "source_ref": "TASK_004",
+      "target_ref": "GATE_002",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_008",
+      "source_ref": "GATE_002",
+      "target_ref": "TASK_005",
+      "process_id": "PROC_001",
+      "condition_expr": "product.quality == 'pass'"
+    },
+    {
+      "flow_id": "FLOW_009",
+      "source_ref": "GATE_002",
+      "target_ref": "TASK_003",
+      "process_id": "PROC_001",
+      "condition_expr": "product.quality == 'fail'"
+    },
+    {
+      "flow_id": "FLOW_010",
+      "source_ref": "TASK_005",
+      "target_ref": "TASK_006",
+      "process_id": "PROC_001"
+    },
+    {
+      "flow_id": "FLOW_011",
+      "source_ref": "TASK_006",
+      "target_ref": "END_001",
+      "process_id": "PROC_001"
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "RES_001",
+      "resource_name": "Design Team",
+      "resource_type": "human",
+      "element_id": "TASK_001",
+      "process_id": "PROC_001",
+      "capability": "Designing Smart"
+    },
+    {
+      "resource_id": "RES_002",
+      "resource_name": "Procurement Team",
+      "resource_type": "human",
+      "element_id": "TASK_002",
+      "process_id": "PROC_001",
+      "capability": "Sourcing materials and components"
+    },
+    {
+      "resource_id": "RES_003",
+      "resource_name": "Manufacturing Equipment",
+      "resource_type": "equipment",
+      "element_id": "TASK_003",
+      "process_id": "PROC_001",
+      "capability": "Production of Smart"
+    }
+  ]
+}

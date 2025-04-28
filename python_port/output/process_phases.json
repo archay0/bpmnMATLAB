@@ -1,0 +1,37 @@
+[
+  {
+    "phase_id": "PH_001",
+    "phase_name": "Requirements Analysis",
+    "description": "Gathering and validating technical specifications, performance criteria, and regulatory standards for the LiDAR camera set."
+  },
+  {
+    "phase_id": "PH_002",
+    "phase_name": "Design and Prototyping",
+    "description": "Developing mechanical, optical, and electronic designs, followed by prototype creation and iterative testing."
+  },
+  {
+    "phase_id": "PH_003",
+    "phase_name": "Manufacturing and Assembly",
+    "description": "Sourcing materials, fabricating components, and assembling the LiDAR system with quality control checks."
+  },
+  {
+    "phase_id": "PH_004",
+    "phase_name": "Testing and Calibration",
+    "description": "Conducting functional, environmental, and durability tests, and calibrating sensors for accuracy."
+  },
+  {
+    "phase_id": "PH_005",
+    "phase_name": "Deployment and Installation",
+    "description": "Installing the LiDAR system in the target environment, integrating with existing infrastructure, and validating performance."
+  },
+  {
+    "phase_id": "PH_006",
+    "phase_name": "Operation and Maintenance",
+    "description": "Monitoring system performance, performing routine maintenance, and addressing operational issues."
+  },
+  {
+    "phase_id": "PH_007",
+    "phase_name": "Decommissioning and Recycling",
+    "description": "Safely dismantling the system, disposing of hazardous materials, and recycling reusable components."
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "resource_id": "RES_001",
+    "resource_name": "Design Team",
+    "resource_type": "human",
+    "element_id": "TASK_001",
+    "process_id": "PROC_001",
+    "capability": "Designing Smart"
+  },
+  {
+    "resource_id": "RES_002",
+    "resource_name": "Procurement Team",
+    "resource_type": "human",
+    "element_id": "TASK_002",
+    "process_id": "PROC_001",
+    "capability": "Sourcing materials and components"
+  },
+  {
+    "resource_id": "RES_003",
+    "resource_name": "Manufacturing Equipment",
+    "resource_type": "equipment",
+    "element_id": "TASK_003",
+    "process_id": "PROC_001",
+    "capability": "Production of Smart"
+  }
+]

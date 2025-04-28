@@ -1,0 +1,27 @@
+[
+  {
+    "phase_id": "PH_001",
+    "phase_name": "Requirements & Design",
+    "description": "Gathering requirements and designing the Smart"
+  },
+  {
+    "phase_id": "PH_002",
+    "phase_name": "Procurement",
+    "description": "Sourcing materials and components for the Smart"
+  },
+  {
+    "phase_id": "PH_003",
+    "phase_name": "Manufacturing",
+    "description": "Producing the Smart"
+  },
+  {
+    "phase_id": "PH_004",
+    "phase_name": "Quality Control",
+    "description": "Testing and validating the Smart"
+  },
+  {
+    "phase_id": "PH_005",
+    "phase_name": "Packaging & Distribution",
+    "description": "Packaging and distributing the Smart"
+  }
+]

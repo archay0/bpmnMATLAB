@@ -1,0 +1,31 @@
+{
+  "product_name": "Smart Speaker",
+  "dimensions": {
+    "width": "10 cm",
+    "height": "15 cm",
+    "depth": "10 cm"
+  },
+  "weight": "500g",
+  "materials": [
+    "Plastic",
+    "Electronics",
+    "Speaker components"
+  ],
+  "component_parts": [
+    {
+      "name": "Speaker unit",
+      "estimated_cost": "$15"
+    },
+    {
+      "name": "Microphone array",
+      "estimated_cost": "$10"
+    },
+    {
+      "name": "Circuit board",
+      "estimated_cost": "$25"
+    }
+  ],
+  "total_cost": "$70",
+  "retail_price": "$149",
+  "manufacturing_time": "45 minutes per unit"
+}

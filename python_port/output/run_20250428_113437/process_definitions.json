@@ -1,0 +1,11 @@
+[
+  {
+    "process_id": "PROC_001",
+    "process_name": "Smart Manufacturing",
+    "description": "End-to-end process for manufacturing Smart Coffee Maker with programmable brewing schedules, temperature control, and mobile app connectivity",
+    "version": "1.0",
+    "author": "System",
+    "creation_date": "2025-04-28T11:34:37.341278",
+    "status": "Active"
+  }
+]

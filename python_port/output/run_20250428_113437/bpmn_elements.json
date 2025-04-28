@@ -1,0 +1,82 @@
+[
+  {
+    "element_id": "START_001",
+    "element_name": "Start Process",
+    "element_type": "event",
+    "element_subtype": "startEvent",
+    "process_id": "PROC_001",
+    "description": "Start of Smart manufacturing process"
+  },
+  {
+    "element_id": "TASK_001",
+    "element_name": "Design Product",
+    "element_type": "task",
+    "element_subtype": "userTask",
+    "process_id": "PROC_001",
+    "description": "Design the Smart"
+  },
+  {
+    "element_id": "TASK_002",
+    "element_name": "Source Materials",
+    "element_type": "task",
+    "element_subtype": "serviceTask",
+    "process_id": "PROC_001",
+    "description": "Source materials for Smart"
+  },
+  {
+    "element_id": "GATE_001",
+    "element_name": "Materials Verification",
+    "element_type": "gateway",
+    "element_subtype": "exclusiveGateway",
+    "process_id": "PROC_001",
+    "description": "Verify materials quality"
+  },
+  {
+    "element_id": "TASK_003",
+    "element_name": "Manufacture Smart",
+    "element_type": "task",
+    "element_subtype": "manualTask",
+    "process_id": "PROC_001",
+    "description": "Manufacturing process for Smart"
+  },
+  {
+    "element_id": "TASK_004",
+    "element_name": "Quality Control",
+    "element_type": "task",
+    "element_subtype": "userTask",
+    "process_id": "PROC_001",
+    "description": "Quality control for Smart"
+  },
+  {
+    "element_id": "GATE_002",
+    "element_name": "Quality Decision",
+    "element_type": "gateway",
+    "element_subtype": "exclusiveGateway",
+    "process_id": "PROC_001",
+    "description": "Decision point for product quality"
+  },
+  {
+    "element_id": "TASK_005",
+    "element_name": "Package Product",
+    "element_type": "task",
+    "element_subtype": "manualTask",
+    "process_id": "PROC_001",
+    "description": "Packaging of Smart"
+  },
+  {
+    "element_id": "TASK_006",
+    "element_name": "Ship Product",
+    "element_type": "task",
+    "element_subtype": "serviceTask",
+    "process_id": "PROC_001",
+    "description": "Shipping of Smart"
+  },
+  {
+    "element_id": "END_001",
+    "element_name": "Process Complete",
+    "element_type": "event",
+    "element_subtype": "endEvent",
+    "process_id": "PROC_001",
+    "description": "End of Smart manufacturing process"
+  }
+]

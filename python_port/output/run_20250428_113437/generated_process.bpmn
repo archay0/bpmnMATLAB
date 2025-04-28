@@ -1,0 +1,112 @@
+<?xml version="1.0" ?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_3904e348" targetNamespace="http://www.omg.org/spec/BPMN/20100524/MODEL">
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_PROC_001" bpmnElement="PROC_001">
+      <bpmndi:BPMNShape id="BPMNShape_START_001" bpmnElement="START_001">
+        <dc:Bounds x="150" y="100" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_TASK_001" bpmnElement="TASK_001">
+        <dc:Bounds x="300" y="100" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_TASK_002" bpmnElement="TASK_002">
+        <dc:Bounds x="450" y="100" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_GATE_001" bpmnElement="GATE_001">
+        <dc:Bounds x="600" y="100" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_TASK_003" bpmnElement="TASK_003">
+        <dc:Bounds x="750" y="100" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_TASK_004" bpmnElement="TASK_004">
+        <dc:Bounds x="100" y="250" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_GATE_002" bpmnElement="GATE_002">
+        <dc:Bounds x="250" y="250" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_TASK_005" bpmnElement="TASK_005">
+        <dc:Bounds x="400" y="250" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_TASK_006" bpmnElement="TASK_006">
+        <dc:Bounds x="550" y="250" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_END_001" bpmnElement="END_001">
+        <dc:Bounds x="700" y="250" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_001" bpmnElement="FLOW_001">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_002" bpmnElement="FLOW_002">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_003" bpmnElement="FLOW_003">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_004" bpmnElement="FLOW_004">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_005" bpmnElement="FLOW_005">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_006" bpmnElement="FLOW_006">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_007" bpmnElement="FLOW_007">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_008" bpmnElement="FLOW_008">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_009" bpmnElement="FLOW_009">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_010" bpmnElement="FLOW_010">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_FLOW_011" bpmnElement="FLOW_011">
+        <di:waypoint x="0" y="0"/>
+        <di:waypoint x="100" y="100"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <process id="PROC_001" name="Smart Manufacturing">
+    <startEvent id="START_001" name="Start Process"/>
+    <userTask id="TASK_001" name="Design Product"/>
+    <serviceTask id="TASK_002" name="Source Materials"/>
+    <exclusiveGateway id="GATE_001" name="Materials Verification"/>
+    <manualTask id="TASK_003" name="Manufacture Smart"/>
+    <userTask id="TASK_004" name="Quality Control"/>
+    <exclusiveGateway id="GATE_002" name="Quality Decision"/>
+    <manualTask id="TASK_005" name="Package Product"/>
+    <serviceTask id="TASK_006" name="Ship Product"/>
+    <endEvent id="END_001" name="Process Complete"/>
+    <sequenceFlow id="FLOW_001" sourceRef="START_001" targetRef="TASK_001"/>
+    <sequenceFlow id="FLOW_002" sourceRef="TASK_001" targetRef="TASK_002"/>
+    <sequenceFlow id="FLOW_003" sourceRef="TASK_002" targetRef="GATE_001"/>
+    <sequenceFlow id="FLOW_004" sourceRef="GATE_001" targetRef="TASK_003">
+      <conditionExpression>materials.quality == 'pass'</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="FLOW_005" sourceRef="GATE_001" targetRef="TASK_002">
+      <conditionExpression>materials.quality == 'fail'</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="FLOW_006" sourceRef="TASK_003" targetRef="TASK_004"/>
+    <sequenceFlow id="FLOW_007" sourceRef="TASK_004" targetRef="GATE_002"/>
+    <sequenceFlow id="FLOW_008" sourceRef="GATE_002" targetRef="TASK_005">
+      <conditionExpression>product.quality == 'pass'</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="FLOW_009" sourceRef="GATE_002" targetRef="TASK_003">
+      <conditionExpression>product.quality == 'fail'</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="FLOW_010" sourceRef="TASK_005" targetRef="TASK_006"/>
+    <sequenceFlow id="FLOW_011" sourceRef="TASK_006" targetRef="END_001"/>
+  </process>
+</definitions>

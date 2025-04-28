@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_e226e231" targetNamespace="http://www.omg.org/spec/BPMN/20100524/MODEL">
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="Process_1"/>
+  </bpmndi:BPMNDiagram>
+  <process id="Process_1" name="Default Process"/>
+</definitions>

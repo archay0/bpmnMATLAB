@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProcessPhases",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "phase_id": { "type": "string" },
+      "phase_name": { "type": "string" },
+      "description": { "type": "string" }
+    },
+    "required": ["phase_id", "phase_name", "description"]
+  }
+}

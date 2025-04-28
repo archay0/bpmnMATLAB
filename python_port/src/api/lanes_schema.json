@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BPMN Lanes Schema",
+  "description": "Schema for defining lanes within pools in BPMN diagrams",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["lane_id", "lane_name", "pool_id", "description"],
+    "properties": {
+      "lane_id": {
+        "type": "string",
+        "description": "Unique identifier for the lane",
+        "pattern": "^LANE_[0-9]{3}$"
+      },
+      "lane_name": {
+        "type": "string",
+        "description": "Descriptive name of the lane"
+      },
+      "pool_id": {
+        "type": "string",
+        "description": "Reference to the pool this lane belongs to"
+      },
+      "process_id": {
+        "type": "string",
+        "description": "Reference to the process this lane belongs to"
+      },
+      "description": {
+        "type": "string",
+        "description": "Description of the lane's purpose"
+      },
+      "role": {
+        "type": "string",
+        "description": "Functional role represented by this lane"
+      },
+      "element_refs": {
+        "type": "array",
+        "description": "List of element IDs contained in this lane",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
